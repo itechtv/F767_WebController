@@ -29,6 +29,7 @@ uint8_t numTabLine = 0;
 uint8_t countJson = 0;
 
 char randomSSID[27] = {0};
+char ssid[27] = {0};
 char url[30] = {0};
 char bufervar[1500] = {0};
 extern unsigned long Ti;
@@ -299,12 +300,11 @@ const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
 const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
-
 	if (iIndex == 0) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 		}
@@ -316,7 +316,6 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return URL_TABLES[iIndex].pcCGIName;
 	} else {
 		printf("SSID Failed \n");
@@ -356,12 +355,12 @@ const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 
 	if (iIndex == 2) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 		}
@@ -371,7 +370,6 @@ const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return URL_TABLES[iIndex].pcCGIName;  //
 	} else {
 		printf("SSID Failed \n");
@@ -386,12 +384,12 @@ const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 
 	if (iIndex == 3) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 		}
@@ -401,7 +399,6 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/tabrelay.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -415,12 +412,12 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 
 	if (iIndex == 4) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 		}
@@ -430,7 +427,6 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/tabbuttom.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -444,12 +440,12 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 
 	if (iIndex == 5) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 		}
@@ -473,12 +469,12 @@ const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 
 	if (iIndex == 6) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 		}
@@ -488,7 +484,6 @@ const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/timers.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -513,12 +508,11 @@ const char* LogoutCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
-
 	if (iIndex == 8) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 			if (strcmp(pcParam[i], "tab") == 0)
@@ -542,7 +536,6 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/tabjson.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -557,7 +550,6 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 	int varid;
 	int val;
 
@@ -565,6 +557,7 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 			if (strcmp(pcParam[i], "id") == 0)
@@ -583,7 +576,6 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/selectset.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -598,7 +590,6 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 	id = 0;
 	tab = 0;
 
@@ -606,6 +597,7 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 			if (strcmp(pcParam[i], "id") == 0)
@@ -623,7 +615,6 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/formrelay.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -636,7 +627,6 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	char ssid[27] = {0};
 	id = 0;
 	tab = 0;
 
@@ -644,6 +634,7 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
+				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
 			if (strcmp(pcParam[i], "id") == 0)
@@ -661,7 +652,6 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
 		return "/formbuttom.shtml"; //
 	} else {
 		printf("SSID Failed \n");
@@ -674,8 +664,10 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 ////////////////////////////// POST START //////////////////////////////////
 
 
+PostBufer_t v_PostBufer;
+static void *current_connection;
 
-int http_post_content_len;
+
 
 
 err_t httpd_post_begin(void *connection, const char *uri,
@@ -688,23 +680,23 @@ err_t httpd_post_begin(void *connection, const char *uri,
 	  LWIP_UNUSED_ARG(content_len);
 	  LWIP_UNUSED_ARG(post_auto_wnd);
 
-	  strncpy(url, uri, 15);
+	  v_PostBufer.len = 0;
+	  memset(v_PostBufer.buf, 0, sizeof(v_PostBufer.buf));
+	  memset(v_PostBufer.uri, 0, sizeof(v_PostBufer.uri));
 
-	  memset(bufervar, '\0', sizeof(bufervar));
+	  // parse URI to "?"
+	  int c = strchr(uri, '?') - uri;
+	  strncpy(v_PostBufer.uri, uri, c);
+	  v_PostBufer.uri[c] = '\0';
 
-	  if (!memcmp(uri, "/login.shtml", 13)) {
-	    if (current_connection != connection) {
+
+	  if (current_connection != connection) {
 	      current_connection = connection;
-
-	      snprintf(response_uri, response_uri_len, "/loginfail.shtml");
-
-
 	      *post_auto_wnd = 1;
+
 	      return ERR_OK;
-	    }
 	  }
 	  return ERR_VAL;
-
 }
 
 
@@ -712,20 +704,31 @@ err_t httpd_post_begin(void *connection, const char *uri,
 
 err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
-	char poststr[1000];
+	//char poststr[1000];
 
 	if (current_connection == connection && p != NULL) {
+	  if(strcmp("upgrade.shtml", v_PostBufer.uri) == 0){
 
+		  // @todo  Firmware update in flash
 
+		  return ERR_OK;
+	  } else {
+		  while(p){
+			memcpy(&v_PostBufer.buf[v_PostBufer.len], p->payload, p->len);
+			v_PostBufer.len += p->len;
+			p = p->next;
+		  }
+		  printf("POST %s \n", v_PostBufer.buf);
 
+		  if (p != NULL) {
+		        pbuf_free(p);
+		  }
+		  return ERR_OK;
+	  }
 
-			   memcpy(poststr, p->payload, p->len);
-			   strcat(bufervar, poststr);
-			   pbuf_free(p);
-
-
-
-		pbuf_free(p);
+	    if (p != NULL) {
+	        pbuf_free(p);
+	    }
 		return ERR_OK;
 	}
 
@@ -739,15 +742,22 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 void httpd_post_finished(void *connection, char *response_uri, u16_t response_uri_len) {
 
 	  /* default page is "login failed" */
-	  snprintf(response_uri, response_uri_len, "/loginfail.shtml");
+	  //snprintf(response_uri, response_uri_len, "/loginfail.shtml");
+	//char ssid[27] = {0};
 
 
 	  if (current_connection == connection) {
 
 	    /* login succeeded */
-		if (strlen(randomSSID) != 0){
-			snprintf(response_uri, response_uri_len, "/session.shtml");
-		}
+		//if (strlen(randomSSID) != 0){
+		  printf("URL %s \n", v_PostBufer.uri);
+		  printf("SSID %s \n", ssid);
+
+			printf("SSID OK11 \n");
+			restartSSID();
+			//memset(ssid, '\0', sizeof(ssid));
+			snprintf(response_uri, response_uri_len, v_PostBufer.uri);
+		//}
 
 	    current_connection = NULL;
 
