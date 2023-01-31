@@ -16,5 +16,14 @@ void restartSSID (void);
 //int MultiPartTabCount(int, int);
 
 
+typedef struct tagPostBufer_t
+{
+	uint32_t len;
+	char buf[2048];
+	char uri[25];
+}PostBufer_t;
+
+extern PostBufer_t v_PostBufer;
+
 
 #endif /* INC_WEBSERVER_H_ */
