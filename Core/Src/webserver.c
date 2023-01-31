@@ -41,6 +41,7 @@ extern struct dbSettings SetSettings;
 
 
 
+
 //////////////////////////
 
 // Generation SSID
