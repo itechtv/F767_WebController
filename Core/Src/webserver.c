@@ -19,7 +19,6 @@
 
 
 
-
 static void *current_connection;
 static int variable = 0;
 
