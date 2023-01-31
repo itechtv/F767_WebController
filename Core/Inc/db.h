@@ -11,7 +11,6 @@
 #define NUMPIN 89 // колличество пинов
 #define NUMPINLINKS 100 // колличество pin to pin
 
-
 #include "stdio.h"
 #include "stm32f7xx_hal.h"
 
