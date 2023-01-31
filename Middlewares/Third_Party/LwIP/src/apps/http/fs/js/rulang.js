@@ -1,0 +1,10 @@
+var langbuttom = new Array();
+langbuttom[1] = "eewewe";
+langbuttom[2] = "ewewew";
+langbuttom[3] = "ewewewe";
+langbuttom[4] = "eee";
+langbuttom[5] = "e";
+langbuttom[6] = "e";
+langbuttom[7] = "e";
+langbuttom[8] = "e";
+langbuttom[9] = "e";
