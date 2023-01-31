@@ -34,7 +34,6 @@ char bufervar[1500] = {0};
 extern unsigned long Ti;
 
 
-
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
