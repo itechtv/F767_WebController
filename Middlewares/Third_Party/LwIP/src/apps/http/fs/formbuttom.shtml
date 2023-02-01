@@ -51,7 +51,7 @@
           employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
           employee_data += '<tr><td>Pullup type</td>';
     
-          employee_data += '<td><select name=\"ptype_' + val.id + '\">';
+          employee_data += '<td><select name=\"ptype">';
           if (val.ptype == 'None') {
             employee_data += ' <option value=\"None\" selected>None</option>';
           } else {
@@ -70,17 +70,17 @@
     
           employee_data += '</select></td></tr>';
     
-          employee_data += '<tr><td>Bounce interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"99\" name=\"binter_' + val.id + '\" value=\"' + val.binter + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Hold interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"hinter_' + val.id + '\" value=\"' + val.hinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Repeat</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"repeat_' + val.id + '\" value=\"' + val.repeat + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Repeat interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"rinter_' + val.id + '\" value=\"' + val.rinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Double-click interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"dcinter_' + val.id + '\" value=\"' + val.dcinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Prevent Click</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"pclick_' + val.id + '\" value=\"' + val.pclick + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info_' + val.id + '\" value=\"' + val.info + '\"></td></tr>';
+          employee_data += '<tr><td>Bounce interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"99\" name=\"binter" value=\"' + val.binter + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Hold interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"hinter" value=\"' + val.hinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Repeat</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"repeat" value=\"' + val.repeat + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Repeat interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"rinter" value=\"' + val.rinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Double-click interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"dcinter" value=\"' + val.dcinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Prevent Click</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"pclick" value=\"' + val.pclick + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info" value=\"' + val.info + '\"></td></tr>';
           if (val.onoff == 1) {
-            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff_' + val.id + '\" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></td></tr>';
+            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></td></tr>';
           } else {
-            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff_' + val.id + '\" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"><span class=\"slider round\"></span></label></td></tr>';
+            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" unchecked=\"unchecked\"><span class=\"slider round\"></span></label></td></tr>';
           }
     
           $('#tab1').append(employee_data);
