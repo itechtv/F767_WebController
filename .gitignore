@@ -1,3 +1,7 @@
 /Debug/
+<<<<<<< HEAD
 Middlewares/Third_Party/LwIP/src/.DS_Store
 Middlewares/Third_Party/LwIP/src/apps/.DS_Store
+=======
+.DS_Store
+>>>>>>> branch 'master' of https://github.com/itechtv/F767_WebController.git
