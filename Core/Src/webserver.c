@@ -704,8 +704,6 @@ err_t httpd_post_begin(void *connection, const char *uri,
 
 err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
-	//char poststr[1000];
-
 	if (current_connection == connection && p != NULL) {
 	  if(strcmp("upgrade.shtml", v_PostBufer.uri) == 0){
 
@@ -741,27 +739,50 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
 void httpd_post_finished(void *connection, char *response_uri, u16_t response_uri_len) {
 
-	  /* default page is "login failed" */
-	  //snprintf(response_uri, response_uri_len, "/loginfail.shtml");
-	//char ssid[27] = {0};
+    int count = 0;
+	char *end_str;
+	char *name;
+
+    char *token = strtok_r(v_PostBufer.buf, "&", &end_str);
+    while (token != NULL)
+    {
+        char *end_token;
+        printf("---- %s \n", token);
+        char *token2 = strtok_r(token, "=", &end_token);
+        while (token2 != NULL)
+        {
+        	count++;
+        	if(count == 1){
+        	    name = token2;
+        		printf("key: %s \n", token2);
+        		printf("key: %s \n", name);
+        	}
+        	if(count == 2){
+        		printf("var: %s \n", token2);
+        		//  тут пишем в структуру
+        	}
+            token2 = strtok_r(NULL, "=", &end_token);
+        }
+        token = strtok_r(NULL, "&", &end_str);
+        count = 0;
+    }
 
 
-	  if (current_connection == connection) {
+	if (current_connection == connection) {
 
 	    /* login succeeded */
 		//if (strlen(randomSSID) != 0){
-		  printf("URL %s \n", v_PostBufer.uri);
-		  printf("SSID %s \n", ssid);
+		printf("URL %s \n", v_PostBufer.uri);
+		printf("SSID %s \n", ssid);
+		printf("SSID OK11 \n");
 
-			printf("SSID OK11 \n");
-			restartSSID();
-			//memset(ssid, '\0', sizeof(ssid));
-			snprintf(response_uri, response_uri_len, v_PostBufer.uri);
+		restartSSID();
+		snprintf(response_uri, response_uri_len, v_PostBufer.uri);
 		//}
 
-	    current_connection = NULL;
+	   current_connection = NULL;
 
-	  }
+	}
 }
 
 //////////////////// POST  END ////////////////////////
