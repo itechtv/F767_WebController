@@ -47,7 +47,7 @@
           var employee_data_pin = '';
           employee_data_pin += ' ' + val.pins + ' ';
     
-          employee_data += '<tr><td>ID</td><td>' + val.id + '</td></tr>';
+          employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"text\" name=\"id" value=\"' + val.id + '\"></td></tr>';
           employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
           employee_data += '<tr><td>Pullup type</td>';
     
