@@ -100,6 +100,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 	char* str = NULL;
 	cJSON *root = NULL;
 	cJSON *fld = NULL;
+	int idplus = 0;
 
 	switch (iIndex) {
 	// ssi tag <!--#tabjson-->
@@ -122,9 +123,10 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			if(tab == 2){
 				if(PinsConf[variable].topin == 1){
 					// buttoms json
+					idplus = variable + 1;
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, variable, PinsInfo[variable].pins,
+							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
 							PinsConf[variable].ptype, PinsConf[variable].binter,
 							PinsConf[variable].hinter, PinsConf[variable].repeat,
 							PinsConf[variable].rinter, PinsConf[variable].dcinter,
@@ -143,6 +145,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			if(tab == 3){
 				if(PinsConf[variable].topin == 2){
 					// relay json
+					idplus = variable + 1;
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, variable, PinsInfo[variable].pins,
@@ -219,7 +222,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 				if(tab == 1){
 					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
-					cJSON_AddNumberToObject(root, "id", id);
+					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
 					cJSON_AddStringToObject(root, "ptype", PinsConf[id].ptype);
 					cJSON_AddNumberToObject(root, "binter", PinsConf[id].binter);
@@ -234,7 +237,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 				if(tab == 2){
 					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
-					cJSON_AddNumberToObject(root, "id", id);
+					cJSON_AddNumberToObject(root, "id", id + 1);  // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
 					cJSON_AddStringToObject(root, "ptype", PinsConf[id].ptype);
 					cJSON_AddNumberToObject(root, "pwm", PinsConf[id].binter);
@@ -602,7 +605,7 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			}
 			if (strcmp(pcParam[i], "id") == 0)
 			{
-				id = atoi(pcValue[i]);
+				id = atoi(pcValue[i]) - 1;
 			}
 			if (strcmp(pcParam[i], "tab") == 0)
 			{
@@ -639,7 +642,7 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			}
 			if (strcmp(pcParam[i], "id") == 0)
 			{
-				id = atoi(pcValue[i]);
+				id = atoi(pcValue[i]) - 1;
 			}
 			if (strcmp(pcParam[i], "tab") == 0)
 			{
@@ -679,6 +682,8 @@ err_t httpd_post_begin(void *connection, const char *uri,
 	  LWIP_UNUSED_ARG(http_request_len);
 	  LWIP_UNUSED_ARG(content_len);
 	  LWIP_UNUSED_ARG(post_auto_wnd);
+
+		printf("response_uri: %s \n", response_uri);
 
 	  v_PostBufer.len = 0;
 	  memset(v_PostBufer.buf, 0, sizeof(v_PostBufer.buf));
@@ -747,14 +752,13 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
     while (token != NULL)
     {
         char *end_token;
-        printf("---- %s \n", token);
+        //printf("---- %s \n", token);
         char *token2 = strtok_r(token, "=", &end_token);
         while (token2 != NULL)
         {
         	count++;
         	if(count == 1){
         	    name = token2;
-        		printf("key: %s \n", token2);
         		printf("key: %s \n", name);
         	}
         	if(count == 2){

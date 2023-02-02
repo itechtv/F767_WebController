@@ -43,10 +43,12 @@
         var employee_data = '';
         var n = 0;
         var z = '';
+        var idplus = 0;
 
         $.each(data, function (key, val) {
+          idplus = val.id + 1;
           employee_data += '<tr>';
-          employee_data += '<td>' + val.id + '</td>';
+          employee_data += '<td>' + idplus + '</td>';
           employee_data += '<td>' + val.pins + '</td>';
           employee_data += '<td width=\"350\" align=\"center\">';
 
