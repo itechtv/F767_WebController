@@ -21,7 +21,8 @@
 
         <h2  id="title1">Edit Relay pin</h2>
 
-        <!--#formjson-->
+
+        
 
         <form action="tabrelay.shtml?ssid=<!--#ssid-->" method="post">
             <table class="zebra_2" border="1" align="center" id="tab1">
