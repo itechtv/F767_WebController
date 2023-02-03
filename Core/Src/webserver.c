@@ -148,7 +148,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					idplus = variable + 1;
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, variable, PinsInfo[variable].pins,
+							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
 							PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
 							PinsConf[variable].istate, PinsConf[variable].dvalue,
 							PinsConf[variable].ponr, PinsConf[variable].info,
@@ -265,7 +265,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 }
 
 //////////////////////////////  CGI HANDLER  //////////////////////////////////
-// @todo  объединить iIndexы избавиться от дублирования кода,для этого надо получить url
 
 const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
@@ -672,6 +671,54 @@ static void *current_connection;
 
 
 
+void setPinRelay (int idpin, char *name, char *token) {
+
+	idpin = idpin - 1;
+	if (strcmp(name, "pwm") == 0) {
+		PinsConf[idpin].pwm = atoi(token);
+	} else if (strcmp(name, "on") == 0) {
+		PinsConf[idpin].on = atoi(token);
+	} else if (strcmp(name, "istate") == 0) {
+		PinsConf[idpin].istate = atoi(token);
+	} else if (strcmp(name, "dvalue") == 0) {
+		PinsConf[idpin].dvalue = atoi(token);
+	} else if (strcmp(name, "ponr") == 0) {
+		PinsConf[idpin].ponr = atoi(token);
+	} else if (strcmp(name, "info") == 0) {
+		strcpy(PinsConf[idpin].info, token);
+	} else if (strcmp(name, "onoff") == 0) {
+		PinsConf[idpin].onoff = atoi(token);
+	} else {
+
+	}
+}
+
+void setPinButtom (int idpin, char *name, char *token) {
+
+	idpin = idpin - 1;
+	if (strcmp(name, "ptype") == 0) {
+		strcpy(PinsConf[idpin].ptype, token);
+	} else if (strcmp(name, "binter") == 0) {
+		PinsConf[idpin].binter = atoi(token);
+	} else if (strcmp(name, "hinter") == 0) {
+		PinsConf[idpin].hinter = atoi(token);
+	} else if (strcmp(name, "repeat") == 0) {
+		PinsConf[idpin].repeat = atoi(token);
+	} else if (strcmp(name, "rinter") == 0) {
+		PinsConf[idpin].rinter = atoi(token);
+	} else if (strcmp(name, "dcinter") == 0) {
+		PinsConf[idpin].dcinter = atoi(token);
+	} else if (strcmp(name, "pclick") == 0) {
+		PinsConf[idpin].pclick = atoi(token);
+	} else if (strcmp(name, "info") == 0) {
+		strcpy(PinsConf[idpin].info, token);
+	} else if (strcmp(name, "onoff") == 0) {
+		PinsConf[idpin].onoff = atoi(token);
+	} else {
+
+	}
+}
+
 
 err_t httpd_post_begin(void *connection, const char *uri,
 		const char *http_request, uint16_t http_request_len, int content_len,
@@ -706,7 +753,6 @@ err_t httpd_post_begin(void *connection, const char *uri,
 
 
 
-
 err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
 	if (current_connection == connection && p != NULL) {
@@ -735,16 +781,17 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 		return ERR_OK;
 	}
 
-
 	if (p != NULL) {
 		pbuf_free(p);
 	}
 	return ERR_VAL;
 }
 
+
 void httpd_post_finished(void *connection, char *response_uri, u16_t response_uri_len) {
 
     int count = 0;
+    int id = 0;
 	char *end_str;
 	char *name;
 
@@ -762,8 +809,21 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         		printf("key: %s \n", name);
         	}
         	if(count == 2){
-        		printf("var: %s \n", token2);
-        		//  тут пишем в структуру
+        		// SET id
+        		if (strcmp(name, "id") == 0){
+        			id = atoi(token2);
+        		}
+        		// POST request Relay
+        		if (strcmp(v_PostBufer.uri, "/tabrelay.shtml") == 0 && id != 0){
+        			setPinRelay(id, name, token2);
+
+        		}
+        		// POST request Buttom
+        		if (strcmp(v_PostBufer.uri, "/tabbuttom.shtml") == 0 && id != 0){
+        			setPinButtom(id, name, token2);
+
+        		}
+
         	}
             token2 = strtok_r(NULL, "=", &end_token);
         }
