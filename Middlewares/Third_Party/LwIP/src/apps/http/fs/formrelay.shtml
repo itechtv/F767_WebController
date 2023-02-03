@@ -45,8 +45,8 @@
     
           var employee_data_pin = '';
           employee_data_pin += ' ' + val.pins + ' ';
-    
-          employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"text\" name=\"id" value=\"' + val.id + '\"></td></tr>';
+
+          employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></td></tr>';
           employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
     
           employee_data += '<tr><td>PWM Frequency (Hz)</td><td><input type=\"number\" min=\"0\" max=\"9999\" name=\"pwm" value=\"' + val.pwm + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
