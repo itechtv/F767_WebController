@@ -547,7 +547,6 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 }
 
 
-// @todo проверить на пустое значение id и val перед записью
 // selectset.shtml Handler (Index 9)
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
@@ -572,6 +571,12 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			}
 		}
 		PinsConf[varid].topin = val;
+		if (val == 1 || val == 2){
+			PinsConf[varid].onoff = 1;
+		}else{
+			PinsConf[varid].onoff = 0;
+			//@todo Обнулить PinsConf
+		}
 	}
 
 	/* login succeeded */
@@ -670,8 +675,8 @@ PostBufer_t v_PostBufer;
 static void *current_connection;
 
 
-
-void setPinRelay (int idpin, char *name, char *token) {
+// POST request Relay
+void setPinRelay(int idpin, char *name, char *token) {
 
 	idpin = idpin - 1;
 	if (strcmp(name, "pwm") == 0) {
@@ -693,7 +698,9 @@ void setPinRelay (int idpin, char *name, char *token) {
 	}
 }
 
-void setPinButtom (int idpin, char *name, char *token) {
+
+// POST request Buttom
+void setPinButtom(int idpin, char *name, char *token) {
 
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
@@ -717,6 +724,11 @@ void setPinButtom (int idpin, char *name, char *token) {
 	} else {
 
 	}
+}
+
+// POST request Settings
+void setSettings(char *name, char *token) {
+
 }
 
 
@@ -815,15 +827,22 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         		}
         		// POST request Relay
         		if (strcmp(v_PostBufer.uri, "/tabrelay.shtml") == 0 && id != 0){
-        			setPinRelay(id, name, token2);
-
+        			if(token2 != NULL){
+        				setPinRelay(id, name, token2);
+        			}
         		}
         		// POST request Buttom
         		if (strcmp(v_PostBufer.uri, "/tabbuttom.shtml") == 0 && id != 0){
-        			setPinButtom(id, name, token2);
-
+        			if(token2 != NULL){
+        				setPinButtom(id, name, token2);
+        			}
         		}
-
+        		// POST request Settings
+        		if (strcmp(v_PostBufer.uri, "/settings.shtml") == 0){
+        			if(token2 != NULL){
+        				setSettings(name, token2);
+        			}
+        		}
         	}
             token2 = strtok_r(NULL, "=", &end_token);
         }
