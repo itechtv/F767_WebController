@@ -31,7 +31,7 @@ uint8_t countJson = 0;
 char randomSSID[27] = {0};
 char ssid[27] = {0};
 char url[30] = {0};
-char bufervar[1500] = {0};
+char tempbufer[1024] = {0};
 extern unsigned long Ti;
 
 
@@ -775,8 +775,8 @@ err_t httpd_post_begin(void *connection, const char *uri,
 		printf("response_uri: %s \n", response_uri);
 
 	  v_PostBufer.len = 0;
-	  memset(v_PostBufer.buf, 0, sizeof(v_PostBufer.buf));
-	  memset(v_PostBufer.uri, 0, sizeof(v_PostBufer.uri));
+	  memset(v_PostBufer.buf, '\0', sizeof(v_PostBufer.buf));
+	  memset(v_PostBufer.uri, '\0', sizeof(v_PostBufer.uri));
 
 	  // parse URI to "?"
 	  int c = strchr(uri, '?') - uri;
@@ -797,6 +797,8 @@ err_t httpd_post_begin(void *connection, const char *uri,
 
 err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
+	memset(tempbufer, '\0', sizeof(tempbufer));
+
 	if (current_connection == connection && p != NULL) {
 	  if(strcmp("upgrade.shtml", v_PostBufer.uri) == 0){
 
@@ -804,16 +806,20 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
 		  return ERR_OK;
 	  } else {
-		  while(p){
-			memcpy(&v_PostBufer.buf[v_PostBufer.len], p->payload, p->len);
-			v_PostBufer.len += p->len;
-			p = p->next;
-		  }
-		  printf("POST %s \n", v_PostBufer.buf);
+//		  while(p){
+//			memcpy(&v_PostBufer.buf[v_PostBufer.len], p->payload, p->len);
+//			v_PostBufer.len += p->len;
+//			p = p->next;
+//		  }
+//		  printf("POST %s \n", v_PostBufer.buf);
+//
+//		  if (p != NULL) {
+//		        pbuf_free(p);
+//		  }
+		  strncpy(tempbufer, p->payload, p->len);
+		  strcat(v_PostBufer.buf, tempbufer);
+		  pbuf_free(p);
 
-		  if (p != NULL) {
-		        pbuf_free(p);
-		  }
 		  return ERR_OK;
 	  }
 
@@ -836,6 +842,8 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
     int id = 0;
 	char *end_str;
 	char *name;
+
+	printf("POST %s \n", v_PostBufer.buf);
 
     char *token = strtok_r(v_PostBufer.buf, "&", &end_str);
     while (token != NULL)
