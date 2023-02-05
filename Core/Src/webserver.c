@@ -278,7 +278,7 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char 
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-
+const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -292,7 +292,8 @@ static const tCGI URL_TABLES[] = {
 		{"/tabjson.shtml", (tCGIHandler) TabjsonCGI_Handler },
 		{"/selectset.shtml", (tCGIHandler) SelectSetCGI_Handler },
 		{"/formrelay.shtml", (tCGIHandler) FormRelayCGI_Handler },
-		{"/formbuttom.shtml", (tCGIHandler) FormButtonCGI_Handler }
+		{"/formbuttom.shtml", (tCGIHandler) FormButtonCGI_Handler },
+		{"/formtopin.shtml", (tCGIHandler) FormPinToPinCGI_Handler }
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -530,6 +531,7 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 					numTabLine = MultiPartTabCount(2,NUMPIN);
 					printf("count  %d \n", numTabLine);
 				}
+
 			}
 		}
 	}
@@ -666,6 +668,34 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		return "/login.shtml";
 	}
 }
+
+// formpintopin.shtml Handler (Index 12)
+const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+
+	if (iIndex == 12) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		printf("SSID OK \n");
+		restartSSID();
+		return "/tabbuttom.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
+
 
 
 ////////////////////////////// POST START //////////////////////////////////
