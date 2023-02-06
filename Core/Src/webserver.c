@@ -217,10 +217,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 		case 5:
 			if(tab != 0){
 				//root = cJSON_CreateArray();
-				root = cJSON_CreateObject();
+				//root = cJSON_CreateObject();
 				//cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
 
 				if(tab == 1){
+					root = cJSON_CreateObject();
 					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
 					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
@@ -233,9 +234,12 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "pclick", PinsConf[id].pclick);
 					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
 					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
+					str = cJSON_PrintUnformatted(root);
+					cJSON_Delete(root);
 				}
 
 				if(tab == 2){
+					root = cJSON_CreateObject();
 					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
 					cJSON_AddNumberToObject(root, "id", id + 1);  // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
@@ -247,11 +251,33 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "ponr", PinsConf[id].dcinter);
 					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
 					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
+					str = cJSON_PrintUnformatted(root);
+					cJSON_Delete(root);
 				}
 
+				if(tab == 3){
+					root = cJSON_CreateObject();
+
+					cJSON_AddNumberToObject(root, "id",id);
+					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
+					fld = cJSON_CreateObject();
+
+					while (variable <=  NUMPIN - 1) {
+						if (PinsConf[variable].topin == 2) {
+							cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable);
+						}
+						variable++;
+					}
+					variable = 0;
+
+					cJSON_AddItemToObject(root, "rpins", fld);
+
+					str = cJSON_PrintUnformatted(root);
+					cJSON_Delete(root);
+				}
 				//str = cJSON_Print(root);
-				str = cJSON_PrintUnformatted(root);
-				cJSON_Delete(root);
+//				str = cJSON_PrintUnformatted(root);
+//				cJSON_Delete(root);
 			}
 
 			sprintf(pcInsert, "%s", str);
@@ -669,7 +695,7 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// formpintopin.shtml Handler (Index 12)
+// formtopin.shtml Handler (Index 12)
 const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -681,6 +707,14 @@ const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
+			if (strcmp(pcParam[i], "id") == 0)
+			{
+				id = atoi(pcValue[i]) - 1;
+			}
+			if (strcmp(pcParam[i], "tab") == 0)
+			{
+				tab = atoi(pcValue[i]);
+			}
 		}
 	}
 
@@ -688,7 +722,7 @@ const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		printf("SSID OK \n");
 		restartSSID();
-		return "/tabbuttom.shtml"; //
+		return "/formtopin.shtml"; //
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -760,6 +794,7 @@ void setPinButtom(int idpin, char *name, char *token) {
 void setSettings(char *name, char *token) {
 
 }
+
 
 
 err_t httpd_post_begin(void *connection, const char *uri,
