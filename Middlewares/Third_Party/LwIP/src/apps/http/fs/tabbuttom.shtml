@@ -151,7 +151,7 @@
                 } else {
                   employee_data += '<td><label class=\"switch\"> <input name=\"onoff_' + val.id + '\" type=\"hidden\" value=\"0\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff\" value=\"1\" unchecked=\"unchecked\"><span class=\"slider round\"></span></label></td>';
                 }
-                employee_data += '<td>| <a href=\"conf_button.shtml?id=' + val.id + '&tab=4\">Conf. bn.</a> | <a href=\"form3.shtml?id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbuttom.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
+                employee_data += '<td>| <a href=\"conf_button.shtml?id=' + val.id + '&tab=4\">Conf. bn.</a> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbuttom.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
                 employee_data += '</tr>';
               }
               n++;
