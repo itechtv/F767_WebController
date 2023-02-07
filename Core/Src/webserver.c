@@ -101,6 +101,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 	cJSON *root = NULL;
 	cJSON *fld = NULL;
 	int idplus = 0;
+	int i = 0;
 
 	switch (iIndex) {
 	// ssi tag <!--#tabjson-->
@@ -124,13 +125,27 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				if(PinsConf[variable].topin == 1){
 					// buttoms json
 					idplus = variable + 1;
+
+				    root = cJSON_CreateObject();
+				    while (i <= NUMPINLINKS - 1) {
+				    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
+				    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
+				    	}
+				    	i++;
+				    }
+
+					str = cJSON_Print(root);
+					cJSON_Delete(root);
+
+					printf("flag %s \n", str);
+
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
 							PinsConf[variable].ptype, PinsConf[variable].binter,
 							PinsConf[variable].hinter, PinsConf[variable].repeat,
 							PinsConf[variable].rinter, PinsConf[variable].dcinter,
-							PinsConf[variable].pclick, "[{}]", PinsConf[variable].info,
+							PinsConf[variable].pclick, str, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 					countJson++;
 					////////////////
@@ -146,6 +161,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				if(PinsConf[variable].topin == 2){
 					// relay json
 					idplus = variable + 1;
+
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
@@ -258,13 +274,13 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				if(tab == 3){
 					root = cJSON_CreateObject();
 
-					cJSON_AddNumberToObject(root, "id",id);
+					cJSON_AddNumberToObject(root, "id",id + 1);
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
 					fld = cJSON_CreateObject();
 
 					while (variable <=  NUMPIN - 1) {
 						if (PinsConf[variable].topin == 2) {
-							cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable);
+							cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable + 1);
 						}
 						variable++;
 					}
@@ -336,8 +352,7 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
-		}
-	}
+		}	}
 
 	//printf("URL %s \n", URL_TABLES[iIndex].pcCGIName);
 
@@ -441,6 +456,10 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
+	int idin = 0;
+	int idout = 0;
+	int i = 0;
+	int del = 0;
 
 	if (iIndex == 4) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -449,6 +468,37 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
+			if (strcmp(pcParam[i], "idin") == 0)
+			{
+				idin = atoi(pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "idout") == 0)
+			{
+				idout = atoi(pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "del") == 0)
+			{
+				del = atoi(pcValue[i]);
+			}
+		}
+		if(idin != 0 && idout != 0){
+			// @todo проверка передзаписью превязан ли этот пин уже или нет
+			while (i <= NUMPINLINKS - 1) {
+				if (PinsLinks[i].flag == 0) {
+					printf("flag %d \n", i);
+					PinsLinks[i].idin = idin - 1;
+					PinsLinks[i].idout = idout - 1;
+					PinsLinks[i].flag = 1;
+					break;
+				}
+				i++;
+			}
+			printf("NOT NULL \n");
+		}
+		if(del != 0){
+			PinsLinks[del-1].idin = 0;
+			PinsLinks[del-1].idout = 0;
+			PinsLinks[del-1].flag = 0;
 		}
 	}
 
@@ -841,16 +891,6 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
 		  return ERR_OK;
 	  } else {
-//		  while(p){
-//			memcpy(&v_PostBufer.buf[v_PostBufer.len], p->payload, p->len);
-//			v_PostBufer.len += p->len;
-//			p = p->next;
-//		  }
-//		  printf("POST %s \n", v_PostBufer.buf);
-//
-//		  if (p != NULL) {
-//		        pbuf_free(p);
-//		  }
 		  strncpy(tempbufer, p->payload, p->len);
 		  strcat(v_PostBufer.buf, tempbufer);
 		  pbuf_free(p);
@@ -916,6 +956,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         				setSettings(name, token2);
         			}
         		}
+
         	}
             token2 = strtok_r(NULL, "=", &end_token);
         }

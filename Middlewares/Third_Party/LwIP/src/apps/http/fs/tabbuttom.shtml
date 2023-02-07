@@ -141,7 +141,7 @@
                 employee_data += '<td align=\"center\">';
     
                 for (var key in val.pinact) {
-                  employee_data += '<span>' + key + ' [<a href="tab1.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
+                  employee_data += '<span>' + key + '[<a href="tabbuttom.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
                 }
     
                 employee_data += '</td>'
