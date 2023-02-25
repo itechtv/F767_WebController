@@ -290,6 +290,39 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					str = cJSON_PrintUnformatted(root);
 					cJSON_Delete(root);
 				}
+				if(tab == 4){
+					root = cJSON_CreateObject();
+					cJSON_AddStringToObject(root, "lang", SetSettings.lang);
+					cJSON_AddNumberToObject(root, "lon_de", SetSettings.lon_de);
+					cJSON_AddNumberToObject(root, "lat_de", SetSettings.lat_de);
+					cJSON_AddNumberToObject(root, "check_mqtt", SetSettings.check_mqtt);
+					cJSON_AddNumberToObject(root, "mqtt_prt", SetSettings.mqtt_prt);
+					cJSON_AddStringToObject(root, "mqtt_clt", SetSettings.mqtt_clt);
+					cJSON_AddStringToObject(root, "mqtt_usr", SetSettings.mqtt_usr);
+					cJSON_AddStringToObject(root, "mqtt_pswd", SetSettings.mqtt_pswd);
+					cJSON_AddStringToObject(root, "mqtt_tpc", SetSettings.mqtt_tpc);
+					cJSON_AddStringToObject(root, "mqtt_ftpc", SetSettings.mqtt_ftpc);
+					cJSON_AddNumberToObject(root, "mqtt_hst0", SetSettings.mqtt_hst0);
+					cJSON_AddNumberToObject(root, "mqtt_hst1", SetSettings.mqtt_hst1);
+					cJSON_AddNumberToObject(root, "mqtt_hst2", SetSettings.mqtt_hst2);
+					cJSON_AddNumberToObject(root, "mqtt_hst3", SetSettings.mqtt_hst3);
+					cJSON_AddNumberToObject(root, "check_ip", SetSettings.check_ip);
+					cJSON_AddNumberToObject(root, "ip_addr0", SetSettings.ip_addr0);
+					cJSON_AddNumberToObject(root, "ip_addr1", SetSettings.ip_addr1);
+					cJSON_AddNumberToObject(root, "ip_addr2", SetSettings.ip_addr2);
+					cJSON_AddNumberToObject(root, "ip_addr3", SetSettings.ip_addr3);
+					cJSON_AddNumberToObject(root, "sb_mask0", SetSettings.sb_mask0);
+					cJSON_AddNumberToObject(root, "sb_mask1", SetSettings.sb_mask1);
+					cJSON_AddNumberToObject(root, "sb_mask2", SetSettings.sb_mask2);
+					cJSON_AddNumberToObject(root, "sb_mask3", SetSettings.sb_mask3);
+					cJSON_AddNumberToObject(root, "gateway0", SetSettings.gateway0);
+					cJSON_AddNumberToObject(root, "gateway1", SetSettings.gateway1);
+					cJSON_AddNumberToObject(root, "gateway2", SetSettings.gateway2);
+					cJSON_AddNumberToObject(root, "gateway3", SetSettings.gateway3);
+					cJSON_AddStringToObject(root, "macaddr", SetSettings.macaddr);
+					str = cJSON_PrintUnformatted(root);
+					cJSON_Delete(root);
+				}
 				//str = cJSON_Print(root);
 //				str = cJSON_PrintUnformatted(root);
 //				cJSON_Delete(root);
@@ -321,6 +354,8 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],cha
 const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -336,7 +371,9 @@ static const tCGI URL_TABLES[] = {
 		{"/formrelay.shtml", (tCGIHandler) FormRelayCGI_Handler },
 		{"/formbuttom.shtml", (tCGIHandler) FormButtonCGI_Handler },
 		{"/formtopin.shtml", (tCGIHandler) FormPinToPinCGI_Handler },
-		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler }
+		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler },
+		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },
+		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler }
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -828,6 +865,62 @@ const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 }
 
+
+// formjson.shtml Handler table json (Index 14)
+const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+	if (iIndex == 14) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "tab") == 0)
+			{
+				tab = atoi(pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		printf("SSID OK \n");
+		restartSSID();
+		return "/formjson.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
+
+// settings.shtml Handler table json (Index 15)
+const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+	if (iIndex == 14) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		printf("SSID OK \n");
+		restartSSID();
+		return "/settings.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
 ////////////////////////////// POST START //////////////////////////////////
 
 
@@ -889,6 +982,28 @@ void setPinButtom(int idpin, char *name, char *token) {
 // POST request Settings
 void setSettings(char *name, char *token) {
 
+	if (strcmp(name, "check_mqtt") == 0) {
+		SetSettings.check_mqtt = atoi(token);
+	} else if (strcmp(name, "check_ip") == 0) {
+		SetSettings.check_ip = atoi(token);
+	} else {
+
+	}
+//	key: check_ip
+//	key: ip_addr
+//	key: sb_mask
+//	key: gateway
+//	key: macaddr
+//	key: check_mqtt
+//	key: mqtt_hst
+//	key: mqtt_prt
+//	key: mqtt_clt
+//	key: mqtt_usr
+//	key: mqtt_pswd
+//	key: mqtt_tpc
+//	key: mqtt_ftpc
+//	key: tlon_de
+//	key: tlat_de
 }
 
 
@@ -902,6 +1017,7 @@ err_t httpd_post_begin(void *connection, const char *uri,
 	  LWIP_UNUSED_ARG(http_request_len);
 	  LWIP_UNUSED_ARG(content_len);
 	  LWIP_UNUSED_ARG(post_auto_wnd);
+
 
 		printf("response_uri: %s \n", response_uri);
 
@@ -940,6 +1056,7 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 		  strncpy(tempbufer, p->payload, p->len);
 		  strcat(v_PostBufer.buf, tempbufer);
 		  pbuf_free(p);
+		  printf("POST 1 \n");
 
 		  return ERR_OK;
 	  }

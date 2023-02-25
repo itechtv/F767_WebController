@@ -72,8 +72,7 @@
                   }
                   employee_data += '<td><a href=\"edit_timers.shtml?id=' + val.id + '&pin=' + val.pins + '&tab=1\">Create timer</a> | <a href=\"formrelay.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=2\">Edit</a></td>';
     
-    
-    
+     
                   employee_data += '</tr>';
                 }
                 n++;
