@@ -40,7 +40,6 @@ extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
 
 
-//---- master
 
 //////////////////////////
 
