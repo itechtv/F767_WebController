@@ -165,7 +165,6 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -375,6 +374,26 @@ void StartWebServerTask(void const * argument)
   /* USER CODE BEGIN 5 */
   http_server_init();
   osDelay(1000);
+
+	0x279148D2,  //National Time Service Center
+	0x42041876,
+	0x5F066CCA,
+	0x0B6C1978,
+	0x0B0C5CB6,
+	0x58066BCB,
+	0x14731978,
+	0xC51F70CA,
+	0x521D70CA,
+
+
+   //ip_addr_t sntp_server_address;
+   //IP4_ADDR(&sntp_server_address,219,239,35,0);
+   sntp_setoperatingmode(SNTP_OPMODE_POLL);
+   sntp_setserver(0,0x279148D2);
+   sntp_init();
+
+   osDelay(1000);
+
   client = mqtt_client_new();
 
 

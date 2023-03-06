@@ -152,7 +152,11 @@ typedef struct {
 } default_filename;
 
 static const default_filename httpd_default_filenames[] = {
-  {"/login.shtml", 1 }
+  {"/index.shtml", 1 },
+  {"/index.ssi",   1 },
+  {"/index.shtm",  1 },
+  {"/index.html",  0 },
+  {"/index.htm",   0 }
 };
 
 #define NUM_DEFAULT_FILENAMES LWIP_ARRAYSIZE(httpd_default_filenames)
@@ -2364,8 +2368,8 @@ http_init_file(struct http_state *hs, struct fs_file *file, int is_09, const cha
     hs->time_started = sys_now();
 #endif /* LWIP_HTTPD_TIMING */
 #if !LWIP_HTTPD_DYNAMIC_HEADERS
- //   LWIP_ASSERT("HTTP headers not included in file system",
-  //              (hs->handle->flags & FS_FILE_FLAGS_HEADER_INCLUDED) != 0);
+    LWIP_ASSERT("HTTP headers not included in file system",
+                (hs->handle->flags & FS_FILE_FLAGS_HEADER_INCLUDED) != 0);
 #endif /* !LWIP_HTTPD_DYNAMIC_HEADERS */
 #if LWIP_HTTPD_SUPPORT_V09
     if (is_09 && ((hs->handle->flags & FS_FILE_FLAGS_HEADER_INCLUDED) != 0)) {

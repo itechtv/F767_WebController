@@ -107,6 +107,10 @@
 #define LWIP_HTTPD_SSI_INCLUDE_TAG 0
 /*----- Value in opt.h for HTTPD_USE_CUSTOM_FSDATA: 0 -----*/
 #define HTTPD_USE_CUSTOM_FSDATA 1
+/*----- Default Value for LWIP_SNTP: 0 ---*/
+#define LWIP_SNTP 1
+/*----- Default Value for SNTP_UPDATE_DELAY: 3600000 ---*/
+#define SNTP_UPDATE_DELAY 20000
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/
 #define LWIP_STATS 0
 /*----- Value in opt.h for CHECKSUM_GEN_IP: 1 -----*/
