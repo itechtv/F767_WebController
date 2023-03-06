@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+///////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
 #include <stdio.h>
