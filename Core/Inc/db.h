@@ -83,7 +83,7 @@ struct dbSettings { 	// Cтруктура для settings
 	short gateway1; 	// Шлюз
 	short gateway2; 	// Шлюз
 	short gateway3; 	// Шлюз
-	char macaddr[18] ; 	// MAC address
+	char macaddr[19]; 	// MAC address
 };
 
 #endif /* INC_DB_H_ */

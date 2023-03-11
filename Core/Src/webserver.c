@@ -9,6 +9,7 @@
 #include <webserver.h>
 #include "string.h"
 #include "stdio.h"
+#include <ctype.h>
 #include "lwip/tcp.h"
 #include "lwip/apps/httpd.h"
 #include "stm32f7xx_hal.h"
@@ -978,13 +979,75 @@ void setPinButtom(int idpin, char *name, char *token) {
 	}
 }
 
+// Parser IP address
+void parserIP(char *data, unsigned char *value)
+{
+    int index = 0;
+        while (*data) {
+        if (isdigit((unsigned char)*data)) {
+            value[index] *= 10;
+            value[index] += *data - '0';
+            printf("%d - %d \n" , index, value[index]);
+        } else {
+            index++;
+        }
+        data++;
+    }
+}
+
+
 // POST request Settings
 void setSettings(char *name, char *token) {
+	char ipstr[17] = {0};
+	unsigned char value[4] = {0};
 
 	if (strcmp(name, "check_mqtt") == 0) {
 		SetSettings.check_mqtt = atoi(token);
 	} else if (strcmp(name, "check_ip") == 0) {
 		SetSettings.check_ip = atoi(token);
+	} else if (strcmp(name, "ip_addr") == 0) {
+		strcpy(ipstr, token);
+		parserIP(ipstr, value);
+		SetSettings.ip_addr0 = value[0];
+		SetSettings.ip_addr1 = value[1];
+		SetSettings.ip_addr2 = value[2];
+		SetSettings.ip_addr3 = value[3];
+	} else if (strcmp(name, "sb_mask") == 0) {
+		strcpy(ipstr, token);
+		parserIP(ipstr, value);
+		SetSettings.sb_mask0 = value[0];
+		SetSettings.sb_mask1 = value[1];
+		SetSettings.sb_mask2 = value[2];
+		SetSettings.sb_mask3 = value[3];
+	} else if (strcmp(name, "gateway") == 0) {
+		strcpy(ipstr, token);
+		parserIP(ipstr, value);
+		SetSettings.gateway0 = value[0];
+		SetSettings.gateway1 = value[1];
+		SetSettings.gateway2 = value[2];
+		SetSettings.gateway3 = value[3];
+	} else if (strcmp(name, "macaddr") == 0) {
+		//strcpy(SetSettings.macaddr, token);
+		printf("macaddr \n");
+	} else if (strcmp(name, "mqtt_hst") == 0) {
+		strcpy(ipstr, token);
+		parserIP(ipstr, value);
+		SetSettings.mqtt_hst0 = value[0];
+		SetSettings.mqtt_hst1 = value[1];
+		SetSettings.mqtt_hst2 = value[2];
+		SetSettings.mqtt_hst3 = value[3];
+	} else if (strcmp(name, "mqtt_prt") == 0) {
+		SetSettings.mqtt_prt = atoi(token);
+	} else if (strcmp(name, "mqtt_clt") == 0) {
+		strcpy(SetSettings.mqtt_clt, token);
+	} else if (strcmp(name, "mqtt_usr") == 0) {
+		strcpy(SetSettings.mqtt_usr, token);
+	} else if (strcmp(name, "mqtt_pswd") == 0) {
+		strcpy(SetSettings.mqtt_pswd, token);
+	} else if (strcmp(name, "mqtt_tpc") == 0) {
+		strcpy(SetSettings.mqtt_tpc, token);
+	} else if (strcmp(name, "mqtt_ftpc") == 0) {
+		strcpy(SetSettings.mqtt_ftpc, token);
 	} else {
 
 	}
@@ -1003,6 +1066,7 @@ void setSettings(char *name, char *token) {
 //	key: mqtt_ftpc
 //	key: tlon_de
 //	key: tlat_de
+//	00:11:72:33:49:52
 }
 
 
