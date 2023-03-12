@@ -259,11 +259,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "id", id + 1);  // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
 					cJSON_AddStringToObject(root, "ptype", PinsConf[id].ptype);
-					cJSON_AddNumberToObject(root, "pwm", PinsConf[id].binter);
-					cJSON_AddNumberToObject(root, "on", PinsConf[id].hinter);
-					cJSON_AddNumberToObject(root, "istate", PinsConf[id].repeat);
-					cJSON_AddNumberToObject(root, "dvalue", PinsConf[id].rinter);
-					cJSON_AddNumberToObject(root, "ponr", PinsConf[id].dcinter);
+					cJSON_AddNumberToObject(root, "pwm", PinsConf[id].pwm);
+					cJSON_AddNumberToObject(root, "on", PinsConf[id].on);
+					cJSON_AddNumberToObject(root, "istate", PinsConf[id].istate);
+					cJSON_AddNumberToObject(root, "dvalue", PinsConf[id].dvalue);
+					cJSON_AddNumberToObject(root, "ponr", PinsConf[id].ponr);
 					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
 					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
 					str = cJSON_PrintUnformatted(root);
@@ -458,7 +458,6 @@ const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
-
 }
 
 
@@ -487,7 +486,6 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
-
 }
 
 // tabbuttom.shtml Handler (Index 4)
@@ -550,7 +548,6 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
-
 }
 
 // tabbuttom.shtml Handler (Index 5)
