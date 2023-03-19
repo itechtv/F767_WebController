@@ -14,7 +14,7 @@ struct dbPinsConf PinsConf[NUMPIN];
 
 struct dbPinToPin PinsLinks[NUMPINLINKS];
 
-struct dbSettings SetSettings = {"ru"};
+struct dbSettings SetSettings;
 
 
 struct dbPinsInfo PinsInfo[NUMPIN] = {

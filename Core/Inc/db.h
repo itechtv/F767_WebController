@@ -53,16 +53,19 @@ struct dbPinToPin { // привязка кнопок к реле
 	int flag;
 };
 
-struct dbSettings { 	// Cтруктура для settings
+struct dbSettings { 	// Cтруктура для setting
+	char adm_name[10];  // Имя пользователя для авторизации
+	char adm_pswd[15]; // Пароль для авторизации
 	char lang[3]; //
+	int timezone;		// UTC
 	double lon_de;    	// Longitude / Долгота
 	double lat_de;    	// Latitude / Широта
 	// Настройки MQTT
 	short check_mqtt; 	// check MQTT on/off
 	int mqtt_prt;       // Your MQTT broker port (default port is set to 1883)
 	char mqtt_clt[10];  // Device's unique identifier.
-	char mqtt_usr[10];  // Имя пользователя для авторизации
-	char mqtt_pswd[15]; // Пароль для авторизации
+	char mqtt_usr[10];  // MQTT Имя пользователя для авторизации
+	char mqtt_pswd[15]; // MQTT Пароль для авторизации
 	char mqtt_tpc[15];  // Unique identifying topic for your device (kitchen-light) It is recommended to use a single word for the topic.
 	char mqtt_ftpc[15]; // Полный топик for example lights/%prefix%/%topic%/
 	short mqtt_hst0; 	// Your MQTT broker address or IP
@@ -83,7 +86,12 @@ struct dbSettings { 	// Cтруктура для settings
 	short gateway1; 	// Шлюз
 	short gateway2; 	// Шлюз
 	short gateway3; 	// Шлюз
-	char macaddr[19]; 	// MAC address
+	uint8_t macaddr0;	// MAC address
+	uint8_t macaddr1;	// MAC address
+	uint8_t macaddr2;	// MAC address
+	uint8_t macaddr3;	// MAC address
+	uint8_t macaddr4;	// MAC address
+	uint8_t macaddr5;	// MAC address
 };
 
 #endif /* INC_DB_H_ */

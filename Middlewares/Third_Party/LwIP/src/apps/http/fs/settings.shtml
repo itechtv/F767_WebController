@@ -24,11 +24,13 @@
             var ip_addr0, ip_addr1, ip_addr2, ip_addr3;
             var sb_mask0, sb_mask1, sb_mask2, sb_mask3;
             var gateway0, gateway1, gateway2, gateway3;
+            var macaddr0, macaddr1, macaddr2, macaddr3, macaddr4, macaddr5;
 
             $.getJSON('formjson.shtml?tab=4&ssid=<!--#ssid-->', function (data) {
               $.each(data, function(key, val) {
-                  if(key == 'lang'){ }   
-
+                  if(key == 'lang'){ 
+                    document.getElementById('lang').value = val;
+                  }   
                   else if(key == 'lon_de'){ $('#lon_de').val(val); }              
                   else if(key == 'lat_de'){ $('#lat_de').val(val); }
                   
@@ -46,7 +48,10 @@
                   else if(key == 'mqtt_pswd'){ $('#mqtt_pswd').val(val); }                
                   else if(key == 'mqtt_tpc'){ $('#mqtt_tpc').val(val); }               
                   else if(key == 'mqtt_ftpc'){ $('#mqtt_ftpc').val(val); }
-                  
+  
+                  else if(key == 'adm_name'){ $('#adm_name').val(val); }             
+                  else if(key == 'adm_pswd'){ $('#adm_pswd').val(val); }  
+
                   else if(key == 'mqtt_hst0'){ mqtt_hst0 = val; }                
                   else if(key == 'mqtt_hst1'){ mqtt_hst1 = val; }              
                   else if(key == 'mqtt_hst2'){ mqtt_hst2 = val; }               
@@ -76,7 +81,15 @@
                   else if(key == 'gateway2'){ gateway2 = val; }          
                   else if(key == 'gateway3'){ gateway3 = val; } 
                 
-                  else if(key == 'macaddr'){  }
+                  else if(key == 'macaddr0'){ macaddr0 = val; }
+                  else if(key == 'macaddr1'){ macaddr1 = val; }
+                  else if(key == 'macaddr2'){ macaddr2 = val; }
+                  else if(key == 'macaddr3'){ macaddr3 = val; }
+                  else if(key == 'macaddr4'){ macaddr4 = val; }
+                  else if(key == 'macaddr5'){ macaddr5 = val; }
+                  else if(key == 'timezone'){  
+                    document.getElementById('timezone').value = val;
+                  }
                   else { }
                 });
 
@@ -131,11 +144,94 @@
         </script>
       
         <form action="settings.shtml?ssid=<!--#ssid-->" method="post">
-      
+     
+          <table class="zebra_2" border="1" align="center" width="580">
+            <tr>
+              <td width="190">Login <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext"> </span>
+                  </a>
+                </div>
+              </td>
+              <td>
+                <input type="text" minlength="1" maxlength="10" id="adm_name" name="adm_name" size="15" value="">
+              </td>
+            </tr>
+            <tr>
+              <td width="190">Password <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext"> </span>
+                  </a>
+                </div>
+              </td>
+              <td>
+                <input type="password" minlength="1" maxlength="15" id="adm_pswd" name="adm_pswd" size="15" value="">
+              </td>
+            </tr>
+            <tr>
+              <td width="190">Язык <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Язык</span>
+                  </a>
+                </div>
+              </td>
+              <td>
+                <select id="lang" name="lang">
+                  <option value="ru">RU</option>
+                  <option value="en">EN</option>
+                 </select>
+              </td>
+            </tr>
+
+            <tr>
+              <td width="190">Часовой пояс UTC<div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Язык</span>
+                  </a>
+                </div>
+              </td>
+              <td>
+              <select name="timezone" id="timezone">
+                <option value="-43200">(GMT -12:00) Eniwetok, Kwajalein</option>
+                <option value="-39600">(GMT -11:00) Midway Island, Samoa</option>
+                <option value="-36000">(GMT -10:00) Hawaii</option>
+                <option value="-32400">(GMT -9:00) Alaska</option>
+                <option value="-28800">(GMT -8:00) Pacific Time (US &amp; Canada)</option>
+                <option value="-25200">(GMT -7:00) Mountain Time (US &amp; Canada)</option>
+                <option value="-21600">(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
+                <option value="-18000">(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
+                <option value="-14400">(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
+                <option value="-12600">(GMT -3:30) Newfoundland</option>
+                <option value="-10800">(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
+                <option value="-7200">(GMT -2:00) Mid-Atlantic</option>
+                <option value="-3600">(GMT -1:00) Azores, Cape Verde Islands</option>
+                <option value="0">(GMT +0:00) Western Europe Time, London, Lisbon, Casablanca</option>
+                <option value="3600">(GMT +1:00) Brussels, Copenhagen, Madrid, Paris</option>
+                <option value="7200">(GMT +2:00) Kaliningrad, South Africa</option>
+                <option value="10800">(GMT +3:00)  Moscow, St. Petersburg, Baghdad, Riyadh</option>
+                <option value="12600">(GMT +3:30) Tehran</option>
+                <option value="14400">(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
+                <option value="16200">(GMT +4:30) Kabul</option>
+                <option value="18000">(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
+                <option value="19800">(GMT +5:30) Bombay, Calcutta, Madras, New Delhi</option>
+                <option value="20700">(GMT +5:45) Kathmandu</option>
+                <option value="21600">(GMT +6:00) Almaty, Dhaka, Colombo</option>
+                <option value="25200">(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
+                <option value="28800">(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
+                <option value="32400">(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
+                <option value="34200">(GMT +9:30) Adelaide, Darwin</option>
+                <option value="36000">(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
+                <option value="39600">(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
+                <option value="43200">(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
+              </select>      
+              </td>
+              </tr>
+            </table>
+
           <h3 class="center"> Настройки сети </h3>
       
-          <table class="zebra_2" border="1" align="center" width="350">
-      
+          <table class="zebra_2" border="1" align="center" width="580">
+                    
             <tr>
               <td colspan="2">
                 <div>
@@ -167,7 +263,7 @@
               </td>
               <td class="center">
       
-                <input type="text" minlength="7" maxlength="15" size="12" id="ip_addr" name="ip_addr"
+                <input type="text" minlength="7" maxlength="15" size="15" id="ip_addr" name="ip_addr"
                   value=""
                   pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
               </td>
@@ -182,7 +278,7 @@
                 </div>
               </td>
               <td class="center">
-                <input type="text" minlength="7" maxlength="15" size="12" id="sb_mask" name="sb_mask"
+                <input type="text" minlength="7" maxlength="15" size="15" id="sb_mask" name="sb_mask"
                   value=""
                   pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
               </td>
@@ -196,7 +292,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="7" maxlength="15" size="12" id="gateway" name="gateway"
+              <td class="center"> <input type="text" minlength="7" maxlength="15" size="15" id="gateway" name="gateway"
                   value=""
                   pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
               </td>
@@ -211,9 +307,9 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="12" maxlength="17" size="14" id="macaddr" name="macaddr"
+              <td class="center"> <input type="text" minlength="12" maxlength="17" size="15" id="macaddr" name="macaddr"
                   value=""
-                  pattern="^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})|([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})$">
+                  pattern="^([0-9A-Fa-f]{2}[-]){5}([0-9A-Fa-f]{2})|([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})$">
       
               </td>
             </tr>
@@ -222,7 +318,7 @@
       
           <br>
           <h3 class="center"> Настройки MQTT </h3>
-          <table class="zebra_2" border="1" align="center" id="tab2" width="350">      
+          <table class="zebra_2" border="1" align="center" id="tab2" width="580">      
             <tr>
               <td colspan="2">
                 <div>
@@ -252,7 +348,7 @@
                 </div>
               </td>
               <td class="center">
-                <input type="text" minlength="7" maxlength="15" size="12" id="mqtt_hst" name="mqtt_hst"
+                <input type="text" minlength="7" maxlength="15" size="15" id="mqtt_hst" name="mqtt_hst"
                   value=""
                   pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
               </td>
@@ -267,7 +363,7 @@
                 </div>
               </td>
               <td class="center">
-                <input type="text" minlength="1" maxlength="10" size="12" id="mqtt_prt" name="mqtt_prt"
+                <input type="text" minlength="1" maxlength="10" size="15" id="mqtt_prt" name="mqtt_prt"
                   value="">
               </td>
             </tr>
@@ -280,7 +376,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="1" maxlength="10" id="mqtt_clt" name="mqtt_clt" size="12"
+              <td class="center"> <input type="text" minlength="1" maxlength="10" id="mqtt_clt" name="mqtt_clt" size="15"
                   value="">
               </td>
             </tr>
@@ -293,7 +389,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="1" maxlength="10" id="mqtt_usr" name="mqtt_usr" size="12"
+              <td class="center"> <input type="text" minlength="1" maxlength="10" id="mqtt_usr" name="mqtt_usr" size="15"
                   value="">
               </td>
             </tr>
@@ -306,7 +402,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqtt_pswd" name="mqtt_pswd" size="12"
+              <td class="center"> <input type="password" minlength="1" maxlength="15" id="mqtt_pswd" name="mqtt_pswd" size="15"
                   value="">
               </td>
             </tr>
@@ -319,7 +415,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqtt_tpc" name="mqtt_tpc" size="12"
+              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqtt_tpc" name="mqtt_tpc" size="15"
                   value="">
               </td>
             </tr>
@@ -332,7 +428,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqt_ftpc" name="mqtt_ftpc" size="12"
+              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqtt_ftpc" name="mqtt_ftpc" size="15"
                   value="">
               </td>
             </tr>
@@ -343,7 +439,7 @@
       
           <h3 class="center"> Настройки координат </h3>
       
-          <table class="zebra_2" border="1" align="center" id="tab1" width="350">
+          <table class="zebra_2" border="1" align="center" id="tab1" width="580">
             <tr>
             <tr>
               <td width="190">Longitude <div class="tooltip">

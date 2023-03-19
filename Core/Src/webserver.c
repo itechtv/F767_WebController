@@ -41,7 +41,6 @@ extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
 
 
-
 //////////////////////////
 
 // Generation SSID
@@ -319,7 +318,17 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "gateway1", SetSettings.gateway1);
 					cJSON_AddNumberToObject(root, "gateway2", SetSettings.gateway2);
 					cJSON_AddNumberToObject(root, "gateway3", SetSettings.gateway3);
-					cJSON_AddStringToObject(root, "macaddr", SetSettings.macaddr);
+					cJSON_AddNumberToObject(root, "macaddr0", SetSettings.macaddr0);
+					cJSON_AddNumberToObject(root, "macaddr1", SetSettings.macaddr1);
+					cJSON_AddNumberToObject(root, "macaddr2", SetSettings.macaddr2);
+					cJSON_AddNumberToObject(root, "macaddr3", SetSettings.macaddr3);
+					cJSON_AddNumberToObject(root, "macaddr4", SetSettings.macaddr4);
+					cJSON_AddNumberToObject(root, "macaddr5", SetSettings.macaddr5);
+					cJSON_AddStringToObject(root, "adm_name", SetSettings.adm_name);
+					cJSON_AddStringToObject(root, "adm_pswd", SetSettings.adm_pswd);
+					cJSON_AddNumberToObject(root, "timezone", SetSettings.timezone);
+
+
 					str = cJSON_PrintUnformatted(root);
 					cJSON_Delete(root);
 				}
@@ -897,7 +906,7 @@ const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	if (iIndex == 14) {
+	if (iIndex == 15) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
@@ -995,8 +1004,9 @@ void parserIP(char *data, unsigned char *value)
 
 // POST request Settings
 void setSettings(char *name, char *token) {
-	char ipstr[17] = {0};
+	char ipstr[34] = {0};
 	unsigned char value[4] = {0};
+	int values[6];
 
 	if (strcmp(name, "check_mqtt") == 0) {
 		SetSettings.check_mqtt = atoi(token);
@@ -1024,8 +1034,20 @@ void setSettings(char *name, char *token) {
 		SetSettings.gateway2 = value[2];
 		SetSettings.gateway3 = value[3];
 	} else if (strcmp(name, "macaddr") == 0) {
-		//strcpy(SetSettings.macaddr, token);
-		printf("macaddr \n");
+		strcpy(ipstr, token);
+		printf("MAC %s \n", ipstr);
+		//uint8_t bytes[6];
+		if( 6 == sscanf(ipstr, "%x-%x-%x-%x-%x-%x%*c", &values[0], &values[1], &values[2], &values[3], &values[4], &values[5])){
+		    /* convert to uint8_t */
+		    SetSettings.macaddr0 = (uint8_t) values[0];
+		    SetSettings.macaddr1 = (uint8_t) values[1];
+		    SetSettings.macaddr2 = (uint8_t) values[2];
+		    SetSettings.macaddr3 = (uint8_t) values[3];
+		    SetSettings.macaddr4 = (uint8_t) values[4];
+		    SetSettings.macaddr5 = (uint8_t) values[5];
+		    printf("MAC0 %d \n", SetSettings.macaddr5);
+
+		}
 	} else if (strcmp(name, "mqtt_hst") == 0) {
 		strcpy(ipstr, token);
 		parserIP(ipstr, value);
@@ -1045,25 +1067,17 @@ void setSettings(char *name, char *token) {
 		strcpy(SetSettings.mqtt_tpc, token);
 	} else if (strcmp(name, "mqtt_ftpc") == 0) {
 		strcpy(SetSettings.mqtt_ftpc, token);
+	} else if (strcmp(name, "lang") == 0) {
+		strcpy(SetSettings.lang, token);
+	} else if (strcmp(name, "timezone") == 0) {
+		SetSettings.timezone = atoi(token);
+	} else if (strcmp(name, "adm_name") == 0) {
+		strcpy(SetSettings.adm_name, token);
+	} else if (strcmp(name, "adm_pswd") == 0) {
+		strcpy(SetSettings.adm_pswd, token);
 	} else {
 
 	}
-//	key: check_ip
-//	key: ip_addr
-//	key: sb_mask
-//	key: gateway
-//	key: macaddr
-//	key: check_mqtt
-//	key: mqtt_hst
-//	key: mqtt_prt
-//	key: mqtt_clt
-//	key: mqtt_usr
-//	key: mqtt_pswd
-//	key: mqtt_tpc
-//	key: mqtt_ftpc
-//	key: tlon_de
-//	key: tlat_de
-//	00:11:72:33:49:52
 }
 
 

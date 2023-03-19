@@ -51,9 +51,9 @@
     
           employee_data += '<tr><td>PWM Frequency (Hz)</td><td><input type=\"number\" min=\"0\" max=\"9999\" name=\"pwm" value=\"' + val.pwm + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
           employee_data += '<tr><td>ON)</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"on" value=\"' + val.on + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Invert State</td><td><input type=\"number\"min=\"0\" max=\"1\" name=\"istate" value=\"' + val.istate + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Invert State</td><td><input type=\"number\"min=\"0\" max=\"1\" name=\"istate\" value=\"' + val.istate + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
           employee_data += '<tr><td>Dimmer value (0-255)</td><td><input type=\"number\" min=\"0\" max=\"255\" name=\"dvalue" value=\"' + val.dvalue + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Power On Restore)</td><td><input type=\"number\" min=\"0\" max=\"4\" name=\"ponr" value=\"' + val.ponr + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Power On Restore)</td><td><input type=\"number\" min=\"0\" max=\"4\" name=\"ponr\" value=\"' + val.ponr + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
     
           employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info" value=\"' + val.info + '\"></td></tr>';
           if (val.onoff == 1) {
