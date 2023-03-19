@@ -96,6 +96,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 		u16_t current_tag_part, u16_t *next_tag_part) {
 
 	char* str = NULL;
+	char macStr[34] = {0};
 	cJSON *root = NULL;
 	cJSON *fld = NULL;
 	int idplus = 0;
@@ -318,12 +319,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "gateway1", SetSettings.gateway1);
 					cJSON_AddNumberToObject(root, "gateway2", SetSettings.gateway2);
 					cJSON_AddNumberToObject(root, "gateway3", SetSettings.gateway3);
-					cJSON_AddNumberToObject(root, "macaddr0", SetSettings.macaddr0);
-					cJSON_AddNumberToObject(root, "macaddr1", SetSettings.macaddr1);
-					cJSON_AddNumberToObject(root, "macaddr2", SetSettings.macaddr2);
-					cJSON_AddNumberToObject(root, "macaddr3", SetSettings.macaddr3);
-					cJSON_AddNumberToObject(root, "macaddr4", SetSettings.macaddr4);
-					cJSON_AddNumberToObject(root, "macaddr5", SetSettings.macaddr5);
+					snprintf(macStr, sizeof(macStr), "%02X-%02X-%02X-%02X-%02X-%02X",
+							SetSettings.macaddr0, SetSettings.macaddr1, SetSettings.macaddr2, SetSettings.macaddr3, SetSettings.macaddr4, SetSettings.macaddr5);
+					cJSON_AddStringToObject(root, "macaddr", macStr);
 					cJSON_AddStringToObject(root, "adm_name", SetSettings.adm_name);
 					cJSON_AddStringToObject(root, "adm_pswd", SetSettings.adm_pswd);
 					cJSON_AddNumberToObject(root, "timezone", SetSettings.timezone);
@@ -1045,7 +1043,9 @@ void setSettings(char *name, char *token) {
 		    SetSettings.macaddr3 = (uint8_t) values[3];
 		    SetSettings.macaddr4 = (uint8_t) values[4];
 		    SetSettings.macaddr5 = (uint8_t) values[5];
-		    printf("MAC0 %d \n", SetSettings.macaddr5);
+
+		    printf("MAC0 %x \n", SetSettings.macaddr4);
+		    printf("MAC0 %x \n", SetSettings.macaddr5);
 
 		}
 	} else if (strcmp(name, "mqtt_hst") == 0) {

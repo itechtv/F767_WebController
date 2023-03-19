@@ -24,7 +24,6 @@
             var ip_addr0, ip_addr1, ip_addr2, ip_addr3;
             var sb_mask0, sb_mask1, sb_mask2, sb_mask3;
             var gateway0, gateway1, gateway2, gateway3;
-            var macaddr0, macaddr1, macaddr2, macaddr3, macaddr4, macaddr5;
 
             $.getJSON('formjson.shtml?tab=4&ssid=<!--#ssid-->', function (data) {
               $.each(data, function(key, val) {
@@ -81,12 +80,9 @@
                   else if(key == 'gateway2'){ gateway2 = val; }          
                   else if(key == 'gateway3'){ gateway3 = val; } 
                 
-                  else if(key == 'macaddr0'){ macaddr0 = val; }
-                  else if(key == 'macaddr1'){ macaddr1 = val; }
-                  else if(key == 'macaddr2'){ macaddr2 = val; }
-                  else if(key == 'macaddr3'){ macaddr3 = val; }
-                  else if(key == 'macaddr4'){ macaddr4 = val; }
-                  else if(key == 'macaddr5'){ macaddr5 = val; }
+                  else if(key == 'macaddr'){ 
+                    $('#macaddr').val(val);
+                  }
                   else if(key == 'timezone'){  
                     document.getElementById('timezone').value = val;
                   }
@@ -307,7 +303,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="12" maxlength="17" size="15" id="macaddr" name="macaddr"
+              <td class="center"> <input type="text" minlength="12" maxlength="17" size="20" id="macaddr" name="macaddr"
                   value=""
                   pattern="^([0-9A-Fa-f]{2}[-]){5}([0-9A-Fa-f]{2})|([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})$">
       
