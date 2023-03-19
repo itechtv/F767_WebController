@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <lwip_mqtt.h>
+#include "db.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,7 +59,7 @@ osThreadId SSIDTaskHandle;
 uint32_t SSIDTaskBuffer[ 256 ];
 osStaticThreadDef_t SSIDTaskControlBlock;
 /* USER CODE BEGIN PV */
-
+extern struct dbSettings SetSettings;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,7 +71,23 @@ void StartWebServerTask(void const * argument);
 void StartSSIDTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-
+void preSet(){
+	strcpy(SetSettings.lang, "ru");
+	strcpy(SetSettings.adm_name, "admin");
+	strcpy(SetSettings.adm_pswd, "12345678");
+    SetSettings.ip_addr0 = 192;
+    SetSettings.ip_addr1 = 168;
+    SetSettings.ip_addr2 = 111;
+    SetSettings.ip_addr3 = 88;
+    SetSettings.sb_mask0 = 255;
+    SetSettings.sb_mask1 = 255;
+    SetSettings.sb_mask2 = 255;
+    SetSettings.sb_mask3 = 0;
+    SetSettings.gateway0 = 192;
+    SetSettings.gateway1 = 168;
+    SetSettings.gateway2 = 111;
+    SetSettings.gateway3 = 1;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -372,6 +389,7 @@ PUTCHAR_PROTOTYPE
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
+	preSet();
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
   http_server_init();

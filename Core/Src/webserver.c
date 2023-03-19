@@ -423,13 +423,13 @@ const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		for (int i = 0; i < iNumParams; i++) {
 			if(strcmp(pcParam[i], "username") == 0){
 				printf("OK Get 1 \n");
-				if(strcmp(pcValue[i], "admin") == 0){
+				if(strcmp(pcValue[i], SetSettings.adm_name) == 0){
 					verifyNum++;
 				}
 
 			} else if(strcmp(pcParam[i], "password") == 0) {
 				printf("OK Get 2 \n");
-				if(strcmp(pcValue[i], "12345678") == 0){
+				if(strcmp(pcValue[i], SetSettings.adm_pswd) == 0){
 					verifyNum++;
 				}
 			}
