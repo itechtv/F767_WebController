@@ -13,7 +13,7 @@
 
 </head>
 
-<body onload="getLang(langbuttom);">
+<body onload="getLang(langbutton);">
 
      <script>
 
@@ -122,8 +122,7 @@
                 </a>
               </div>
             </th>
-          </tr>
-    
+          </tr>    
         </table>
 
       </div>

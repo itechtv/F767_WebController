@@ -7,13 +7,22 @@
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
   <script src="js/jquerymin.js"></script>
+  <script src="<!--#lang-->"></script>
 
 
 </head>
 
-<body>
+<body onload="getLang(langrelay);">
 
   <script>
+    function getLang(langs){
+        langs.forEach(function(element, key){
+          var fieldNameElement = document.getElementById('lang' + key);
+          fieldNameElement.innerHTML = element;
+          console.log(key + ': ' + element);
+        });
+      }
+
     function getSelect(id){
         if(document.getElementById("s"+id).checked) {
             console.log('checked');
@@ -32,16 +41,74 @@
        <div class="tab">
         <table class="zebra_3" border="1" align="center" id="tab1" class="tab">
           <tr>
-            <th>ID</th>
-            <th>Pin</th>
-            <th class="firstline">PWM Frequency (Hz)</th>
-            <th class="firstline">ON</th>
-            <th class="firstline">Invert State</th>
-            <th class="firstline">Dimmer value (0-255)</th>
-            <th>Power On Restore</th>
-            <th>INFO</th>
-            <th>On/Off</th>
-            <th>Action</th>
+            <th>ID <div class="tooltip">
+              <a class="support" href="#">(?)
+                <span class="tooltiptext" id="lang1"></span>
+              </a>
+            </div>
+            </th>
+            <th>Pin<div class="tooltip">
+              <a class="support" href="#">(?)
+                <span class="tooltiptext" id="lang2"></span>
+              </a>
+            </div>
+            </th>
+            <th class="firstline">PWM Frequency (Hz)
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang3"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">ON
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang4"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">Invert State
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang5"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">Dimmer value (0-255)
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang6"></span>
+                </a>
+              </div>
+            </th>
+            <th>Power On Restore
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang7"></span>
+                </a>
+              </div>
+            </th>
+            <th>INFO
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang8"></span>
+                </a>
+              </div>
+            </th>
+            <th>On/Off
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang9"></span>
+                </a>
+              </div>
+            </th>
+            <th>Action
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang10"></span>
+                </a>
+              </div>
+            </th>
           </tr>
     
         </table>
