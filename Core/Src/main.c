@@ -48,6 +48,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+
+RTC_HandleTypeDef hrtc;
+RTC_TimeTypeDef sTime = {0};
+RTC_DateTypeDef sDate = {0};
+struct tm* timez;
+
+
 UART_HandleTypeDef huart3;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
@@ -58,6 +65,7 @@ osStaticThreadDef_t WebServerTaskControlBlock;
 osThreadId SSIDTaskHandle;
 uint32_t SSIDTaskBuffer[ 256 ];
 osStaticThreadDef_t SSIDTaskControlBlock;
+
 /* USER CODE BEGIN PV */
 extern struct dbSettings SetSettings;
 /* USER CODE END PV */
@@ -67,6 +75,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
+static void MX_RTC_Init(void);
 void StartWebServerTask(void const * argument);
 void StartSSIDTask(void const * argument);
 
@@ -140,6 +149,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -183,7 +193,6 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -210,8 +219,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -244,6 +254,69 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+ // RTC_TimeTypeDef sTime = {0};
+ // RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
 }
 
 /**
@@ -368,6 +441,96 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*************************** Processing functions of SNTP **********************************/
+/*!
+ * @brief Get the current timestamp
+ *
+ * @param [in] none
+ *
+ * @retval current timestamp
+ */
+uint32_t get_timestamp(void)
+{
+    struct tm stm;
+    ///The acquisition time must be before the acquisition date
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+    stm.tm_year = sDate.Year + 100;    //RTC_Year rang 0-99,but tm_year since 1900
+    stm.tm_mon = sDate.Month - 1;      //RTC_Month rang 1-12,but tm_mon rang 0-11
+    stm.tm_mday = sDate.Date;          //RTC_Date rang 1-31 and tm_mday rang 1-31
+    stm.tm_hour = sTime.Hours;         //RTC_Hours rang 0-23 and tm_hour rang 0-23
+    stm.tm_min = sTime.Minutes;        //RTC_Minutes rang 0-59 and tm_min rang 0-59
+    stm.tm_sec = sTime.Seconds;
+	return (mktime(&stm));
+}
+/*!
+ * @brief SNTP Get the processing function of the timestamp
+ * Execution conditions: none
+ *
+ * @param [in]: timestamp obtained by sntp
+ *
+ * @retval: None
+ */
+void sntp_set_time(uint32_t sntp_time) {
+	if (sntp_time == 0) {
+		printf("sntp_set_time: wrong!@@\n");
+		return;
+	}
+	time_t rawtime = sntp_time;
+
+	printf("sntp_set_time: c00, enter!\n");
+	printf("sntp_set_time: c01, get time = %lu\n", sntp_time);     // 1678302445
+
+//	struct tm *timez;
+
+//	sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
+	timez = localtime(&rawtime);
+	char buf[80];
+	strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
+	printf("%s \n", buf);
+	printf("timez->tm_years   = %d\n", timez->tm_year - 100);
+	printf("timez->tm_mon    = %d\n", 1 + timez->tm_mon);
+	printf("timez->tm_mday   = %d\n", 0 + timez->tm_mday);
+	printf("timez->tm_hour   = %d\n", 0 + timez->tm_hour);
+	printf("timez->tm_min    = %d\n", 0 + timez->tm_min);
+	printf("timez->tm_sec    = %d\n", 0 + timez->tm_sec);
+	printf("timez->tm_wday   = %d\n", 0 + timez->tm_wday);
+	printf("timez->tm_yday   = %d\n", 1 + timez->tm_yday);
+	/*
+	 * Set the time of RTC
+	 */
+	sTime.Hours = timez->tm_hour;
+	sTime.Minutes = timez->tm_min;
+	sTime.Seconds = timez->tm_sec;
+	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+	if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+		Error_Handler();
+	}
+
+	/*
+	 * Set the date of RTC
+	 */
+	sDate.WeekDay = timez->tm_wday;
+	sDate.Month = (timez->tm_mon) + 1;
+	sDate.Date = timez->tm_mday;
+	sDate.Year = (timez->tm_year) - 100;
+	printf("+Year+   = %d\n", sDate.Year);
+	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+		Error_Handler();
+	}
+
+	printf("sntp_set_time: c02, decode time: 20%d-%02d-%02d %d:%d:%d\n",
+			sDate.Year, sDate.Month, sDate.Date, sTime.Hours, sTime.Minutes,
+			sTime.Seconds);
+
+	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
+	printf("sntp_set_time: c04, set rtc time done\n");
+}
+/*************************** END OF SNTP **********************************/
+
+
+
 PUTCHAR_PROTOTYPE
 {
   /* Place your implementation of fputc here */
@@ -389,7 +552,8 @@ PUTCHAR_PROTOTYPE
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-	preSet();
+
+  preSet();
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
   http_server_init();
@@ -400,6 +564,10 @@ void StartWebServerTask(void const * argument)
   //sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
   example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
   //example_publish(client, pacote); // Публикуем сообщение.
+
+  osDelay(1000);
+  bsp_sntp_init();
+
   /* Infinite loop */
   for(;;)
   {

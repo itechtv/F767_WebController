@@ -107,6 +107,12 @@
 #define LWIP_HTTPD_SSI_INCLUDE_TAG 0
 /*----- Value in opt.h for HTTPD_USE_CUSTOM_FSDATA: 0 -----*/
 #define HTTPD_USE_CUSTOM_FSDATA 1
+/*----- Default Value for LWIP_SNTP: 0 ---*/
+#define LWIP_SNTP 1
+/*----- Default Value for SNTP_MAX_SERVERS: 1 ---*/
+#define SNTP_MAX_SERVERS 11
+/*----- Default Value for SNTP_UPDATE_DELAY: 3600000 ---*/
+#define SNTP_UPDATE_DELAY 20000
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/
 #define LWIP_STATS 0
 /*----- Value in opt.h for CHECKSUM_GEN_IP: 1 -----*/
@@ -131,7 +137,10 @@
 #define CHECKSUM_CHECK_ICMP6 0
 /*-----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
-
+#define SNTP_DEBUG LWIP_DBG_ON
+ //Define the processing function of Lwip SNTP
+#include "wc_sntp.h"
+#define SNTP_SET_SYSTEM_TIME		sntp_set_time
 /* USER CODE END 1 */
 
 #ifdef __cplusplus
