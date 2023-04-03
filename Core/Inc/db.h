@@ -10,6 +10,7 @@
 
 #define NUMPIN 89 // колличество пинов
 #define NUMPINLINKS 100 // колличество pin to pin
+#define NUMTASK 30 // кол-во CRON task
 
 #include "stdio.h"
 #include "stm32f7xx_hal.h"
@@ -60,6 +61,18 @@ struct dbSettings { 	// Cтруктура для setting
 	int timezone;		// UTC
 	double lon_de;    	// Longitude / Долгота
 	double lat_de;    	// Latitude / Широта
+	short ip1_sntp0; 	// SMTP Server primary
+	short ip1_sntp1; 	// SMTP Server primary
+	short ip1_sntp2; 	// SMTP Server primary
+	short ip1_sntp3; 	// SMTP Server primary
+	short ip2_sntp0; 	// SMTP Server secondary
+	short ip2_sntp1; 	// SMTP Server secondary
+	short ip2_sntp2; 	// SMTP Server secondary
+	short ip2_sntp3; 	// SMTP Server secondary
+	short ip3_sntp0; 	// SMTP Server teriary
+	short ip3_sntp1; 	// SMTP Server teriary
+	short ip3_sntp2; 	// SMTP Server teriary
+	short ip3_sntp3; 	// SMTP Server teriary
 	// Настройки MQTT
 	short check_mqtt; 	// check MQTT on/off
 	int mqtt_prt;       // Your MQTT broker port (default port is set to 1883)
@@ -93,5 +106,11 @@ struct dbSettings { 	// Cтруктура для setting
 	uint8_t macaddr4;	// MAC address
 	uint8_t macaddr5;	// MAC address
 };
+
+struct dbCron {
+	char cron[20];
+	char action[50];
+};
+
 
 #endif /* INC_DB_H_ */

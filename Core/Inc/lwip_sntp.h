@@ -5,8 +5,8 @@
  *      Author: anton
  */
 
-#ifndef INC_WC_SNTP_H_
-#define INC_WC_SNTP_H_
+#ifndef INC_LWIP_SNTP_H_
+#define INC_LWIP_SNTP_H_
 
 #include <stdint.h>
 /*-----------------------------------------------------------
@@ -53,4 +53,4 @@ void SetAndPrintOnUartRTCFromSecond(uint32_t sec);
  */
 uint32_t get_timestamp(void);
 
-#endif /* INC_WC_SNTP_H_ */
+#endif /* INC_LWIP_SNTP_H_ */

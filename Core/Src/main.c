@@ -96,6 +96,7 @@ void preSet(){
     SetSettings.gateway1 = 168;
     SetSettings.gateway2 = 111;
     SetSettings.gateway3 = 1;
+    SetSettings.mqtt_prt = 1883;
 }
 /* USER CODE END PFP */
 
@@ -478,24 +479,12 @@ void sntp_set_time(uint32_t sntp_time) {
 	}
 	time_t rawtime = sntp_time;
 
-	printf("sntp_set_time: c00, enter!\n");
-	printf("sntp_set_time: c01, get time = %lu\n", sntp_time);     // 1678302445
-
-//	struct tm *timez;
 
 //	sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
 	timez = localtime(&rawtime);
 	char buf[80];
 	strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
 	printf("%s \n", buf);
-	printf("timez->tm_years   = %d\n", timez->tm_year - 100);
-	printf("timez->tm_mon    = %d\n", 1 + timez->tm_mon);
-	printf("timez->tm_mday   = %d\n", 0 + timez->tm_mday);
-	printf("timez->tm_hour   = %d\n", 0 + timez->tm_hour);
-	printf("timez->tm_min    = %d\n", 0 + timez->tm_min);
-	printf("timez->tm_sec    = %d\n", 0 + timez->tm_sec);
-	printf("timez->tm_wday   = %d\n", 0 + timez->tm_wday);
-	printf("timez->tm_yday   = %d\n", 1 + timez->tm_yday);
 	/*
 	 * Set the time of RTC
 	 */
@@ -515,17 +504,17 @@ void sntp_set_time(uint32_t sntp_time) {
 	sDate.Month = (timez->tm_mon) + 1;
 	sDate.Date = timez->tm_mday;
 	sDate.Year = (timez->tm_year) - 100;
-	printf("+Year+   = %d\n", sDate.Year);
+
 	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
 		Error_Handler();
 	}
 
-	printf("sntp_set_time: c02, decode time: 20%d-%02d-%02d %d:%d:%d\n",
+	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n",
 			sDate.Year, sDate.Month, sDate.Date, sTime.Hours, sTime.Minutes,
 			sTime.Seconds);
 
-	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
-	printf("sntp_set_time: c04, set rtc time done\n");
+//	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
+
 }
 /*************************** END OF SNTP **********************************/
 

@@ -14,8 +14,9 @@ struct dbPinsConf PinsConf[NUMPIN];
 
 struct dbPinToPin PinsLinks[NUMPINLINKS];
 
-struct dbSettings SetSettings;
+struct dbCron CronTask[NUMTASK];
 
+struct dbSettings SetSettings;
 
 struct dbPinsInfo PinsInfo[NUMPIN] = {
 		// Total 89 pins

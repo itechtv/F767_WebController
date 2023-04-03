@@ -71,11 +71,12 @@ void restartSSID(void){
 
 
 // Counting the number of lines JSON
-int MultiPartTabCount(int num, int pinnum)
+int MultiPartTabCount(int num, int pinnum, int count)
 {
-	int count = 0;
+	count = 0;
 	for (int i = 0; i <= pinnum; i++){
 		if(num == PinsConf[i].topin && num == 1){
+			printf("pin  %d \n", i);
 			count++;
 		}
 		if(num == PinsConf[i].topin && num == 2){
@@ -108,7 +109,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 	#if LWIP_HTTPD_SSI_MULTIPART
 		if (variable == NUMPIN) {
 			variable = 0;
-			countJson = 0;
+			countJson = 1;
 			break;
 		} else {
 			///////
@@ -136,7 +137,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					str = cJSON_Print(root);
 					cJSON_Delete(root);
 
-					printf("flag %s \n", str);
 
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
@@ -146,15 +146,17 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].rinter, PinsConf[variable].dcinter,
 							PinsConf[variable].pclick, str, PinsConf[variable].info,
 							PinsConf[variable].onoff);
+
+					if(countJson == numTabLine){
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
+					}
 					countJson++;
 					////////////////
 				} else {
 					pcInsert = "";
 				}
 
-				if(countJson == numTabLine){
-					pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-				}
+
 			}
 			if(tab == 3){
 				if(PinsConf[variable].topin == 2){
@@ -169,14 +171,15 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].ponr, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 					////////////////
+					if(countJson == numTabLine){
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
+					}
 					countJson++;
 				} else {
 					pcInsert = "";
 				}
 
-				if(countJson == numTabLine){
-					pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-				}
+
 			}
 			*next_tag_part = variable;
 			variable++;
@@ -330,9 +333,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					str = cJSON_PrintUnformatted(root);
 					cJSON_Delete(root);
 				}
-				//str = cJSON_Print(root);
-//				str = cJSON_PrintUnformatted(root);
-//				cJSON_Delete(root);
 			}
 
 			sprintf(pcInsert, "%s", str);
@@ -403,7 +403,7 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return URL_TABLES[iIndex].pcCGIName;
 	} else {
@@ -457,7 +457,7 @@ const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return URL_TABLES[iIndex].pcCGIName;  //
 	} else {
@@ -485,7 +485,7 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabrelay.shtml"; //
 	} else {
@@ -547,7 +547,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabbuttom.shtml"; //
 	} else {
@@ -557,7 +557,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// tabbuttom.shtml Handler (Index 5)
+// settings.shtml Handler (Index 5)
 const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -586,7 +586,7 @@ const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 }
 
-// tabbuttom.shtml Handler (Index 6)
+// timers.shtml Handler (Index 6)
 const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -603,7 +603,7 @@ const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/timers.shtml"; //
 	} else {
@@ -641,13 +641,11 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				tab = atoi(pcValue[i]);
 				if(tab == 2)
 				{
-					numTabLine = MultiPartTabCount(1,NUMPIN);
-					printf("count  %d \n", numTabLine);
+					numTabLine = MultiPartTabCount(1,NUMPIN-1, numTabLine);
 				}
 				if(tab == 3)
 				{
-					numTabLine = MultiPartTabCount(2,NUMPIN);
-					printf("count  %d \n", numTabLine);
+					numTabLine = MultiPartTabCount(2,NUMPIN-1, numTabLine);
 				}
 
 			}
@@ -656,7 +654,7 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabjson.shtml"; //
 	} else {
@@ -701,7 +699,7 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/selectset.shtml"; //
 	} else {
@@ -740,7 +738,7 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/formrelay.shtml"; //
 	} else {
@@ -777,7 +775,7 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/formbuttom.shtml"; //
 	} else {
@@ -812,7 +810,7 @@ const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/formtopin.shtml"; //
 	} else {
@@ -858,7 +856,7 @@ const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/selectset.shtml"; //
 	} else {
@@ -890,7 +888,7 @@ const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/formjson.shtml"; //
 	} else {
@@ -916,7 +914,7 @@ const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		printf("SSID OK \n");
+		//printf("SSID OK \n");
 		restartSSID();
 		return "/settings.shtml"; //
 	} else {
@@ -1203,18 +1201,15 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 
 
 	if (current_connection == connection) {
-
 	    /* login succeeded */
-		//if (strlen(randomSSID) != 0){
+
 		printf("URL %s \n", v_PostBufer.uri);
 		printf("SSID %s \n", ssid);
-		printf("SSID OK11 \n");
 
 		restartSSID();
 		snprintf(response_uri, response_uri_len, v_PostBufer.uri);
-		//}
 
-	   current_connection = NULL;
+		current_connection = NULL;
 
 	}
 }
