@@ -547,11 +547,10 @@ void StartWebServerTask(void const * argument)
   /* USER CODE BEGIN 5 */
   http_server_init();
   osDelay(1000);
+
   client = mqtt_client_new();
-
-
-  //sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
   example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
+  //sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
   //example_publish(client, pacote); // Публикуем сообщение.
 
   osDelay(1000);

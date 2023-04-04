@@ -41,7 +41,7 @@ extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
 
 
-//////////////////////////
+///////////////////////////
 
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
