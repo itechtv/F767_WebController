@@ -38,6 +38,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct data_pin_t
+{
+    uint8_t pin;
+    uint8_t action;
+} data_pin_t;
+
+data_pin_t data_pin;
 
 /* USER CODE END PTD */
 
@@ -47,7 +54,14 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+// Cron variable
+struct tm* timez;
+time_t cronetime;
+time_t cronetime_old;
 
+//////////////////////////////////////
+int i = 0;
+char str[40]={0};
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -56,40 +70,6 @@ RTC_HandleTypeDef hrtc;
 RTC_TimeTypeDef sTime = {0};
 RTC_DateTypeDef sDate = {0};
 
-
-typedef struct data_pin_t
-{
-    uint8_t pin;
-    uint8_t action;
-} data_pin_t;
-data_pin_t data_pin;
-
-// Cron variable
-struct tm* timez;
-time_t cronetime;
-time_t cronetime_old;
-
-//////////////////////////////////////
-int i = 0; // ????
-//int d = 0;
-//int k = -1;
-char str[40]={0};
-
-//char* token;
-//char* token1;
-//char* saveptr;
-//char* saveptr1;
-//char* result[100];
-
-//char delim[] = ";";
-
-char buf[256]={0};
-// int len = 0;
-//
-// int flag = 0;
-// int pause = 0;
-
- //int flag1 = 1; /////////////////////////////////////
 
 UART_HandleTypeDef huart3;
 
@@ -535,6 +515,8 @@ uint32_t get_timestamp(void)
  * @retval: None
  */
 void sntp_set_time(uint32_t sntp_time) {
+	char buf[80];
+
 	if (sntp_time == 0) {
 		printf("sntp_set_time: wrong!@@\n");
 		return;
@@ -544,7 +526,7 @@ void sntp_set_time(uint32_t sntp_time) {
 
 //	sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
 	timez = localtime(&rawtime);
-	char buf[80];
+
 	strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
 	printf("%s \n", buf);
 	/*
