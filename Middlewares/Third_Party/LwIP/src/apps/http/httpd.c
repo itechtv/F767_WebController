@@ -2363,10 +2363,10 @@ http_init_file(struct http_state *hs, struct fs_file *file, int is_09, const cha
 #if LWIP_HTTPD_TIMING
     hs->time_started = sys_now();
 #endif /* LWIP_HTTPD_TIMING */
-#if !LWIP_HTTPD_DYNAMIC_HEADERS
+//#if !LWIP_HTTPD_DYNAMIC_HEADERS
 //    LWIP_ASSERT("HTTP headers not included in file system",
 //                (hs->handle->flags & FS_FILE_FLAGS_HEADER_INCLUDED) != 0);
-#endif /* !LWIP_HTTPD_DYNAMIC_HEADERS */
+//#endif /* !LWIP_HTTPD_DYNAMIC_HEADERS */
 #if LWIP_HTTPD_SUPPORT_V09
     if (is_09 && ((hs->handle->flags & FS_FILE_FLAGS_HEADER_INCLUDED) != 0)) {
       /* HTTP/0.9 responses are sent without HTTP header,

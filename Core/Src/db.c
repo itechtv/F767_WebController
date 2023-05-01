@@ -18,6 +18,13 @@ struct dbCron CronTask[NUMTASK];
 
 struct dbSettings SetSettings;
 
+struct dbCron dbCrontxt[MAXSIZE] = {
+		{"*/20 * * * * * *", "6:2;p5;6:2", 0},
+		{"*/20 * * * * * *", "18:2;p5;18:2", 0},
+		{"*/20 * * * * * *", "12:2;p5;12:2", 0}
+//	{"*/7 * * * * * *", "3:0;3:1", 0}
+};
+
 struct dbPinsInfo PinsInfo[NUMPIN] = {
 		// Total 89 pins
 		{"PA0", "A", 0, GPIO_PIN_0, GPIOA},
@@ -27,19 +34,19 @@ struct dbPinsInfo PinsInfo[NUMPIN] = {
 		{"PA6", "A", 6, GPIO_PIN_6, GPIOA},
 		{"PA15", "A", 15, GPIO_PIN_15, GPIOA},
 
-		{"PB0", "B", 0, GPIO_PIN_0, GPIOB}, // LD1 [Green]
+		{"PB0", "B", 0, GPIO_PIN_0, GPIOB}, // LD1 [Green] 6
 		{"PB1", "B", 1, GPIO_PIN_1, GPIOB},
 		{"PB2", "B", 2, GPIO_PIN_2, GPIOB},
 		{"PB4", "B", 4, GPIO_PIN_4, GPIOB},
 		{"PB5", "B", 5, GPIO_PIN_5, GPIOB},
 		{"PB6", "B", 6, GPIO_PIN_6, GPIOB},
-		{"PB7", "B", 7, GPIO_PIN_7, GPIOB}, // LD2 [Blue]
+		{"PB7", "B", 7, GPIO_PIN_7, GPIOB}, // LD2 [Blue] 12
 		{"PB8", "B", 8, GPIO_PIN_8, GPIOB},
 		{"PB9", "B", 9, GPIO_PIN_9, GPIOB},
 		{"PB10", "B", 10, GPIO_PIN_10, GPIOB},
 		{"PB11", "B", 11, GPIO_PIN_11, GPIOB},
 		{"PB12", "B", 12, GPIO_PIN_12, GPIOB},
-		{"PB14", "B", 14, GPIO_PIN_14, GPIOB}, // LD3 [Red]
+		{"PB14", "B", 14, GPIO_PIN_14, GPIOB}, // LD3 [Red] 18
 		{"PB15", "B", 15, GPIO_PIN_15, GPIOB},
 
 		{"PC0", "C", 0, GPIO_PIN_0, GPIOC},

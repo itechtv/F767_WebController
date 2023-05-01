@@ -30,6 +30,16 @@
 #include <string.h>
 #include <lwip_mqtt.h>
 #include "db.h"
+#include "lwdtc.h"
+
+
+typedef struct data_pin_t
+{
+    uint8_t pin;
+    uint8_t action;
+} data_pin_t;
+
+data_pin_t data_pin;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,12 +58,10 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-
 RTC_HandleTypeDef hrtc;
 RTC_TimeTypeDef sTime = {0};
 RTC_DateTypeDef sDate = {0};
 struct tm* timez;
-
 
 UART_HandleTypeDef huart3;
 
@@ -65,7 +73,16 @@ osStaticThreadDef_t WebServerTaskControlBlock;
 osThreadId SSIDTaskHandle;
 uint32_t SSIDTaskBuffer[ 256 ];
 osStaticThreadDef_t SSIDTaskControlBlock;
+osThreadId CronTaskHandle;
+uint32_t CronTaskBuffer[ 512 ];
+osStaticThreadDef_t CronTaskControlBlock;
+osThreadId ActionTaskHandle;
+uint32_t ActionTaskBuffer[ 512 ];
+osStaticThreadDef_t ActionTaskControlBlock;
+osMessageQId myQueueHandle;
+uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 
+osStaticMessageQDef_t myQueueControlBlock;
 /* USER CODE BEGIN PV */
 extern struct dbSettings SetSettings;
 /* USER CODE END PV */
@@ -78,6 +95,8 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_RTC_Init(void);
 void StartWebServerTask(void const * argument);
 void StartSSIDTask(void const * argument);
+void StartCronTask(void const * argument);
+void StartActionTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 void preSet(){
@@ -167,6 +186,11 @@ int main(void)
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* definition and creation of myQueue */
+  osMessageQStaticDef(myQueue, 16, struct data_pin_t, myQueueBuffer, &myQueueControlBlock);
+  myQueueHandle = osMessageCreate(osMessageQ(myQueue), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -179,6 +203,14 @@ int main(void)
   /* definition and creation of SSIDTask */
   osThreadStaticDef(SSIDTask, StartSSIDTask, osPriorityNormal, 0, 256, SSIDTaskBuffer, &SSIDTaskControlBlock);
   SSIDTaskHandle = osThreadCreate(osThread(SSIDTask), NULL);
+
+  /* definition and creation of CronTask */
+  osThreadStaticDef(CronTask, StartCronTask, osPriorityNormal, 0, 512, CronTaskBuffer, &CronTaskControlBlock);
+  CronTaskHandle = osThreadCreate(osThread(CronTask), NULL);
+
+  /* definition and creation of ActionTask */
+  osThreadStaticDef(ActionTask, StartActionTask, osPriorityNormal, 0, 512, ActionTaskBuffer, &ActionTaskControlBlock);
+  ActionTaskHandle = osThreadCreate(osThread(ActionTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -269,8 +301,7 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
- // RTC_TimeTypeDef sTime = {0};
- // RTC_DateTypeDef sDate = {0};
+
 
   /* USER CODE BEGIN RTC_Init 1 */
 
@@ -541,8 +572,7 @@ PUTCHAR_PROTOTYPE
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-
-  preSet();
+	preSet();
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
   http_server_init();
@@ -587,6 +617,42 @@ void StartSSIDTask(void const * argument)
     osDelay(1);
   }
   /* USER CODE END StartSSIDTask */
+}
+
+/* USER CODE BEGIN Header_StartCronTask */
+/**
+* @brief Function implementing the CronTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartCronTask */
+void StartCronTask(void const * argument)
+{
+  /* USER CODE BEGIN StartCronTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartCronTask */
+}
+
+/* USER CODE BEGIN Header_StartActionTask */
+/**
+* @brief Function implementing the ActionTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartActionTask */
+void StartActionTask(void const * argument)
+{
+  /* USER CODE BEGIN StartActionTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartActionTask */
 }
 
 /**

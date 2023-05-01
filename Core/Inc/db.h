@@ -15,6 +15,14 @@
 #include "stdio.h"
 #include "stm32f7xx_hal.h"
 
+#define MAXSIZE 10
+
+struct dbCron {
+	char cron[30];
+	char activ[50];
+	uint32_t ptime; // для паузы в Unix time sec.
+};
+
 struct dbPinsConf {    // Создали структуру с необходимым набором типов элиментов.
 	int topin;		// Type of pins: 0 - ON; 1 - buttons; 2 - relay
 	int pwm;		// PWM frequency
@@ -107,10 +115,6 @@ struct dbSettings { 	// Cтруктура для setting
 	uint8_t macaddr5;	// MAC address
 };
 
-struct dbCron {
-	char cron[20];
-	char action[50];
-};
 
 
 #endif /* INC_DB_H_ */
