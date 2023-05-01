@@ -33,13 +33,7 @@
 #include "lwdtc.h"
 
 
-typedef struct data_pin_t
-{
-    uint8_t pin;
-    uint8_t action;
-} data_pin_t;
 
-data_pin_t data_pin;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +55,41 @@ data_pin_t data_pin;
 RTC_HandleTypeDef hrtc;
 RTC_TimeTypeDef sTime = {0};
 RTC_DateTypeDef sDate = {0};
+
+
+typedef struct data_pin_t
+{
+    uint8_t pin;
+    uint8_t action;
+} data_pin_t;
+data_pin_t data_pin;
+
+// Cron variable
 struct tm* timez;
+time_t cronetime;
+time_t cronetime_old;
+
+//////////////////////////////////////
+int i = 0; // ????
+//int d = 0;
+//int k = -1;
+char str[40]={0};
+
+//char* token;
+//char* token1;
+//char* saveptr;
+//char* saveptr1;
+//char* result[100];
+
+//char delim[] = ";";
+
+char buf[256]={0};
+// int len = 0;
+//
+// int flag = 0;
+// int pause = 0;
+
+ //int flag1 = 1; /////////////////////////////////////
 
 UART_HandleTypeDef huart3;
 
@@ -83,8 +111,11 @@ osMessageQId myQueueHandle;
 uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 
 osStaticMessageQDef_t myQueueControlBlock;
+
 /* USER CODE BEGIN PV */
 extern struct dbSettings SetSettings;
+extern struct dbCron dbCrontxt[MAXSIZE];
+extern struct dbPinsInfo PinsInfo[NUMPIN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -560,6 +591,61 @@ PUTCHAR_PROTOTYPE
 
   return ch;
 }
+
+
+// int pause  0 - до паузы 1 - после паузы
+	void parse_string(char* str, time_t cronetime_olds, int i, int pause) {
+	    char* token;
+	    char* saveptr;
+	    int flag = 0;
+	    int k = 0;
+	    char delim[] = ";";
+
+	    // Разбиваем строку на элементы, разделенные точкой с запятой
+	    token = strtok_r(str, delim, &saveptr);
+	    while (token != NULL) {
+	        char *end_token;
+	        // Если нашли элемент "p", устанавливаем флаг
+
+	        if(token[0] == 'p'){
+				char* newstring = token + 1;
+				//printf("Pause %d seconds\n", atoi(newstring));
+				dbCrontxt[i].ptime = cronetime_olds + atoi(newstring);
+				flag = 1;
+	        }
+	        // в зависимости от флага отправляем в очередь до или после паузы
+	        if (flag == pause) {
+	            //printf("%s\n", token);
+
+
+		        //strcpy(data_pin.message, pch);
+
+
+	            char *token2 = strtok_r(token, ":", &end_token);
+	            //printf("pin = %d\n", atoi(token2));
+
+	            while (token2 != NULL) {
+	                // тут отправляем в очередь
+	            	if (k == 0) {
+	            		data_pin.pin = atoi(token2);
+	            		//printf("pin = %s\n", token2);
+	            	}
+	            	if (k == 1) {
+	            		data_pin.action = atoi(token2);
+	            		//printf("action = %s\n", token2);
+	            	}
+
+	                token2 = strtok_r(NULL, ":", &end_token);
+	                k++;
+	               // printf("action = %d\n", atoi(token2));
+	            }
+	            k = 0;
+
+	            xQueueSend(myQueueHandle, ( void * ) &data_pin, 0);
+	        }
+	        token = strtok_r(NULL, delim, &saveptr);
+	    }
+	}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartWebServerTask */
@@ -629,10 +715,72 @@ void StartSSIDTask(void const * argument)
 void StartCronTask(void const * argument)
 {
   /* USER CODE BEGIN StartCronTask */
+	static lwdtc_cron_ctx_t cron_ctxs[MAXSIZE];
+
+	/* Define context for CRON, used to parse data to */
+	size_t fail_index;
+	printf("Count task %d\r\n", LWDTC_ARRAYSIZE(dbCrontxt));
+	/* Parse all cron strings */
+	if (lwdtc_cron_parse_multi(cron_ctxs, dbCrontxt, MAXSIZE, &fail_index) != lwdtcOK) {
+		printf("Failed to parse cron at index %d\r\n", (int) fail_index);
+	}
+	printf("CRONs parsed and ready to go\r\n");
+
+	struct tm stm;
+
+
+
   /* Infinite loop */
   for(;;)
   {
+	  if(stm.tm_year != 0){
+
+		HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+		stm.tm_year = sDate.Year + 100; //RTC_Year rang 0-99,but tm_year since 1900
+		stm.tm_mon = sDate.Month - 1; //RTC_Month rang 1-12,but tm_mon rang 0-11
+		stm.tm_mday = sDate.Date; //RTC_Date rang 1-31 and tm_mday rang 1-31
+		stm.tm_hour = sTime.Hours;   //RTC_Hours rang 0-23 and tm_hour rang 0-23
+		stm.tm_min = sTime.Minutes; //RTC_Minutes rang 0-59 and tm_min rang 0-59
+		stm.tm_sec = sTime.Seconds;
+
+		cronetime = mktime(&stm);
+
+		if (cronetime != cronetime_old) {
+			cronetime_old = cronetime;
+			timez = localtime(&cronetime);
+			i = 0;
+
+
+			while (i < LWDTC_ARRAYSIZE(dbCrontxt)) {
+				if(cronetime >= dbCrontxt[i].ptime && dbCrontxt[i].ptime != 0){
+
+					strcpy(str, dbCrontxt[i].activ);
+					parse_string(str, cronetime_old, i, 1);
+		            dbCrontxt[i].ptime = 0;
+
+				}
+				i++;
+			}
+			i=0;
+
+
+			/* Check if CRON should execute */
+			while (i < LWDTC_ARRAYSIZE(cron_ctxs)) {
+				if (lwdtc_cron_is_valid_for_time(timez, cron_ctxs, &i)== lwdtcOK) {
+
+					  strcpy(str, dbCrontxt[i].activ);
+					  parse_string(str, cronetime_old, i, 0);
+
+
+					//xQueueSend(myQueueHandle, &i, 0);
+				}
+				i++;
+			}
+		}
     osDelay(1);
+   }
   }
   /* USER CODE END StartCronTask */
 }
@@ -647,11 +795,37 @@ void StartCronTask(void const * argument)
 void StartActionTask(void const * argument)
 {
   /* USER CODE BEGIN StartActionTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	  //uint8_t element;
+
+	  int pin = -1;
+
+
+	  /* Infinite loop */
+	  for(;;)
+	  {
+
+
+		  if (xQueueReceive(myQueueHandle, &data_pin, portMAX_DELAY) == pdTRUE) {
+
+
+
+			  if(data_pin.action == 0){
+		//		  printf("RESET \n\r");
+				  HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin,GPIO_PIN_RESET);
+			  }
+			  if(data_pin.action == 1){
+				  HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin,GPIO_PIN_SET);
+		//		  printf("SET \n\r");
+			  }
+			  if(data_pin.action == 2){
+			//	  printf("TOGLE \n\r");
+				  pin = data_pin.pin;
+				  HAL_GPIO_TogglePin(PinsInfo[pin].gpio_name, PinsInfo[pin].hal_pin);
+			  }
+
+		  }
+		  osDelay(1);
+	  }
   /* USER CODE END StartActionTask */
 }
 
