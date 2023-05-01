@@ -777,10 +777,6 @@ void StartCronTask(void const * argument)
 void StartActionTask(void const * argument)
 {
   /* USER CODE BEGIN StartActionTask */
-	  //uint8_t element;
-
-	  int pin = -1;
-
 
 	  /* Infinite loop */
 	  for(;;)
@@ -788,21 +784,17 @@ void StartActionTask(void const * argument)
 
 
 		  if (xQueueReceive(myQueueHandle, &data_pin, portMAX_DELAY) == pdTRUE) {
-
-
-
 			  if(data_pin.action == 0){
-		//		  printf("RESET \n\r");
+				  //@todo  проверить что data_pin.pin число
 				  HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin,GPIO_PIN_RESET);
 			  }
 			  if(data_pin.action == 1){
+				  //@todo  проверить что data_pin.pin число
 				  HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin,GPIO_PIN_SET);
-		//		  printf("SET \n\r");
 			  }
 			  if(data_pin.action == 2){
-			//	  printf("TOGLE \n\r");
-				  pin = data_pin.pin;
-				  HAL_GPIO_TogglePin(PinsInfo[pin].gpio_name, PinsInfo[pin].hal_pin);
+				  //@todo  проверить что data_pin.pin число
+				  HAL_GPIO_TogglePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin);
 			  }
 
 		  }
