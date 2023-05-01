@@ -59,7 +59,7 @@ struct tm* timez;
 time_t cronetime;
 time_t cronetime_old;
 
-//////////////////////////////////////
+/////////////////////////////////
 int i = 0;
 char str[40]={0};
 /* USER CODE END PM */
