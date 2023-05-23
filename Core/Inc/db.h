@@ -17,10 +17,12 @@
 
 #define MAXSIZE 10
 
+
 struct dbCron {
-	char cron[30];
-	char activ[50];
+	char cron[35]; // 30-45 30-45 1-22 15-17 5-12 1-7 23 max возможное кол-во символов.
+	char activ[255]; // max 534
 	uint32_t ptime; // для паузы в Unix time sec.
+	char info[30];
 };
 
 struct dbPinsConf {    // Создали структуру с необходимым набором типов элиментов.

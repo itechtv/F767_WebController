@@ -28,7 +28,9 @@
 #include "ethernetif.h"
 
 /* USER CODE BEGIN 0 */
+#include "db.h"
 
+extern struct dbSettings SetSettings;
 /* USER CODE END 0 */
 /* Private function prototypes -----------------------------------------------*/
 static void ethernet_link_status_updated(struct netif *netif);
@@ -72,6 +74,19 @@ void MX_LWIP_Init(void)
   GATEWAY_ADDRESS[3] = 1;
 
 /* USER CODE BEGIN IP_ADDRESSES */
+
+  IP_ADDRESS[0] = SetSettings.ip_addr0;
+  IP_ADDRESS[1] = SetSettings.ip_addr1;
+  IP_ADDRESS[2] = SetSettings.ip_addr2;
+  IP_ADDRESS[3] = SetSettings.ip_addr3;
+  NETMASK_ADDRESS[0] = SetSettings.sb_mask0;
+  NETMASK_ADDRESS[1] = SetSettings.sb_mask1;
+  NETMASK_ADDRESS[2] = SetSettings.sb_mask2;
+  NETMASK_ADDRESS[3] = SetSettings.sb_mask3;
+  GATEWAY_ADDRESS[0] = SetSettings.gateway0;
+  GATEWAY_ADDRESS[1] = SetSettings.gateway1;
+  GATEWAY_ADDRESS[2] = SetSettings.gateway2;
+  GATEWAY_ADDRESS[3] = SetSettings.gateway3;
 /* USER CODE END IP_ADDRESSES */
 
   /* Initilialize the LwIP stack with RTOS */

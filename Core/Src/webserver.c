@@ -18,6 +18,7 @@
 #include "cJSON.h"
 #include "db.h"
 
+//#define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
 static void *current_connection;
 static int variable = 0;
@@ -39,7 +40,7 @@ extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
-
+extern struct dbCron dbCrontxt[MAXSIZE];
 
 ///////////////////////////
 
@@ -87,7 +88,7 @@ int MultiPartTabCount(int num, int pinnum, int count)
 }
 //////////////////////////////  SSI HANDLER  //////////////////////////////////
 
-char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson"};
+char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson"};
 char const **TAGS = TAGCHAR;
 
 
@@ -181,6 +182,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 
 			}
+
 			*next_tag_part = variable;
 			variable++;
 			return strlen(pcInsert);
@@ -221,7 +223,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 		// ssi tag <!--#menu-->
 		case 3:
-			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabbuttom.shtml?ssid=%s\">Buttom pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"timers.shtml?ssid=%s\">Timers</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
+			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabbuttom.shtml?ssid=%s\">Buttom pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
 			return strlen(pcInsert);
 			break;
 
@@ -333,12 +335,43 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					str = cJSON_PrintUnformatted(root);
 					cJSON_Delete(root);
 				}
+				if(tab == 5){
+					root = cJSON_CreateObject();
+
+					cJSON_AddNumberToObject(root, "id", id); // в JS доваляеме +1
+					cJSON_AddStringToObject(root, "cron", dbCrontxt[id].cron);
+					cJSON_AddStringToObject(root, "activ", dbCrontxt[id].activ);
+					cJSON_AddStringToObject(root, "info", dbCrontxt[id].info);
+					str = cJSON_PrintUnformatted(root);
+					cJSON_Delete(root);
+				}
 			}
 
 			sprintf(pcInsert, "%s", str);
 			return strlen(pcInsert);
 			break;
+			// ssi tag <!--#cronjson-->
+			case 6:
 
+				root = cJSON_CreateArray();
+				i = 0;
+				fld = cJSON_CreateObject();
+				while (i <= MAXSIZE - 1) {
+					cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
+					cJSON_AddNumberToObject(fld, "id", i);
+					cJSON_AddStringToObject(fld, "cron", dbCrontxt[i].cron);
+					cJSON_AddStringToObject(fld, "activ", dbCrontxt[i].activ);
+					cJSON_AddStringToObject(fld, "info", dbCrontxt[i].info);
+
+					i++;
+				}
+
+				str = cJSON_Print(root);
+				cJSON_Delete(root);
+
+				sprintf(pcInsert, "%s", str);
+				return strlen(pcInsert);
+				break;
 		default:
 			break;
 	}
@@ -363,6 +396,8 @@ const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -380,7 +415,9 @@ static const tCGI URL_TABLES[] = {
 		{"/formtopin.shtml", (tCGIHandler) FormPinToPinCGI_Handler },
 		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler },
 		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },
-		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler }
+		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },
+		{"/formcron.shtml", (tCGIHandler) FormcronCGI_Handler },
+		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler }
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -923,6 +960,72 @@ const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		return "/login.shtml";
 	}
 }
+
+
+// formcron.shtml Handler table json (Index 16)
+const char*  FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+	if (iIndex == 16) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "id") == 0)
+			{
+				id = atoi(pcValue[i]) - 1;
+			}
+			if (strcmp(pcParam[i], "tab") == 0)
+			{
+				tab = atoi(pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/formcron.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
+
+// tabcron.shtml Handler (Index 17)
+const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+	int del = 0;
+	if (iIndex == 17) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0) {
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "del") == 0) {
+				del = atoi(pcValue[i])-1;
+				memset(dbCrontxt[del].cron, '\0', sizeof(dbCrontxt[del].cron));
+				memset(dbCrontxt[del].activ, '\0', sizeof(dbCrontxt[del].activ));
+				memset(dbCrontxt[del].info, '\0', sizeof(dbCrontxt[del].info));
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/tabcron.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
 ////////////////////////////// POST START //////////////////////////////////
 
 
@@ -979,6 +1082,46 @@ void setPinButtom(int idpin, char *name, char *token) {
 	} else {
 
 	}
+}
+
+// POST request Cron
+void setCron(int idpin, char *name, char *token) {
+
+    char decoded_url[50] = {0};
+
+	idpin = idpin - 1;
+	if (strcmp(name, "cron") == 0) {
+		url_decode(token, decoded_url);
+		strcpy(dbCrontxt[idpin].cron, decoded_url);
+	} else if (strcmp(name, "activ") == 0) {
+		url_decode(token, decoded_url);
+		strcpy(dbCrontxt[idpin].activ, decoded_url);
+	} else if (strcmp(name, "info") == 0) {
+		strcpy(dbCrontxt[idpin].info, token);
+	}  else {
+
+	}
+}
+// Функция декодирования URL
+void url_decode(char* url, char* decoded)
+{
+    int i = 0, j = 0;
+    while (url[i] != '\0') {
+        if (url[i] == '%') {
+            int num;
+            sscanf(&url[i+1], "%2x", &num);
+            decoded[j] = (char)num;
+            i += 3;  // Пропускаем 3 символа: %XY
+        } else if (url[i] == '+') {
+            decoded[j] = ' ';
+            i++;
+        } else {
+            decoded[j] = url[i];
+            i++;
+        }
+        j++;
+    }
+    decoded[j] = '\0';
 }
 
 // Parser IP address
@@ -1041,10 +1184,6 @@ void setSettings(char *name, char *token) {
 		    SetSettings.macaddr3 = (uint8_t) values[3];
 		    SetSettings.macaddr4 = (uint8_t) values[4];
 		    SetSettings.macaddr5 = (uint8_t) values[5];
-
-		    printf("MAC0 %x \n", SetSettings.macaddr4);
-		    printf("MAC0 %x \n", SetSettings.macaddr5);
-
 		}
 	} else if (strcmp(name, "mqtt_hst") == 0) {
 		strcpy(ipstr, token);
@@ -1191,6 +1330,12 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         				setSettings(name, token2);
         			}
         		}
+        		// POST request Cron
+				if (strcmp(v_PostBufer.uri, "/tabcron.shtml") == 0){
+					if(token2 != NULL){
+						setCron(id, name, token2);
+					}
+				}
 
         	}
             token2 = strtok_r(NULL, "=", &end_token);
