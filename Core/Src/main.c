@@ -100,9 +100,11 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 
 extern ApplicationTypeDef Appli_state;
-/* USER CODE END PV */
+
 RTC_TimeTypeDef sTime = {0};
 RTC_DateTypeDef sDate = {0};
+/* USER CODE END PV */
+
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
