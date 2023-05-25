@@ -72,8 +72,7 @@ char fsbuffer[2000] = {0};
 /* Private variables ---------------------------------------------------------*/
 
 RTC_HandleTypeDef hrtc;
-RTC_TimeTypeDef sTime = {0};
-RTC_DateTypeDef sDate = {0};
+
 
 UART_HandleTypeDef huart3;
 
@@ -102,6 +101,8 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 
 extern ApplicationTypeDef Appli_state;
 /* USER CODE END PV */
+RTC_TimeTypeDef sTime = {0};
+RTC_DateTypeDef sDate = {0};
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -115,24 +116,7 @@ void StartActionTask(void const * argument);
 void StartConfigTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void preSet(){
-	strcpy(SetSettings.lang, "ru");
-	strcpy(SetSettings.adm_name, "admin");
-	strcpy(SetSettings.adm_pswd, "12345678");
-    SetSettings.ip_addr0 = 192;
-    SetSettings.ip_addr1 = 168;
-    SetSettings.ip_addr2 = 11;
-    SetSettings.ip_addr3 = 80;
-    SetSettings.sb_mask0 = 255;
-    SetSettings.sb_mask1 = 255;
-    SetSettings.sb_mask2 = 255;
-    SetSettings.sb_mask3 = 0;
-    SetSettings.gateway0 = 192;
-    SetSettings.gateway1 = 168;
-    SetSettings.gateway2 = 11;
-    SetSettings.gateway3 = 1;
-    SetSettings.mqtt_prt = 1883;
-}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -320,8 +304,8 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
-  RTC_TimeTypeDef sTime = {0};
-  RTC_DateTypeDef sDate = {0};
+ // RTC_TimeTypeDef sTime = {0};
+ // RTC_DateTypeDef sDate = {0};
 
   /* USER CODE BEGIN RTC_Init 1 */
 
@@ -619,7 +603,7 @@ void StartWebServerTask(void const * argument)
   /* init code for LWIP */
   ulTaskNotifyTake(0, portMAX_DELAY);
   //
-  //preSet();
+
   MX_LWIP_Init();
 
   /* USER CODE BEGIN 5 */
