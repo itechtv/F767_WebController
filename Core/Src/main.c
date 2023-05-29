@@ -34,6 +34,9 @@
 #include "db.h"
 #include "lwdtc.h"
 #include "cJSON.h"
+
+#include "SEGGER_SYSVIEW_Conf.h"
+#include "SEGGER_SYSVIEW.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -139,7 +142,7 @@ char pacote[50];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	SEGGER_SYSVIEW_Conf();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -470,7 +473,7 @@ void sntp_set_time(uint32_t sntp_time) {
 	char buf[80];
 
 	if (sntp_time == 0) {
-		printf("sntp_set_time: wrong!@@\n");
+		printf("sntp_set_time: wrong!\n");
 		return;
 	}
 	time_t rawtime = sntp_time;
