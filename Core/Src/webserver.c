@@ -14,6 +14,7 @@
 #include "lwip/apps/httpd.h"
 #include "stm32f7xx_hal.h"
 #include "math.h"
+#include "cmsis_os.h"
 #include "time.h"
 #include "cJSON.h"
 #include "db.h"
@@ -33,7 +34,12 @@ char randomSSID[27] = {0};
 char ssid[27] = {0};
 char url[30] = {0};
 char tempbufer[1024] = {0};
+
+uint16_t rusb = 0;
 extern unsigned long Ti;
+extern osMessageQId myQueue02Handle;
+
+
 
 
 extern struct dbPinsConf PinsConf[NUMPIN];
@@ -1292,6 +1298,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 	char *end_str;
 	char *name;
 
+
 	printf("POST %s \n", v_PostBufer.buf);
 
     char *token = strtok_r(v_PostBufer.buf, "&", &end_str);
@@ -1347,6 +1354,9 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 
 	if (current_connection == connection) {
 	    /* login succeeded */
+		rusb = 1;
+
+		xQueueSend(myQueue02Handle, ( void * ) &rusb, 0);
 
 		printf("URL %s \n", v_PostBufer.uri);
 		printf("SSID %s \n", ssid);

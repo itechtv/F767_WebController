@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-///////////////////////////////////////////
+/////////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
 #include <stdio.h>
@@ -34,8 +34,6 @@
 #include "db.h"
 #include "lwdtc.h"
 #include "cJSON.h"
-
-
 
 /* USER CODE END Includes */
 
@@ -46,9 +44,9 @@ typedef struct data_pin_t
     uint8_t pin;
     uint8_t action;
 } data_pin_t;
-
 data_pin_t data_pin;
 
+uint16_t rwusb = 0;
 
 /* USER CODE END PTD */
 
@@ -73,7 +71,6 @@ char fsbuffer[2000] = {0};
 
 RTC_HandleTypeDef hrtc;
 
-
 UART_HandleTypeDef huart3;
 
 osThreadId WebServerTaskHandle;
@@ -94,6 +91,9 @@ osStaticThreadDef_t ConfigTaskControlBlock;
 osMessageQId myQueueHandle;
 uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 osStaticMessageQDef_t myQueueControlBlock;
+osMessageQId myQueue02Handle;
+uint8_t myQueue02Buffer[ 16 * sizeof( uint16_t ) ];
+osStaticMessageQDef_t myQueue02ControlBlock;
 /* USER CODE BEGIN PV */
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
@@ -104,7 +104,6 @@ extern ApplicationTypeDef Appli_state;
 RTC_TimeTypeDef sTime = {0};
 RTC_DateTypeDef sDate = {0};
 /* USER CODE END PV */
-
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -192,6 +191,10 @@ int main(void)
   /* definition and creation of myQueue */
   osMessageQStaticDef(myQueue, 16, struct data_pin_t, myQueueBuffer, &myQueueControlBlock);
   myQueueHandle = osMessageCreate(osMessageQ(myQueue), NULL);
+
+  /* definition and creation of myQueue02 */
+  osMessageQStaticDef(myQueue02, 16, uint16_t, myQueue02Buffer, &myQueue02ControlBlock);
+  myQueue02Handle = osMessageCreate(osMessageQ(myQueue02), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -306,8 +309,8 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
- // RTC_TimeTypeDef sTime = {0};
- // RTC_DateTypeDef sDate = {0};
+//  RTC_TimeTypeDef sTime = {0};
+//  RTC_DateTypeDef sDate = {0};
 
   /* USER CODE BEGIN RTC_Init 1 */
 
@@ -604,7 +607,6 @@ void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
   ulTaskNotifyTake(0, portMAX_DELAY);
-  //
 
   MX_LWIP_Init();
 
@@ -786,6 +788,7 @@ void StartConfigTask(void const * argument)
 {
   /* USER CODE BEGIN StartConfigTask */
 	int usbflag = 1;
+
 	FRESULT fresult;
 	FILINFO finfo;
 	UINT Byteswritten; // File read/write count
@@ -802,6 +805,8 @@ void StartConfigTask(void const * argument)
   {
 		switch (Appli_state) {
 			case APPLICATION_READY:
+				//xQueueSend(myQueue02Handle, ( void * ) 1, 0);
+
 				if(usbflag == 1){
 					osDelay(1000);
 					printf("APPLICATION_READY! \r\n");
@@ -1022,6 +1027,22 @@ void StartConfigTask(void const * argument)
 					}
 
 					usbflag = 0;
+
+
+					if (xQueueReceive(myQueue02Handle, &rwusb, portMAX_DELAY) == pdTRUE) {
+
+						switch (rwusb) {
+							case 1:
+
+								printf("w setings! %d \r\n", rwusb);
+								break;
+							default:
+								//printf("Wrong data! \r\n");
+								break;
+
+						}
+
+					}
 				}
 				break;
 			default:
