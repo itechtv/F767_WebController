@@ -797,101 +797,56 @@ void StartConfigTask(void const * argument)
 								&Byteswritten);
 
 						cJSON *root_obj = cJSON_Parse(fsbuffer);
-						cJSON *adm_name = cJSON_GetObjectItem(root_obj,
-								"adm_name");
-						cJSON *adm_pswd = cJSON_GetObjectItem(root_obj,
-								"adm_pswd");
+						cJSON *adm_name = cJSON_GetObjectItem(root_obj, "adm_name");
+						cJSON *adm_pswd = cJSON_GetObjectItem(root_obj, "adm_pswd");
 						cJSON *lang = cJSON_GetObjectItem(root_obj, "lang");
-						cJSON *timezone = cJSON_GetObjectItem(root_obj,
-								"timezone");
+						cJSON *timezone = cJSON_GetObjectItem(root_obj, "timezone");
 						cJSON *lon_de = cJSON_GetObjectItem(root_obj, "lon_de");
 						cJSON *lat_de = cJSON_GetObjectItem(root_obj, "lat_de");
-						cJSON *ip1_sntp0 = cJSON_GetObjectItem(root_obj,
-								"ip1_sntp0");
-						cJSON *ip1_sntp1 = cJSON_GetObjectItem(root_obj,
-								"ip1_sntp1");
-						cJSON *ip1_sntp2 = cJSON_GetObjectItem(root_obj,
-								"ip1_sntp2");
-						cJSON *ip1_sntp3 = cJSON_GetObjectItem(root_obj,
-								"ip1_sntp3");
-						cJSON *ip2_sntp0 = cJSON_GetObjectItem(root_obj,
-								"ip2_sntp0");
-						cJSON *ip2_sntp1 = cJSON_GetObjectItem(root_obj,
-								"ip2_sntp1");
-						cJSON *ip2_sntp2 = cJSON_GetObjectItem(root_obj,
-								"ip2_sntp2");
-						cJSON *ip2_sntp3 = cJSON_GetObjectItem(root_obj,
-								"ip2_sntp3");
-						cJSON *ip3_sntp0 = cJSON_GetObjectItem(root_obj,
-								"ip3_sntp0");
-						cJSON *ip3_sntp1 = cJSON_GetObjectItem(root_obj,
-								"ip3_sntp1");
-						cJSON *ip3_sntp2 = cJSON_GetObjectItem(root_obj,
-								"ip3_sntp2");
-						cJSON *ip3_sntp3 = cJSON_GetObjectItem(root_obj,
-								"ip3_sntp3");
+						cJSON *ip1_sntp0 = cJSON_GetObjectItem(root_obj, "ip1_sntp0");
+						cJSON *ip1_sntp1 = cJSON_GetObjectItem(root_obj, "ip1_sntp1");
+						cJSON *ip1_sntp2 = cJSON_GetObjectItem(root_obj, "ip1_sntp2");
+						cJSON *ip1_sntp3 = cJSON_GetObjectItem(root_obj, "ip1_sntp3");
+						cJSON *ip2_sntp0 = cJSON_GetObjectItem(root_obj, "ip2_sntp0");
+						cJSON *ip2_sntp1 = cJSON_GetObjectItem(root_obj, "ip2_sntp1");
+						cJSON *ip2_sntp2 = cJSON_GetObjectItem(root_obj, "ip2_sntp2");
+						cJSON *ip2_sntp3 = cJSON_GetObjectItem(root_obj, "ip2_sntp3");
+						cJSON *ip3_sntp0 = cJSON_GetObjectItem(root_obj, "ip3_sntp0");
+						cJSON *ip3_sntp1 = cJSON_GetObjectItem(root_obj, "ip3_sntp1");
+						cJSON *ip3_sntp2 = cJSON_GetObjectItem(root_obj, "ip3_sntp2");
+						cJSON *ip3_sntp3 = cJSON_GetObjectItem(root_obj, "ip3_sntp3");
 						// Настройки MQTT
-						cJSON *check_mqtt = cJSON_GetObjectItem(root_obj,
-								"check_mqtt");
-						cJSON *mqtt_prt = cJSON_GetObjectItem(root_obj,
-								"mqtt_prt");
-						cJSON *mqtt_clt = cJSON_GetObjectItem(root_obj,
-								"mqtt_clt");
-						cJSON *mqtt_usr = cJSON_GetObjectItem(root_obj,
-								"mqtt_usr");
-						cJSON *mqtt_pswd = cJSON_GetObjectItem(root_obj,
-								"mqtt_pswd");
-						cJSON *mqtt_tpc = cJSON_GetObjectItem(root_obj,
-								"mqtt_tpc");
-						cJSON *mqtt_ftpc = cJSON_GetObjectItem(root_obj,
-								"mqtt_ftpc");
-						cJSON *mqtt_hst0 = cJSON_GetObjectItem(root_obj,
-								"mqtt_hst0");
-						cJSON *mqtt_hst1 = cJSON_GetObjectItem(root_obj,
-								"mqtt_hst1");
-						cJSON *mqtt_hst2 = cJSON_GetObjectItem(root_obj,
-								"mqtt_hst2");
-						cJSON *mqtt_hst3 = cJSON_GetObjectItem(root_obj,
-								"mqtt_hst3");
+						cJSON *check_mqtt = cJSON_GetObjectItem(root_obj, "check_mqtt");
+						cJSON *mqtt_prt = cJSON_GetObjectItem(root_obj, "mqtt_prt");
+						cJSON *mqtt_clt = cJSON_GetObjectItem(root_obj, "mqtt_clt");
+						cJSON *mqtt_usr = cJSON_GetObjectItem(root_obj, "mqtt_usr");
+						cJSON *mqtt_pswd = cJSON_GetObjectItem(root_obj, "mqtt_pswd");
+						cJSON *mqtt_tpc = cJSON_GetObjectItem(root_obj, "mqtt_tpc");
+						cJSON *mqtt_ftpc = cJSON_GetObjectItem(root_obj, "mqtt_ftpc");
+						cJSON *mqtt_hst0 = cJSON_GetObjectItem(root_obj, "mqtt_hst0");
+						cJSON *mqtt_hst1 = cJSON_GetObjectItem(root_obj, "mqtt_hst1");
+						cJSON *mqtt_hst2 = cJSON_GetObjectItem(root_obj, "mqtt_hst2");
+						cJSON *mqtt_hst3 = cJSON_GetObjectItem(root_obj, "mqtt_hst3");
 						// Настройки IP адреса
-						cJSON *check_ip = cJSON_GetObjectItem(root_obj,
-								"check_ip");
-						cJSON *ip_addr0 = cJSON_GetObjectItem(root_obj,
-								"ip_addr0");
-						cJSON *ip_addr1 = cJSON_GetObjectItem(root_obj,
-								"ip_addr1");
-						cJSON *ip_addr2 = cJSON_GetObjectItem(root_obj,
-								"ip_addr2");
-						cJSON *ip_addr3 = cJSON_GetObjectItem(root_obj,
-								"ip_addr3");
-						cJSON *sb_mask0 = cJSON_GetObjectItem(root_obj,
-								"sb_mask0");
-						cJSON *sb_mask1 = cJSON_GetObjectItem(root_obj,
-								"sb_mask1");
-						cJSON *sb_mask2 = cJSON_GetObjectItem(root_obj,
-								"sb_mask2");
-						cJSON *sb_mask3 = cJSON_GetObjectItem(root_obj,
-								"sb_mask3");
-						cJSON *gateway0 = cJSON_GetObjectItem(root_obj,
-								"gateway0");
-						cJSON *gateway1 = cJSON_GetObjectItem(root_obj,
-								"gateway1");
-						cJSON *gateway2 = cJSON_GetObjectItem(root_obj,
-								"gateway2");
-						cJSON *gateway3 = cJSON_GetObjectItem(root_obj,
-								"gateway3");
-						cJSON *macaddr0 = cJSON_GetObjectItem(root_obj,
-								"macaddr0");
-						cJSON *macaddr1 = cJSON_GetObjectItem(root_obj,
-								"macaddr1");
-						cJSON *macaddr2 = cJSON_GetObjectItem(root_obj,
-								"macaddr2");
-						cJSON *macaddr3 = cJSON_GetObjectItem(root_obj,
-								"macaddr3");
-						cJSON *macaddr4 = cJSON_GetObjectItem(root_obj,
-								"macaddr4");
-						cJSON *macaddr5 = cJSON_GetObjectItem(root_obj,
-								"macaddr5");
+						cJSON *check_ip = cJSON_GetObjectItem(root_obj, "check_ip");
+						cJSON *ip_addr0 = cJSON_GetObjectItem(root_obj, "ip_addr0");
+						cJSON *ip_addr1 = cJSON_GetObjectItem(root_obj, "ip_addr1");
+						cJSON *ip_addr2 = cJSON_GetObjectItem(root_obj, "ip_addr2");
+						cJSON *ip_addr3 = cJSON_GetObjectItem(root_obj, "ip_addr3");
+						cJSON *sb_mask0 = cJSON_GetObjectItem(root_obj, "sb_mask0");
+						cJSON *sb_mask1 = cJSON_GetObjectItem(root_obj, "sb_mask1");
+						cJSON *sb_mask2 = cJSON_GetObjectItem(root_obj, "sb_mask2");
+						cJSON *sb_mask3 = cJSON_GetObjectItem(root_obj, "sb_mask3");
+						cJSON *gateway0 = cJSON_GetObjectItem(root_obj, "gateway0");
+						cJSON *gateway1 = cJSON_GetObjectItem(root_obj, "gateway1");
+						cJSON *gateway2 = cJSON_GetObjectItem(root_obj, "gateway2");
+						cJSON *gateway3 = cJSON_GetObjectItem(root_obj, "gateway3");
+						cJSON *macaddr0 = cJSON_GetObjectItem(root_obj, "macaddr0");
+						cJSON *macaddr1 = cJSON_GetObjectItem(root_obj, "macaddr1");
+						cJSON *macaddr2 = cJSON_GetObjectItem(root_obj,	"macaddr2");
+						cJSON *macaddr3 = cJSON_GetObjectItem(root_obj, "macaddr3");
+						cJSON *macaddr4 = cJSON_GetObjectItem(root_obj, "macaddr4");
+						cJSON *macaddr5 = cJSON_GetObjectItem(root_obj, "macaddr5");
 
 						strcpy(SetSettings.adm_name, adm_name->valuestring);
 						strcpy(SetSettings.adm_pswd, adm_pswd->valuestring);
@@ -1057,7 +1012,7 @@ void StartConfigTask(void const * argument)
 /******************************************************************************************/
 			// Функция для чтения целых чисел из очереди
 				if (xQueueReceive(usbQueueHandle, &usbnum,portMAX_DELAY) == pdTRUE) {
-					switch (Appli_state) {
+					switch (usbnum) {
 					case 1:
 						break;
 					case 2:

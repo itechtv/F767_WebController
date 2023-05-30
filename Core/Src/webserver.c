@@ -46,6 +46,7 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 ///////////////////////////
 
 extern osMessageQId usbQueueHandle;
+
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
 {
