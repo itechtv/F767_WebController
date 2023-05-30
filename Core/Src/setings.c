@@ -6,3 +6,6 @@
  */
 
 
+#include "db.h"
+
+extern struct dbSettings SetSettings;

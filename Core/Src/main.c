@@ -34,6 +34,7 @@
 #include "db.h"
 #include "lwdtc.h"
 #include "cJSON.h"
+#include "setings.h"
 
 
 /* USER CODE END Includes */
@@ -636,7 +637,6 @@ void StartSSIDTask(void const * argument)
 			if (HAL_GetTick() - Ti >= 500000) {
 				Ti = HAL_GetTick();
 				memset(&randomSSID, '\0', sizeof(randomSSID));
-				//printf("StartTaskToken1 \n");
 			}
 		}
 		osDelay(1);
@@ -790,11 +790,9 @@ void StartConfigTask(void const * argument)
 				fresult = f_stat("setings.ini", &finfo);
 				if (fresult == FR_OK) {
 					// если файл существует, открываем его и перезаписываем
-					if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ)
-							== FR_OK) {
+					if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ) == FR_OK) {
 
-						fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer),
-								&Byteswritten);
+						fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer), &Byteswritten);
 
 						cJSON *root_obj = cJSON_Parse(fsbuffer);
 						cJSON *adm_name = cJSON_GetObjectItem(root_obj, "adm_name");
@@ -915,15 +913,13 @@ void StartConfigTask(void const * argument)
 					}
 				} else {
 					// если файл не существует, создаем его и записываем данные
-					if (f_open(&USBHFile, (const TCHAR*) "setings.ini",
-							FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+					if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 						printf("f_open! create setings.ini \r\n");
 						root_obj = cJSON_CreateObject();
 
-						cJSON_AddStringToObject(root_obj, "adm_name", "admin");
-						cJSON_AddStringToObject(root_obj, "adm_pswd",
-								"12345678"); // Пароль для авторизации
-						cJSON_AddStringToObject(root_obj, "lang", "ru"); //
+						cJSON_AddStringToObject(root_obj, "adm_name", ADM_NAME);
+						cJSON_AddStringToObject(root_obj, "adm_pswd", ADM_PASS); // Пароль для авторизации
+						cJSON_AddStringToObject(root_obj, "lang", LANG); //
 						cJSON_AddNumberToObject(root_obj, "timezone", 0);// UTC
 						cJSON_AddNumberToObject(root_obj, "lon_de", 0); // Longitude / Долгота
 						cJSON_AddNumberToObject(root_obj, "lat_de", 0); // Latitude / Широта
@@ -940,7 +936,7 @@ void StartConfigTask(void const * argument)
 						cJSON_AddNumberToObject(root_obj, "ip3_sntp2", 0); // SMTP Server teriary
 						cJSON_AddNumberToObject(root_obj, "ip3_sntp3", 0); // SMTP Server teriary
 						cJSON_AddNumberToObject(root_obj, "check_mqtt", 0); // check MQTT on/off
-						cJSON_AddNumberToObject(root_obj, "mqtt_prt", 0); // Your MQTT broker port (default port is set to 1883)
+						cJSON_AddNumberToObject(root_obj, "mqtt_prt", MQTT_PRT); // Your MQTT broker port (default port is set to 1883)
 						cJSON_AddStringToObject(root_obj, "mqtt_clt", ""); // Device's unique identifier.
 						cJSON_AddStringToObject(root_obj, "mqtt_usr", ""); // MQTT Имя пользователя для авторизации
 						cJSON_AddStringToObject(root_obj, "mqtt_pswd", ""); // MQTT Пароль для авторизации
@@ -952,18 +948,18 @@ void StartConfigTask(void const * argument)
 						cJSON_AddNumberToObject(root_obj, "mqtt_hst3", 0); // Your MQTT broker address or IP
 						// Настройки IP адреса
 						cJSON_AddNumberToObject(root_obj, "check_ip", 0); // check DHCP on/off
-						cJSON_AddNumberToObject(root_obj, "ip_addr0", 192); // IP адрес
-						cJSON_AddNumberToObject(root_obj, "ip_addr1", 168); // IP адрес
-						cJSON_AddNumberToObject(root_obj, "ip_addr2", 18); // IP адрес
-						cJSON_AddNumberToObject(root_obj, "ip_addr3", 88); // IP адрес
-						cJSON_AddNumberToObject(root_obj, "sb_mask0", 255);	// Маска сети
-						cJSON_AddNumberToObject(root_obj, "sb_mask1", 255);	// Маска сети
-						cJSON_AddNumberToObject(root_obj, "sb_mask2", 255);	// Маска сети
-						cJSON_AddNumberToObject(root_obj, "sb_mask3", 0);// Маска сети
-						cJSON_AddNumberToObject(root_obj, "gateway0", 192); // Шлюз
-						cJSON_AddNumberToObject(root_obj, "gateway1", 168); // Шлюз
-						cJSON_AddNumberToObject(root_obj, "gateway2", 18); // Шлюз
-						cJSON_AddNumberToObject(root_obj, "gateway3", 1); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "ip_addr0", IP_ADDR0); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "ip_addr1", IP_ADDR1); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "ip_addr2", IP_ADDR2); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "ip_addr3", IP_ADDR3); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "sb_mask0", SB_MASK0);	// Маска сети
+						cJSON_AddNumberToObject(root_obj, "sb_mask1", SB_MASK1);	// Маска сети
+						cJSON_AddNumberToObject(root_obj, "sb_mask2", SB_MASK2);	// Маска сети
+						cJSON_AddNumberToObject(root_obj, "sb_mask3", SB_MASK3);// Маска сети
+						cJSON_AddNumberToObject(root_obj, "gateway0", GATEWAY0); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "gateway1", GATEWAY1); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "gateway2", GATEWAY2); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "gateway3", GATEWAY3); // Шлюз
 						cJSON_AddNumberToObject(root_obj, "macaddr0", 0);// MAC address
 						cJSON_AddNumberToObject(root_obj, "macaddr1", 0);// MAC address
 						cJSON_AddNumberToObject(root_obj, "macaddr2", 0);// MAC address
@@ -973,31 +969,29 @@ void StartConfigTask(void const * argument)
 
 						out_str = cJSON_PrintUnformatted(root_obj);
 
-						//sprintf(tbuf,"LAN zagotovka, USB task added information to Relays - score000000\r\n"); // данные которые запишем в файл!
-						fresult = f_write(&USBHFile, (const void*) out_str,
-								strlen(out_str), &Byteswritten);
+						fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
 
 						printf("f_open! setings.ini \r\n");
 
 						cJSON_Delete(root_obj);
 						f_close(&USBHFile);
 
-						strcpy(SetSettings.lang, "ru");
-						strcpy(SetSettings.adm_name, "admin");
-						strcpy(SetSettings.adm_pswd, "12345678");
-						SetSettings.ip_addr0 = 192;
-						SetSettings.ip_addr1 = 168;
-						SetSettings.ip_addr2 = 18;
-						SetSettings.ip_addr3 = 80;
-						SetSettings.sb_mask0 = 255;
-						SetSettings.sb_mask1 = 255;
-						SetSettings.sb_mask2 = 255;
-						SetSettings.sb_mask3 = 0;
-						SetSettings.gateway0 = 192;
-						SetSettings.gateway1 = 168;
-						SetSettings.gateway2 = 18;
-						SetSettings.gateway3 = 1;
-						SetSettings.mqtt_prt = 1883;
+						strcpy(SetSettings.lang, LANG);
+						strcpy(SetSettings.adm_name, ADM_NAME);
+						strcpy(SetSettings.adm_pswd, ADM_PASS);
+						SetSettings.ip_addr0 = IP_ADDR0;
+						SetSettings.ip_addr1 = IP_ADDR1;
+						SetSettings.ip_addr2 = IP_ADDR2;
+						SetSettings.ip_addr3 = IP_ADDR3;
+						SetSettings.sb_mask0 = SB_MASK0;
+						SetSettings.sb_mask1 = SB_MASK1;
+						SetSettings.sb_mask2 = SB_MASK2;
+						SetSettings.sb_mask3 = SB_MASK3;
+						SetSettings.gateway0 = GATEWAY0;
+						SetSettings.gateway1 = GATEWAY1;
+						SetSettings.gateway2 = GATEWAY2;
+						SetSettings.gateway3 = GATEWAY3;
+						SetSettings.mqtt_prt = MQTT_PRT;
 
 						xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 						xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask

@@ -19,7 +19,6 @@
 #include "db.h"
 #include "cmsis_os.h"
 
-//#define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
 static void *current_connection;
 static int variable = 0;
@@ -1292,7 +1291,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 	char *end_str;
 	char *name;
 	uint16_t usbdata = 0;
-	printf("POST %s \n", v_PostBufer.buf);
+	//printf("POST %s \n", v_PostBufer.buf);
 
     char *token = strtok_r(v_PostBufer.buf, "&", &end_str);
     while (token != NULL)
@@ -1351,7 +1350,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 	if (current_connection == connection) {
 	    /* login succeeded */
 
-		printf("URL %s \n", v_PostBufer.uri);
+		//printf("URL %s \n", v_PostBufer.uri);
 
 /******************************************************************************************/
 		// Отправка числа в очередь
