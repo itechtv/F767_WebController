@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-/////////////////////////////////////////////
+///////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
 #include <stdio.h>
@@ -35,19 +35,19 @@
 #include "lwdtc.h"
 #include "cJSON.h"
 
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct data_pin_t
-{
-    uint8_t pin;
-    uint8_t action;
+typedef struct data_pin_t {
+	uint8_t pin;
+	uint8_t action;
 } data_pin_t;
+
 data_pin_t data_pin;
 
-uint16_t rwusb = 0;
-
+uint16_t usbnum = 0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,14 +57,14 @@ uint16_t rwusb = 0;
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 // Cron variable
-struct tm* timez;
+struct tm *timez;
 time_t cronetime;
 time_t cronetime_old;
 
 /////////////////////////////////
 int i = 0;
-char str[40]={0};
-char fsbuffer[2000] = {0};
+char str[40] = { 0 };
+char fsbuffer[2000] = { 0 };
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -91,7 +91,7 @@ osStaticThreadDef_t ConfigTaskControlBlock;
 osMessageQId myQueueHandle;
 uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 osStaticMessageQDef_t myQueueControlBlock;
-osMessageQId myQueue02Handle;
+osMessageQId usbQueueHandle;
 uint8_t myQueue02Buffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t myQueue02ControlBlock;
 /* USER CODE BEGIN PV */
@@ -101,8 +101,8 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 
 extern ApplicationTypeDef Appli_state;
 
-RTC_TimeTypeDef sTime = {0};
-RTC_DateTypeDef sDate = {0};
+RTC_TimeTypeDef sTime = { 0 };
+RTC_DateTypeDef sDate = { 0 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -134,7 +134,6 @@ extern struct netif gnetif;
 extern char randomSSID[27];
 
 unsigned long Ti;
-
 
 mqtt_client_t *client;
 char pacote[50];
@@ -170,21 +169,21 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
+	/* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
+	/* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
+	/* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
@@ -192,12 +191,12 @@ int main(void)
   osMessageQStaticDef(myQueue, 16, struct data_pin_t, myQueueBuffer, &myQueueControlBlock);
   myQueueHandle = osMessageCreate(osMessageQ(myQueue), NULL);
 
-  /* definition and creation of myQueue02 */
-  osMessageQStaticDef(myQueue02, 16, uint16_t, myQueue02Buffer, &myQueue02ControlBlock);
-  myQueue02Handle = osMessageCreate(osMessageQ(myQueue02), NULL);
+  /* definition and creation of usbQueue */
+  osMessageQStaticDef(usbQueue, 16, uint16_t, myQueue02Buffer, &myQueue02ControlBlock);
+  usbQueueHandle = osMessageCreate(osMessageQ(usbQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
+	/* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -222,7 +221,7 @@ int main(void)
   ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+	/* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -230,12 +229,11 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -459,17 +457,16 @@ static void MX_GPIO_Init(void)
  *
  * @retval current timestamp
  */
-uint32_t get_timestamp(void)
-{
-    struct tm stm;
-    ///The acquisition time must be before the acquisition date
+uint32_t get_timestamp(void) {
+	struct tm stm;
+	///The acquisition time must be before the acquisition date
 
-    stm.tm_year = sDate.Year + 100;    //RTC_Year rang 0-99,but tm_year since 1900
-    stm.tm_mon = sDate.Month - 1;      //RTC_Month rang 1-12,but tm_mon rang 0-11
-    stm.tm_mday = sDate.Date;          //RTC_Date rang 1-31 and tm_mday rang 1-31
-    stm.tm_hour = sTime.Hours;         //RTC_Hours rang 0-23 and tm_hour rang 0-23
-    stm.tm_min = sTime.Minutes;        //RTC_Minutes rang 0-59 and tm_min rang 0-59
-    stm.tm_sec = sTime.Seconds;
+	stm.tm_year = sDate.Year + 100;  //RTC_Year rang 0-99,but tm_year since 1900
+	stm.tm_mon = sDate.Month - 1;     //RTC_Month rang 1-12,but tm_mon rang 0-11
+	stm.tm_mday = sDate.Date;         //RTC_Date rang 1-31 and tm_mday rang 1-31
+	stm.tm_hour = sTime.Hours;       //RTC_Hours rang 0-23 and tm_hour rang 0-23
+	stm.tm_min = sTime.Minutes;     //RTC_Minutes rang 0-59 and tm_min rang 0-59
+	stm.tm_sec = sTime.Seconds;
 	return (mktime(&stm));
 }
 /*!
@@ -484,11 +481,10 @@ void sntp_set_time(uint32_t sntp_time) {
 	char buf[80];
 
 	if (sntp_time == 0) {
-		printf("sntp_set_time: wrong!@@\n");
+		printf("sntp_set_time: wrong!\n");
 		return;
 	}
 	time_t rawtime = sntp_time;
-
 
 //	sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
 	timez = localtime(&rawtime);
@@ -519,150 +515,141 @@ void sntp_set_time(uint32_t sntp_time) {
 		Error_Handler();
 	}
 
-	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n",
-			sDate.Year, sDate.Month, sDate.Date, sTime.Hours, sTime.Minutes,
-			sTime.Seconds);
+	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month,
+			sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
 
 //	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
 
 }
 /*************************** END OF SNTP **********************************/
 
+PUTCHAR_PROTOTYPE {
+	/* Place your implementation of fputc here */
+	/* e.g. write a character to the USART1 and Loop until the end of transmission */
 
+	HAL_UART_Transmit(&huart3, (uint8_t*) &ch, 1, 0xFFFF);
 
-PUTCHAR_PROTOTYPE
-{
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART1 and Loop until the end of transmission */
-
-  HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, 0xFFFF);
-
-  return ch;
+	return ch;
 }
 
-
 // int pause  0 - до паузы 1 - после паузы
-	void parse_string(char* str, time_t cronetime_olds, int i, int pause) {
-	    char* token;
-	    char* saveptr;
-	    int flag = 0;
-	    int k = 0;
-	    char delim[] = ";";
+void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
+	char *token;
+	char *saveptr;
+	int flag = 0;
+	int k = 0;
+	char delim[] = ";";
 
-	    // Разбиваем строку на элементы, разделенные точкой с запятой
-	    token = strtok_r(str, delim, &saveptr);
-	    while (token != NULL) {
-	        char *end_token;
-	        // Если нашли элемент "p", устанавливаем флаг
+	// Разбиваем строку на элементы, разделенные точкой с запятой
+	token = strtok_r(str, delim, &saveptr);
+	while (token != NULL) {
+		char *end_token;
+		// Если нашли элемент "p", устанавливаем флаг
 
-	        if(token[0] == 'p'){
-				char* newstring = token + 1;
-				//printf("Pause %d seconds\n", atoi(newstring));
-				dbCrontxt[i].ptime = cronetime_olds + atoi(newstring);
-				flag = 1;
-	        }
-	        // в зависимости от флага отправляем в очередь до или после паузы
-	        if (flag == pause) {
-	            //printf("%s\n", token);
+		if (token[0] == 'p') {
+			char *newstring = token + 1;
+			//printf("Pause %d seconds\n", atoi(newstring));
+			dbCrontxt[i].ptime = cronetime_olds + atoi(newstring);
+			flag = 1;
+		}
+		// в зависимости от флага отправляем в очередь до или после паузы
+		if (flag == pause) {
+			//printf("%s\n", token);
 
+			//strcpy(data_pin.message, pch);
 
-		        //strcpy(data_pin.message, pch);
+			char *token2 = strtok_r(token, ":", &end_token);
+			//printf("pin = %d\n", atoi(token2));
 
+			while (token2 != NULL) {
+				// тут отправляем в очередь
+				if (k == 0) {
+					data_pin.pin = atoi(token2);
+					//printf("pin = %s\n", token2);
+				}
+				if (k == 1) {
+					data_pin.action = atoi(token2);
+					//printf("action = %s\n", token2);
+				}
 
-	            char *token2 = strtok_r(token, ":", &end_token);
-	            //printf("pin = %d\n", atoi(token2));
+				token2 = strtok_r(NULL, ":", &end_token);
+				k++;
+				// printf("action = %d\n", atoi(token2));
+			}
+			k = 0;
 
-	            while (token2 != NULL) {
-	                // тут отправляем в очередь
-	            	if (k == 0) {
-	            		data_pin.pin = atoi(token2);
-	            		//printf("pin = %s\n", token2);
-	            	}
-	            	if (k == 1) {
-	            		data_pin.action = atoi(token2);
-	            		//printf("action = %s\n", token2);
-	            	}
-
-	                token2 = strtok_r(NULL, ":", &end_token);
-	                k++;
-	               // printf("action = %d\n", atoi(token2));
-	            }
-	            k = 0;
-
-	            xQueueSend(myQueueHandle, ( void * ) &data_pin, 0);
-	        }
-	        token = strtok_r(NULL, delim, &saveptr);
-	    }
+			xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+		}
+		token = strtok_r(NULL, delim, &saveptr);
 	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartWebServerTask */
 /**
-  * @brief  Function implementing the WebServerTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+ * @brief  Function implementing the WebServerTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartWebServerTask */
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-  ulTaskNotifyTake(0, portMAX_DELAY);
+	ulTaskNotifyTake(0, portMAX_DELAY);
+	MX_LWIP_Init();
 
-  MX_LWIP_Init();
-
+  /* init code for USB_HOST */
   /* USER CODE BEGIN 5 */
-  http_server_init();
-  osDelay(1000);
+	http_server_init();
+	osDelay(1000);
 
-  client = mqtt_client_new();
-  example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
-  //sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
-  //example_publish(client, pacote); // Публикуем сообщение.
+	client = mqtt_client_new();
+	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
+	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
+	//example_publish(client, pacote); // Публикуем сообщение.
 
-  osDelay(1000);
-  bsp_sntp_init();
+	osDelay(1000);
+	bsp_sntp_init();
 
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	/* Infinite loop */
+	for (;;) {
+		osDelay(1);
+	}
   /* USER CODE END 5 */
 }
 
 /* USER CODE BEGIN Header_StartSSIDTask */
 /**
-* @brief Function implementing the SSIDTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the SSIDTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartSSIDTask */
 void StartSSIDTask(void const * argument)
 {
   /* USER CODE BEGIN StartSSIDTask */
-  ulTaskNotifyTake(0, portMAX_DELAY);
-	  //
-  /* Infinite loop */
-  for(;;)
-  {
-	   if (strlen(randomSSID) != 0) {
-			  if (HAL_GetTick() - Ti >= 500000){
-				  Ti = HAL_GetTick();
-				  memset(&randomSSID, '\0', sizeof(randomSSID));
-				   //printf("StartTaskToken1 \n");
-			  }
-	   }
-    osDelay(1);
-  }
+	ulTaskNotifyTake(0, portMAX_DELAY);
+	//
+	/* Infinite loop */
+	for (;;) {
+		if (strlen(randomSSID) != 0) {
+			if (HAL_GetTick() - Ti >= 500000) {
+				Ti = HAL_GetTick();
+				memset(&randomSSID, '\0', sizeof(randomSSID));
+				//printf("StartTaskToken1 \n");
+			}
+		}
+		osDelay(1);
+	}
   /* USER CODE END StartSSIDTask */
 }
 
 /* USER CODE BEGIN Header_StartCronTask */
 /**
-* @brief Function implementing the CronTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the CronTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartCronTask */
 void StartCronTask(void const * argument)
 {
@@ -675,382 +662,412 @@ void StartCronTask(void const * argument)
 	size_t fail_index;
 	printf("Count task %d\r\n", LWDTC_ARRAYSIZE(dbCrontxt));
 	/* Parse all cron strings */
-	if (lwdtc_cron_parse_multi(cron_ctxs, dbCrontxt, MAXSIZE, &fail_index) != lwdtcOK) {
+	if (lwdtc_cron_parse_multi(cron_ctxs, dbCrontxt, MAXSIZE, &fail_index)
+			!= lwdtcOK) {
 		printf("Failed to parse cron at index %d\r\n", (int) fail_index);
 	}
 	printf("CRONs parsed and ready to go\r\n");
 
 	struct tm stm;
+	/* Infinite loop */
+	for (;;) {
+		if (stm.tm_year != 0) {
 
+			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
+			stm.tm_year = sDate.Year + 100; //RTC_Year rang 0-99,but tm_year since 1900
+			stm.tm_mon = sDate.Month - 1; //RTC_Month rang 1-12,but tm_mon rang 0-11
+			stm.tm_mday = sDate.Date; //RTC_Date rang 1-31 and tm_mday rang 1-31
+			stm.tm_hour = sTime.Hours; //RTC_Hours rang 0-23 and tm_hour rang 0-23
+			stm.tm_min = sTime.Minutes; //RTC_Minutes rang 0-59 and tm_min rang 0-59
+			stm.tm_sec = sTime.Seconds;
 
-  /* Infinite loop */
-  for(;;)
-  {
-	  if(stm.tm_year != 0){
+			cronetime = mktime(&stm);
 
-		HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+			if (cronetime != cronetime_old) {
+				cronetime_old = cronetime;
+				timez = localtime(&cronetime);
+				i = 0;
 
-		stm.tm_year = sDate.Year + 100; //RTC_Year rang 0-99,but tm_year since 1900
-		stm.tm_mon = sDate.Month - 1; //RTC_Month rang 1-12,but tm_mon rang 0-11
-		stm.tm_mday = sDate.Date; //RTC_Date rang 1-31 and tm_mday rang 1-31
-		stm.tm_hour = sTime.Hours;   //RTC_Hours rang 0-23 and tm_hour rang 0-23
-		stm.tm_min = sTime.Minutes; //RTC_Minutes rang 0-59 and tm_min rang 0-59
-		stm.tm_sec = sTime.Seconds;
+				while (i < LWDTC_ARRAYSIZE(dbCrontxt)) {
+					if (cronetime >= dbCrontxt[i].ptime
+							&& dbCrontxt[i].ptime != 0) {
 
-		cronetime = mktime(&stm);
-
-		if (cronetime != cronetime_old) {
-			cronetime_old = cronetime;
-			timez = localtime(&cronetime);
-			i = 0;
-
-
-			while (i < LWDTC_ARRAYSIZE(dbCrontxt)) {
-				if(cronetime >= dbCrontxt[i].ptime && dbCrontxt[i].ptime != 0){
-
-					strcpy(str, dbCrontxt[i].activ);
-					parse_string(str, cronetime_old, i, 1);
-		            dbCrontxt[i].ptime = 0;
-
+						strcpy(str, dbCrontxt[i].activ);
+						parse_string(str, cronetime_old, i, 1);
+						dbCrontxt[i].ptime = 0;
+					}
+					i++;
 				}
-				i++;
-			}
-			i=0;
+				i = 0;
 
+				/* Check if CRON should execute */
+				while (i < LWDTC_ARRAYSIZE(cron_ctxs)) {
+					if (lwdtc_cron_is_valid_for_time(timez, cron_ctxs, &i)
+							== lwdtcOK) {
 
-			/* Check if CRON should execute */
-			while (i < LWDTC_ARRAYSIZE(cron_ctxs)) {
-				if (lwdtc_cron_is_valid_for_time(timez, cron_ctxs, &i)== lwdtcOK) {
-
-					  strcpy(str, dbCrontxt[i].activ);
-					  parse_string(str, cronetime_old, i, 0);
-
-
-					//xQueueSend(myQueueHandle, &i, 0);
+						strcpy(str, dbCrontxt[i].activ);
+						parse_string(str, cronetime_old, i, 0);
+						//xQueueSend(myQueueHandle, &i, 0);
+					}
+					i++;
 				}
-				i++;
 			}
+			osDelay(1);
 		}
-    osDelay(1);
-   }
-  }
+	}
   /* USER CODE END StartCronTask */
 }
 
 /* USER CODE BEGIN Header_StartActionTask */
 /**
-* @brief Function implementing the ActionTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the ActionTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartActionTask */
 void StartActionTask(void const * argument)
 {
   /* USER CODE BEGIN StartActionTask */
-	  ulTaskNotifyTake(0, portMAX_DELAY);
-	  //
+	ulTaskNotifyTake(0, portMAX_DELAY);
+	//
 
-	  /* Infinite loop */
-	  for(;;)
-	  {
-
-
-		  if (xQueueReceive(myQueueHandle, &data_pin, portMAX_DELAY) == pdTRUE) {
-			  if(data_pin.action == 0){
-				  //@todo  проверить что data_pin.pin число
-				  HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin,GPIO_PIN_RESET);
-			  }
-			  if(data_pin.action == 1){
-				  //@todo  проверить что data_pin.pin число
-				  HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin,GPIO_PIN_SET);
-			  }
-			  if(data_pin.action == 2){
-				  //@todo  проверить что data_pin.pin число
-				  HAL_GPIO_TogglePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin);
-			  }
-
-		  }
-		  osDelay(1);
-	  }
+	/* Infinite loop */
+	for (;;) {
+		if (xQueueReceive(myQueueHandle, &data_pin, portMAX_DELAY) == pdTRUE) {
+			if (data_pin.action == 0) {
+				//@todo  проверить что data_pin.pin число
+				HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name,
+						PinsInfo[data_pin.pin].hal_pin, GPIO_PIN_RESET);
+			}
+			if (data_pin.action == 1) {
+				//@todo  проверить что data_pin.pin число
+				HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name,
+						PinsInfo[data_pin.pin].hal_pin, GPIO_PIN_SET);
+			}
+			if (data_pin.action == 2) {
+				//@todo  проверить что data_pin.pin число
+				HAL_GPIO_TogglePin(PinsInfo[data_pin.pin].gpio_name,
+						PinsInfo[data_pin.pin].hal_pin);
+			}
+		}
+		osDelay(1);
+	}
   /* USER CODE END StartActionTask */
 }
 
 /* USER CODE BEGIN Header_StartConfigTask */
 /**
-* @brief Function implementing the ConfigTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the ConfigTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartConfigTask */
 void StartConfigTask(void const * argument)
 {
   /* USER CODE BEGIN StartConfigTask */
 	int usbflag = 1;
-
 	FRESULT fresult;
 	FILINFO finfo;
 	UINT Byteswritten; // File read/write count
 
-    cJSON *root_obj = NULL;
-    char *out_str = NULL;
+	cJSON *root_obj = NULL;
+	char *out_str = NULL;
 
 	MX_FATFS_Init();
 	/* init code for USB_HOST */
 
 	MX_USB_HOST_Init();
-  /* Infinite loop */
-  for(;;)
-  {
+	/* Infinite loop */
+	for (;;) {
 		switch (Appli_state) {
-			case APPLICATION_READY:
-				//xQueueSend(myQueue02Handle, ( void * ) 1, 0);
+		case APPLICATION_READY:
+			if (usbflag == 1) {
+				osDelay(1000);
+				printf("APPLICATION_READY! \r\n");
 
-				if(usbflag == 1){
-					osDelay(1000);
-					printf("APPLICATION_READY! \r\n");
+				fresult = f_stat("setings.ini", &finfo);
+				if (fresult == FR_OK) {
+					// если файл существует, открываем его и перезаписываем
+					if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ)
+							== FR_OK) {
 
-					fresult = f_stat("setings.ini", &finfo);
-					if (fresult == FR_OK) {
-					    // если файл существует, открываем его и перезаписываем
-						if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ) == FR_OK) {
+						fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer),
+								&Byteswritten);
 
-							fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer), &Byteswritten);
+						cJSON *root_obj = cJSON_Parse(fsbuffer);
+						cJSON *adm_name = cJSON_GetObjectItem(root_obj,
+								"adm_name");
+						cJSON *adm_pswd = cJSON_GetObjectItem(root_obj,
+								"adm_pswd");
+						cJSON *lang = cJSON_GetObjectItem(root_obj, "lang");
+						cJSON *timezone = cJSON_GetObjectItem(root_obj,
+								"timezone");
+						cJSON *lon_de = cJSON_GetObjectItem(root_obj, "lon_de");
+						cJSON *lat_de = cJSON_GetObjectItem(root_obj, "lat_de");
+						cJSON *ip1_sntp0 = cJSON_GetObjectItem(root_obj,
+								"ip1_sntp0");
+						cJSON *ip1_sntp1 = cJSON_GetObjectItem(root_obj,
+								"ip1_sntp1");
+						cJSON *ip1_sntp2 = cJSON_GetObjectItem(root_obj,
+								"ip1_sntp2");
+						cJSON *ip1_sntp3 = cJSON_GetObjectItem(root_obj,
+								"ip1_sntp3");
+						cJSON *ip2_sntp0 = cJSON_GetObjectItem(root_obj,
+								"ip2_sntp0");
+						cJSON *ip2_sntp1 = cJSON_GetObjectItem(root_obj,
+								"ip2_sntp1");
+						cJSON *ip2_sntp2 = cJSON_GetObjectItem(root_obj,
+								"ip2_sntp2");
+						cJSON *ip2_sntp3 = cJSON_GetObjectItem(root_obj,
+								"ip2_sntp3");
+						cJSON *ip3_sntp0 = cJSON_GetObjectItem(root_obj,
+								"ip3_sntp0");
+						cJSON *ip3_sntp1 = cJSON_GetObjectItem(root_obj,
+								"ip3_sntp1");
+						cJSON *ip3_sntp2 = cJSON_GetObjectItem(root_obj,
+								"ip3_sntp2");
+						cJSON *ip3_sntp3 = cJSON_GetObjectItem(root_obj,
+								"ip3_sntp3");
+						// Настройки MQTT
+						cJSON *check_mqtt = cJSON_GetObjectItem(root_obj,
+								"check_mqtt");
+						cJSON *mqtt_prt = cJSON_GetObjectItem(root_obj,
+								"mqtt_prt");
+						cJSON *mqtt_clt = cJSON_GetObjectItem(root_obj,
+								"mqtt_clt");
+						cJSON *mqtt_usr = cJSON_GetObjectItem(root_obj,
+								"mqtt_usr");
+						cJSON *mqtt_pswd = cJSON_GetObjectItem(root_obj,
+								"mqtt_pswd");
+						cJSON *mqtt_tpc = cJSON_GetObjectItem(root_obj,
+								"mqtt_tpc");
+						cJSON *mqtt_ftpc = cJSON_GetObjectItem(root_obj,
+								"mqtt_ftpc");
+						cJSON *mqtt_hst0 = cJSON_GetObjectItem(root_obj,
+								"mqtt_hst0");
+						cJSON *mqtt_hst1 = cJSON_GetObjectItem(root_obj,
+								"mqtt_hst1");
+						cJSON *mqtt_hst2 = cJSON_GetObjectItem(root_obj,
+								"mqtt_hst2");
+						cJSON *mqtt_hst3 = cJSON_GetObjectItem(root_obj,
+								"mqtt_hst3");
+						// Настройки IP адреса
+						cJSON *check_ip = cJSON_GetObjectItem(root_obj,
+								"check_ip");
+						cJSON *ip_addr0 = cJSON_GetObjectItem(root_obj,
+								"ip_addr0");
+						cJSON *ip_addr1 = cJSON_GetObjectItem(root_obj,
+								"ip_addr1");
+						cJSON *ip_addr2 = cJSON_GetObjectItem(root_obj,
+								"ip_addr2");
+						cJSON *ip_addr3 = cJSON_GetObjectItem(root_obj,
+								"ip_addr3");
+						cJSON *sb_mask0 = cJSON_GetObjectItem(root_obj,
+								"sb_mask0");
+						cJSON *sb_mask1 = cJSON_GetObjectItem(root_obj,
+								"sb_mask1");
+						cJSON *sb_mask2 = cJSON_GetObjectItem(root_obj,
+								"sb_mask2");
+						cJSON *sb_mask3 = cJSON_GetObjectItem(root_obj,
+								"sb_mask3");
+						cJSON *gateway0 = cJSON_GetObjectItem(root_obj,
+								"gateway0");
+						cJSON *gateway1 = cJSON_GetObjectItem(root_obj,
+								"gateway1");
+						cJSON *gateway2 = cJSON_GetObjectItem(root_obj,
+								"gateway2");
+						cJSON *gateway3 = cJSON_GetObjectItem(root_obj,
+								"gateway3");
+						cJSON *macaddr0 = cJSON_GetObjectItem(root_obj,
+								"macaddr0");
+						cJSON *macaddr1 = cJSON_GetObjectItem(root_obj,
+								"macaddr1");
+						cJSON *macaddr2 = cJSON_GetObjectItem(root_obj,
+								"macaddr2");
+						cJSON *macaddr3 = cJSON_GetObjectItem(root_obj,
+								"macaddr3");
+						cJSON *macaddr4 = cJSON_GetObjectItem(root_obj,
+								"macaddr4");
+						cJSON *macaddr5 = cJSON_GetObjectItem(root_obj,
+								"macaddr5");
 
-							cJSON *root_obj = cJSON_Parse(fsbuffer);
-							cJSON *adm_name = cJSON_GetObjectItem(root_obj, "adm_name");
-							cJSON *adm_pswd = cJSON_GetObjectItem(root_obj, "adm_pswd");
-							cJSON *lang = cJSON_GetObjectItem(root_obj, "lang");
-							cJSON *timezone = cJSON_GetObjectItem(root_obj, "timezone");
-							cJSON *lon_de = cJSON_GetObjectItem(root_obj, "lon_de");
-							cJSON *lat_de = cJSON_GetObjectItem(root_obj, "lat_de");
-							cJSON *ip1_sntp0 = cJSON_GetObjectItem(root_obj, "ip1_sntp0");
-							cJSON *ip1_sntp1 = cJSON_GetObjectItem(root_obj, "ip1_sntp1");
-							cJSON *ip1_sntp2 = cJSON_GetObjectItem(root_obj, "ip1_sntp2");
-							cJSON *ip1_sntp3 = cJSON_GetObjectItem(root_obj, "ip1_sntp3");
-							cJSON *ip2_sntp0 = cJSON_GetObjectItem(root_obj, "ip2_sntp0");
-							cJSON *ip2_sntp1 = cJSON_GetObjectItem(root_obj, "ip2_sntp1");
-							cJSON *ip2_sntp2 = cJSON_GetObjectItem(root_obj, "ip2_sntp2");
-							cJSON *ip2_sntp3 = cJSON_GetObjectItem(root_obj, "ip2_sntp3");
-							cJSON *ip3_sntp0 = cJSON_GetObjectItem(root_obj, "ip3_sntp0");
-							cJSON *ip3_sntp1 = cJSON_GetObjectItem(root_obj, "ip3_sntp1");
-							cJSON *ip3_sntp2 = cJSON_GetObjectItem(root_obj, "ip3_sntp2");
-							cJSON *ip3_sntp3 = cJSON_GetObjectItem(root_obj, "ip3_sntp3");
-							// Настройки MQTT
-							cJSON *check_mqtt = cJSON_GetObjectItem(root_obj, "check_mqtt");
-							cJSON *mqtt_prt = cJSON_GetObjectItem(root_obj, "mqtt_prt");
-							cJSON *mqtt_clt = cJSON_GetObjectItem(root_obj, "mqtt_clt");
-							cJSON *mqtt_usr = cJSON_GetObjectItem(root_obj, "mqtt_usr");
-							cJSON *mqtt_pswd = cJSON_GetObjectItem(root_obj, "mqtt_pswd");
-							cJSON *mqtt_tpc = cJSON_GetObjectItem(root_obj, "mqtt_tpc");
-							cJSON *mqtt_ftpc = cJSON_GetObjectItem(root_obj, "mqtt_ftpc");
-							cJSON *mqtt_hst0 = cJSON_GetObjectItem(root_obj, "mqtt_hst0");
-							cJSON *mqtt_hst1 = cJSON_GetObjectItem(root_obj, "mqtt_hst1");
-							cJSON *mqtt_hst2 = cJSON_GetObjectItem(root_obj, "mqtt_hst2");
-							cJSON *mqtt_hst3 = cJSON_GetObjectItem(root_obj, "mqtt_hst3");
-							// Настройки IP адреса
-							cJSON *check_ip = cJSON_GetObjectItem(root_obj, "check_ip");
-							cJSON *ip_addr0 = cJSON_GetObjectItem(root_obj, "ip_addr0");
-							cJSON *ip_addr1 = cJSON_GetObjectItem(root_obj, "ip_addr1");
-							cJSON *ip_addr2 = cJSON_GetObjectItem(root_obj, "ip_addr2");
-							cJSON *ip_addr3 = cJSON_GetObjectItem(root_obj, "ip_addr3");
-							cJSON *sb_mask0 = cJSON_GetObjectItem(root_obj, "sb_mask0");
-							cJSON *sb_mask1 = cJSON_GetObjectItem(root_obj, "sb_mask1");
-							cJSON *sb_mask2 = cJSON_GetObjectItem(root_obj, "sb_mask2");
-							cJSON *sb_mask3 = cJSON_GetObjectItem(root_obj, "sb_mask3");
-							cJSON *gateway0 = cJSON_GetObjectItem(root_obj, "gateway0");
-							cJSON *gateway1 = cJSON_GetObjectItem(root_obj, "gateway1");
-							cJSON *gateway2 = cJSON_GetObjectItem(root_obj, "gateway2");
-							cJSON *gateway3 = cJSON_GetObjectItem(root_obj, "gateway3");
-							cJSON *macaddr0 = cJSON_GetObjectItem(root_obj, "macaddr0");
-							cJSON *macaddr1 = cJSON_GetObjectItem(root_obj, "macaddr1");
-							cJSON *macaddr2 = cJSON_GetObjectItem(root_obj, "macaddr2");
-							cJSON *macaddr3 = cJSON_GetObjectItem(root_obj, "macaddr3");
-							cJSON *macaddr4 = cJSON_GetObjectItem(root_obj, "macaddr4");
-							cJSON *macaddr5 = cJSON_GetObjectItem(root_obj, "macaddr5");
+						strcpy(SetSettings.adm_name, adm_name->valuestring);
+						strcpy(SetSettings.adm_pswd, adm_pswd->valuestring);
+						strcpy(SetSettings.lang, lang->valuestring);
 
-							strcpy(SetSettings.adm_name, adm_name->valuestring);
-							strcpy(SetSettings.adm_pswd, adm_pswd->valuestring);
-							strcpy(SetSettings.lang, lang->valuestring);
+						SetSettings.timezone = timezone->valueint;
+						SetSettings.lon_de = lon_de->valueint;
+						SetSettings.lat_de = lat_de->valueint;
 
-							SetSettings.timezone = timezone->valueint;
-							SetSettings.lon_de = lon_de->valueint;
-							SetSettings.lat_de = lat_de->valueint;
+						SetSettings.ip1_sntp0 = ip1_sntp0->valueint;
+						SetSettings.ip1_sntp1 = ip1_sntp1->valueint;
+						SetSettings.ip1_sntp2 = ip1_sntp2->valueint;
+						SetSettings.ip1_sntp3 = ip1_sntp3->valueint;
+						SetSettings.ip2_sntp0 = ip2_sntp0->valueint;
+						SetSettings.ip2_sntp1 = ip2_sntp1->valueint;
+						SetSettings.ip2_sntp2 = ip2_sntp2->valueint;
+						SetSettings.ip2_sntp3 = ip2_sntp3->valueint;
+						SetSettings.ip3_sntp0 = ip3_sntp0->valueint;
+						SetSettings.ip3_sntp1 = ip3_sntp1->valueint;
+						SetSettings.ip3_sntp2 = ip3_sntp2->valueint;
+						SetSettings.ip3_sntp3 = ip3_sntp3->valueint;
 
-							SetSettings.ip1_sntp0 = ip1_sntp0->valueint;
-							SetSettings.ip1_sntp1 = ip1_sntp1->valueint;
-							SetSettings.ip1_sntp2 = ip1_sntp2->valueint;
-							SetSettings.ip1_sntp3 = ip1_sntp3->valueint;
-							SetSettings.ip2_sntp0 = ip2_sntp0->valueint;
-							SetSettings.ip2_sntp1 = ip2_sntp1->valueint;
-							SetSettings.ip2_sntp2 = ip2_sntp2->valueint;
-							SetSettings.ip2_sntp3 = ip2_sntp3->valueint;
-							SetSettings.ip3_sntp0 = ip3_sntp0->valueint;
-							SetSettings.ip3_sntp1 = ip3_sntp1->valueint;
-							SetSettings.ip3_sntp2 = ip3_sntp2->valueint;
-							SetSettings.ip3_sntp3 = ip3_sntp3->valueint;
+						SetSettings.check_mqtt = check_mqtt->valueint;
+						SetSettings.mqtt_prt = mqtt_prt->valueint;
 
-							SetSettings.check_mqtt = check_mqtt->valueint;
-							SetSettings.mqtt_prt = mqtt_prt->valueint;
+						strcpy(SetSettings.mqtt_clt, mqtt_clt->valuestring);
+						strcpy(SetSettings.mqtt_usr, mqtt_usr->valuestring);
+						strcpy(SetSettings.mqtt_pswd, mqtt_pswd->valuestring);
+						strcpy(SetSettings.mqtt_tpc, mqtt_tpc->valuestring);
+						strcpy(SetSettings.mqtt_ftpc, mqtt_ftpc->valuestring);
 
-							strcpy(SetSettings.mqtt_clt, mqtt_clt->valuestring);
-							strcpy(SetSettings.mqtt_usr, mqtt_usr->valuestring);
-							strcpy(SetSettings.mqtt_pswd, mqtt_pswd->valuestring);
-							strcpy(SetSettings.mqtt_tpc, mqtt_tpc->valuestring);
-							strcpy(SetSettings.mqtt_ftpc, mqtt_ftpc->valuestring);
+						SetSettings.mqtt_hst0 = mqtt_hst0->valueint;
+						SetSettings.mqtt_hst1 = mqtt_hst1->valueint;
+						SetSettings.mqtt_hst2 = mqtt_hst2->valueint;
+						SetSettings.mqtt_hst3 = mqtt_hst3->valueint;
 
-							SetSettings.mqtt_hst0 = mqtt_hst0->valueint;
-							SetSettings.mqtt_hst1 = mqtt_hst1->valueint;
-							SetSettings.mqtt_hst2 = mqtt_hst2->valueint;
-							SetSettings.mqtt_hst3 = mqtt_hst3->valueint;
+						SetSettings.check_ip = check_ip->valueint;
+						SetSettings.ip_addr0 = ip_addr0->valueint;
+						SetSettings.ip_addr1 = ip_addr1->valueint;
+						SetSettings.ip_addr2 = ip_addr2->valueint;
+						SetSettings.ip_addr3 = ip_addr3->valueint;
+						SetSettings.sb_mask0 = sb_mask0->valueint;
+						SetSettings.sb_mask1 = sb_mask1->valueint;
+						SetSettings.sb_mask2 = sb_mask2->valueint;
+						SetSettings.sb_mask3 = sb_mask3->valueint;
+						SetSettings.gateway0 = gateway0->valueint;
+						SetSettings.gateway1 = gateway1->valueint;
+						SetSettings.gateway2 = gateway2->valueint;
+						SetSettings.gateway3 = gateway3->valueint;
+						SetSettings.macaddr0 = macaddr0->valueint;
+						SetSettings.macaddr1 = macaddr1->valueint;
+						SetSettings.macaddr2 = macaddr2->valueint;
+						SetSettings.macaddr3 = macaddr3->valueint;
+						SetSettings.macaddr4 = macaddr4->valueint;
+						SetSettings.macaddr5 = macaddr5->valueint;
 
-							SetSettings.check_ip = check_ip->valueint;
-							SetSettings.ip_addr0 = ip_addr0->valueint;
-							SetSettings.ip_addr1 = ip_addr1->valueint;
-							SetSettings.ip_addr2 = ip_addr2->valueint;
-							SetSettings.ip_addr3 = ip_addr3->valueint;
-							SetSettings.sb_mask0 = sb_mask0->valueint;
-							SetSettings.sb_mask1 = sb_mask1->valueint;
-							SetSettings.sb_mask2 = sb_mask2->valueint;
-							SetSettings.sb_mask3 = sb_mask3->valueint;
-							SetSettings.gateway0 = gateway0->valueint;
-							SetSettings.gateway1 = gateway1->valueint;
-							SetSettings.gateway2 = gateway2->valueint;
-							SetSettings.gateway3 = gateway3->valueint;
-							SetSettings.macaddr0 = macaddr0->valueint;
-							SetSettings.macaddr1 = macaddr1->valueint;
-							SetSettings.macaddr2 = macaddr2->valueint;
-							SetSettings.macaddr3 = macaddr3->valueint;
-							SetSettings.macaddr4 = macaddr4->valueint;
-							SetSettings.macaddr5 = macaddr5->valueint;
+						cJSON_Delete(root_obj);
 
-							cJSON_Delete(root_obj);
+						f_close(&USBHFile);
 
-							f_close(&USBHFile);
+						xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
+						xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
+						xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
+						xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
 
-							xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
-							xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
-							xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
-							xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
-
-						}
-					} else {
-					    // если файл не существует, создаем его и записываем данные
-					    if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
-					    	printf("f_open! create setings.ini \r\n");
-					    	root_obj = cJSON_CreateObject();
-
-					    	cJSON_AddStringToObject(root_obj, "adm_name", "admin");
-					    	cJSON_AddStringToObject(root_obj, "adm_pswd", "12345678"); // Пароль для авторизации
-					    	cJSON_AddStringToObject(root_obj, "lang", "ru"); //
-					    	cJSON_AddNumberToObject(root_obj, "timezone",0);	// UTC
-					    	cJSON_AddNumberToObject(root_obj, "lon_de",0); 	// Longitude / Долгота
-					    	cJSON_AddNumberToObject(root_obj, "lat_de",0);   	// Latitude / Широта
-					    	cJSON_AddNumberToObject(root_obj, "ip1_sntp0",0);	// SMTP Server primary
-					    	cJSON_AddNumberToObject(root_obj, "ip1_sntp1",0); 	// SMTP Server primary
-					    	cJSON_AddNumberToObject(root_obj, "ip1_sntp2",0); 	// SMTP Server primary
-					    	cJSON_AddNumberToObject(root_obj, "ip1_sntp3",0);	// SMTP Server primary
-					    	cJSON_AddNumberToObject(root_obj, "ip2_sntp0",0); 	// SMTP Server secondary
-					    	cJSON_AddNumberToObject(root_obj, "ip2_sntp1",0);	// SMTP Server secondary
-					    	cJSON_AddNumberToObject(root_obj, "ip2_sntp2",0); 	// SMTP Server secondary
-					    	cJSON_AddNumberToObject(root_obj, "ip2_sntp3",0);	// SMTP Server secondary
-					    	cJSON_AddNumberToObject(root_obj, "ip3_sntp0",0);	// SMTP Server teriary
-					    	cJSON_AddNumberToObject(root_obj, "ip3_sntp1",0); 	// SMTP Server teriary
-					    	cJSON_AddNumberToObject(root_obj, "ip3_sntp2",0); 	// SMTP Server teriary
-					    	cJSON_AddNumberToObject(root_obj, "ip3_sntp3",0); 	// SMTP Server teriary
-					    	cJSON_AddNumberToObject(root_obj, "check_mqtt",0); 	// check MQTT on/off
-					    	cJSON_AddNumberToObject(root_obj, "mqtt_prt",0);       // Your MQTT broker port (default port is set to 1883)
-					    	cJSON_AddStringToObject(root_obj, "mqtt_clt", "");  // Device's unique identifier.
-					    	cJSON_AddStringToObject(root_obj, "mqtt_usr", ""); // MQTT Имя пользователя для авторизации
-					    	cJSON_AddStringToObject(root_obj, "mqtt_pswd", ""); // MQTT Пароль для авторизации
-					    	cJSON_AddStringToObject(root_obj, "mqtt_tpc", ""); // Unique identifying topic for your device (kitchen-light) It is recommended to use a single word for the topic.
-					    	cJSON_AddStringToObject(root_obj, "mqtt_ftpc", ""); // Полный топик for example lights/%prefix%/%topic%/
-					    	cJSON_AddNumberToObject(root_obj, "mqtt_hst0",0); 	// Your MQTT broker address or IP
-					    	cJSON_AddNumberToObject(root_obj, "mqtt_hst1",0); 	// Your MQTT broker address or IP
-					    	cJSON_AddNumberToObject(root_obj, "mqtt_hst2",0); 	// Your MQTT broker address or IP
-					    	cJSON_AddNumberToObject(root_obj, "mqtt_hst3",0); 	// Your MQTT broker address or IP
-					    	// Настройки IP адреса
-					    	cJSON_AddNumberToObject(root_obj, "check_ip",0); 	// check DHCP on/off
-					    	cJSON_AddNumberToObject(root_obj, "ip_addr0",192); 	// IP адрес
-					    	cJSON_AddNumberToObject(root_obj, "ip_addr1",168); 	// IP адрес
-					    	cJSON_AddNumberToObject(root_obj, "ip_addr2",11); 	// IP адрес
-					    	cJSON_AddNumberToObject(root_obj, "ip_addr3",88); 	// IP адрес
-					    	cJSON_AddNumberToObject(root_obj, "sb_mask0",255);		// Маска сети
-					    	cJSON_AddNumberToObject(root_obj, "sb_mask1",255);		// Маска сети
-					    	cJSON_AddNumberToObject(root_obj, "sb_mask2",255);		// Маска сети
-					    	cJSON_AddNumberToObject(root_obj, "sb_mask3",0);		// Маска сети
-					    	cJSON_AddNumberToObject(root_obj, "gateway0",192); 	// Шлюз
-					    	cJSON_AddNumberToObject(root_obj, "gateway1",168); 	// Шлюз
-					    	cJSON_AddNumberToObject(root_obj, "gateway2",11); 	// Шлюз
-					    	cJSON_AddNumberToObject(root_obj, "gateway3",1); 	// Шлюз
-					    	cJSON_AddNumberToObject(root_obj, "macaddr0",0);	// MAC address
-					    	cJSON_AddNumberToObject(root_obj, "macaddr1",0);	// MAC address
-					    	cJSON_AddNumberToObject(root_obj, "macaddr2",0);	// MAC address
-					    	cJSON_AddNumberToObject(root_obj, "macaddr3",0);	// MAC address
-					    	cJSON_AddNumberToObject(root_obj, "macaddr4",0);	// MAC address
-					    	cJSON_AddNumberToObject(root_obj, "macaddr5",0);	// MAC address
-
-					        out_str = cJSON_PrintUnformatted(root_obj);
-
-
-							//sprintf(tbuf,"LAN zagotovka, USB task added information to Relays - score000000\r\n"); // данные которые запишем в файл!
-							fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
-
-					    	printf("f_open! setings.ini \r\n");
-
-					    	cJSON_Delete(root_obj);
-					        f_close(&USBHFile);
-
-					    	strcpy(SetSettings.lang, "ru");
-					    	strcpy(SetSettings.adm_name, "admin");
-					    	strcpy(SetSettings.adm_pswd, "12345678");
-					        SetSettings.ip_addr0 = 192;
-					        SetSettings.ip_addr1 = 168;
-					        SetSettings.ip_addr2 = 11;
-					        SetSettings.ip_addr3 = 80;
-					        SetSettings.sb_mask0 = 255;
-					        SetSettings.sb_mask1 = 255;
-					        SetSettings.sb_mask2 = 255;
-					        SetSettings.sb_mask3 = 0;
-					        SetSettings.gateway0 = 192;
-					        SetSettings.gateway1 = 168;
-					        SetSettings.gateway2 = 11;
-					        SetSettings.gateway3 = 1;
-					        SetSettings.mqtt_prt = 1883;
-
-							xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
-							xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
-							xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
-							xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
-					    }
 					}
+				} else {
+					// если файл не существует, создаем его и записываем данные
+					if (f_open(&USBHFile, (const TCHAR*) "setings.ini",
+							FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+						printf("f_open! create setings.ini \r\n");
+						root_obj = cJSON_CreateObject();
 
-					usbflag = 0;
+						cJSON_AddStringToObject(root_obj, "adm_name", "admin");
+						cJSON_AddStringToObject(root_obj, "adm_pswd",
+								"12345678"); // Пароль для авторизации
+						cJSON_AddStringToObject(root_obj, "lang", "ru"); //
+						cJSON_AddNumberToObject(root_obj, "timezone", 0);// UTC
+						cJSON_AddNumberToObject(root_obj, "lon_de", 0); // Longitude / Долгота
+						cJSON_AddNumberToObject(root_obj, "lat_de", 0); // Latitude / Широта
+						cJSON_AddNumberToObject(root_obj, "ip1_sntp0", 0);// SMTP Server primary
+						cJSON_AddNumberToObject(root_obj, "ip1_sntp1", 0); // SMTP Server primary
+						cJSON_AddNumberToObject(root_obj, "ip1_sntp2", 0); // SMTP Server primary
+						cJSON_AddNumberToObject(root_obj, "ip1_sntp3", 0);// SMTP Server primary
+						cJSON_AddNumberToObject(root_obj, "ip2_sntp0", 0); // SMTP Server secondary
+						cJSON_AddNumberToObject(root_obj, "ip2_sntp1", 0);// SMTP Server secondary
+						cJSON_AddNumberToObject(root_obj, "ip2_sntp2", 0); // SMTP Server secondary
+						cJSON_AddNumberToObject(root_obj, "ip2_sntp3", 0);// SMTP Server secondary
+						cJSON_AddNumberToObject(root_obj, "ip3_sntp0", 0);// SMTP Server teriary
+						cJSON_AddNumberToObject(root_obj, "ip3_sntp1", 0); // SMTP Server teriary
+						cJSON_AddNumberToObject(root_obj, "ip3_sntp2", 0); // SMTP Server teriary
+						cJSON_AddNumberToObject(root_obj, "ip3_sntp3", 0); // SMTP Server teriary
+						cJSON_AddNumberToObject(root_obj, "check_mqtt", 0); // check MQTT on/off
+						cJSON_AddNumberToObject(root_obj, "mqtt_prt", 0); // Your MQTT broker port (default port is set to 1883)
+						cJSON_AddStringToObject(root_obj, "mqtt_clt", ""); // Device's unique identifier.
+						cJSON_AddStringToObject(root_obj, "mqtt_usr", ""); // MQTT Имя пользователя для авторизации
+						cJSON_AddStringToObject(root_obj, "mqtt_pswd", ""); // MQTT Пароль для авторизации
+						cJSON_AddStringToObject(root_obj, "mqtt_tpc", ""); // Unique identifying topic for your device (kitchen-light) It is recommended to use a single word for the topic.
+						cJSON_AddStringToObject(root_obj, "mqtt_ftpc", ""); // Полный топик for example lights/%prefix%/%topic%/
+						cJSON_AddNumberToObject(root_obj, "mqtt_hst0", 0); // Your MQTT broker address or IP
+						cJSON_AddNumberToObject(root_obj, "mqtt_hst1", 0); // Your MQTT broker address or IP
+						cJSON_AddNumberToObject(root_obj, "mqtt_hst2", 0); // Your MQTT broker address or IP
+						cJSON_AddNumberToObject(root_obj, "mqtt_hst3", 0); // Your MQTT broker address or IP
+						// Настройки IP адреса
+						cJSON_AddNumberToObject(root_obj, "check_ip", 0); // check DHCP on/off
+						cJSON_AddNumberToObject(root_obj, "ip_addr0", 192); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "ip_addr1", 168); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "ip_addr2", 18); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "ip_addr3", 88); // IP адрес
+						cJSON_AddNumberToObject(root_obj, "sb_mask0", 255);	// Маска сети
+						cJSON_AddNumberToObject(root_obj, "sb_mask1", 255);	// Маска сети
+						cJSON_AddNumberToObject(root_obj, "sb_mask2", 255);	// Маска сети
+						cJSON_AddNumberToObject(root_obj, "sb_mask3", 0);// Маска сети
+						cJSON_AddNumberToObject(root_obj, "gateway0", 192); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "gateway1", 168); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "gateway2", 18); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "gateway3", 1); // Шлюз
+						cJSON_AddNumberToObject(root_obj, "macaddr0", 0);// MAC address
+						cJSON_AddNumberToObject(root_obj, "macaddr1", 0);// MAC address
+						cJSON_AddNumberToObject(root_obj, "macaddr2", 0);// MAC address
+						cJSON_AddNumberToObject(root_obj, "macaddr3", 0);// MAC address
+						cJSON_AddNumberToObject(root_obj, "macaddr4", 0);// MAC address
+						cJSON_AddNumberToObject(root_obj, "macaddr5", 0);// MAC address
 
+						out_str = cJSON_PrintUnformatted(root_obj);
 
-					if (xQueueReceive(myQueue02Handle, &rwusb, portMAX_DELAY) == pdTRUE) {
+						//sprintf(tbuf,"LAN zagotovka, USB task added information to Relays - score000000\r\n"); // данные которые запишем в файл!
+						fresult = f_write(&USBHFile, (const void*) out_str,
+								strlen(out_str), &Byteswritten);
 
-						switch (rwusb) {
-							case 1:
+						printf("f_open! setings.ini \r\n");
 
-								printf("w setings! %d \r\n", rwusb);
-								break;
-							default:
-								//printf("Wrong data! \r\n");
-								break;
+						cJSON_Delete(root_obj);
+						f_close(&USBHFile);
 
-						}
+						strcpy(SetSettings.lang, "ru");
+						strcpy(SetSettings.adm_name, "admin");
+						strcpy(SetSettings.adm_pswd, "12345678");
+						SetSettings.ip_addr0 = 192;
+						SetSettings.ip_addr1 = 168;
+						SetSettings.ip_addr2 = 18;
+						SetSettings.ip_addr3 = 80;
+						SetSettings.sb_mask0 = 255;
+						SetSettings.sb_mask1 = 255;
+						SetSettings.sb_mask2 = 255;
+						SetSettings.sb_mask3 = 0;
+						SetSettings.gateway0 = 192;
+						SetSettings.gateway1 = 168;
+						SetSettings.gateway2 = 18;
+						SetSettings.gateway3 = 1;
+						SetSettings.mqtt_prt = 1883;
 
+						xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
+						xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
+						xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
+						xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
 					}
 				}
-				break;
-			default:
-				//printf("Wrong data! \r\n");
-				break;
+
+				usbflag = 0;
+			}
+
+/******************************************************************************************/
+			// Функция для чтения целых чисел из очереди
+				if (xQueueReceive(usbQueueHandle, &usbnum,portMAX_DELAY) == pdTRUE) {
+					printf("+++ Received number: %u\n", usbnum);
+				}
+/******************************************************************************************/
+
+			break;
+		default:
+			//printf("Wrong data! \r\n");
+			break;
 		}
-    osDelay(1);
-  }
+		osDelay(1);
+	}
   /* USER CODE END StartConfigTask */
 }
 
@@ -1082,11 +1099,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 

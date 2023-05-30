@@ -14,10 +14,10 @@
 #include "lwip/apps/httpd.h"
 #include "stm32f7xx_hal.h"
 #include "math.h"
-#include "cmsis_os.h"
 #include "time.h"
 #include "cJSON.h"
 #include "db.h"
+#include "cmsis_os.h"
 
 //#define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
@@ -34,12 +34,7 @@ char randomSSID[27] = {0};
 char ssid[27] = {0};
 char url[30] = {0};
 char tempbufer[1024] = {0};
-
-uint16_t rusb = 0;
 extern unsigned long Ti;
-extern osMessageQId myQueue02Handle;
-
-
 
 
 extern struct dbPinsConf PinsConf[NUMPIN];
@@ -50,6 +45,7 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 
 ///////////////////////////
 
+extern osMessageQId usbQueueHandle;
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
 {
@@ -1297,8 +1293,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
     int id = 0;
 	char *end_str;
 	char *name;
-
-
+	uint16_t usbdata = 0;
 	printf("POST %s \n", v_PostBufer.buf);
 
     char *token = strtok_r(v_PostBufer.buf, "&", &end_str);
@@ -1323,24 +1318,28 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         		if (strcmp(v_PostBufer.uri, "/tabrelay.shtml") == 0 && id != 0){
         			if(token2 != NULL){
         				setPinRelay(id, name, token2);
+        				usbdata = 1;
         			}
         		}
         		// POST request Buttom
         		if (strcmp(v_PostBufer.uri, "/tabbuttom.shtml") == 0 && id != 0){
         			if(token2 != NULL){
         				setPinButtom(id, name, token2);
+        				usbdata = 1;
         			}
         		}
         		// POST request Settings
         		if (strcmp(v_PostBufer.uri, "/settings.shtml") == 0){
         			if(token2 != NULL){
         				setSettings(name, token2);
+        				usbdata = 2;
         			}
         		}
         		// POST request Cron
 				if (strcmp(v_PostBufer.uri, "/tabcron.shtml") == 0){
 					if(token2 != NULL){
 						setCron(id, name, token2);
+						usbdata = 3;
 					}
 				}
 
@@ -1354,12 +1353,18 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 
 	if (current_connection == connection) {
 	    /* login succeeded */
-		rusb = 1;
-
-		xQueueSend(myQueue02Handle, ( void * ) &rusb, 0);
 
 		printf("URL %s \n", v_PostBufer.uri);
 		printf("SSID %s \n", ssid);
+
+/******************************************************************************************/
+		// Отправка числа в очередь
+		if(usbdata != 0){
+			xQueueSend(usbQueueHandle, &usbdata, 0);
+		}
+		usbdata = 0;
+
+/******************************************************************************************/
 
 		restartSSID();
 		snprintf(response_uri, response_uri_len, v_PostBufer.uri);
