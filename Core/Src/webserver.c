@@ -79,7 +79,6 @@ int MultiPartTabCount(int num, int pinnum, int count)
 	count = 0;
 	for (int i = 0; i <= pinnum; i++){
 		if(num == PinsConf[i].topin && num == 1){
-			printf("pin  %d \n", i);
 			count++;
 		}
 		if(num == PinsConf[i].topin && num == 2){
@@ -567,7 +566,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			// @todo проверка передзаписью превязан ли этот пин уже или нет
 			while (i <= NUMPINLINKS - 1) {
 				if (PinsLinks[i].flag == 0) {
-					printf("flag %d \n", i);
+					//printf("flag %d \n", i);
 					PinsLinks[i].idin = idin - 1;
 					PinsLinks[i].idout = idout - 1;
 					PinsLinks[i].flag = 1;
@@ -1134,7 +1133,6 @@ void parserIP(char *data, unsigned char *value)
         if (isdigit((unsigned char)*data)) {
             value[index] *= 10;
             value[index] += *data - '0';
-            printf("%d - %d \n" , index, value[index]);
         } else {
             index++;
         }
@@ -1176,7 +1174,6 @@ void setSettings(char *name, char *token) {
 		SetSettings.gateway3 = value[3];
 	} else if (strcmp(name, "macaddr") == 0) {
 		strcpy(ipstr, token);
-		printf("MAC %s \n", ipstr);
 		//uint8_t bytes[6];
 		if( 6 == sscanf(ipstr, "%x-%x-%x-%x-%x-%x%*c", &values[0], &values[1], &values[2], &values[3], &values[4], &values[5])){
 		    /* convert to uint8_t */
@@ -1307,7 +1304,6 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         	count++;
         	if(count == 1){
         	    name = token2;
-        		printf("key: %s \n", name);
         	}
         	if(count == 2){
         		// SET id
@@ -1355,7 +1351,6 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 	    /* login succeeded */
 
 		printf("URL %s \n", v_PostBufer.uri);
-		printf("SSID %s \n", ssid);
 
 /******************************************************************************************/
 		// Отправка числа в очередь

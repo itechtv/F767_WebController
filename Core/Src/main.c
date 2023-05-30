@@ -1057,6 +1057,76 @@ void StartConfigTask(void const * argument)
 /******************************************************************************************/
 			// Функция для чтения целых чисел из очереди
 				if (xQueueReceive(usbQueueHandle, &usbnum,portMAX_DELAY) == pdTRUE) {
+					switch (Appli_state) {
+					case 1:
+						break;
+					case 2:
+						if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+
+							root_obj = cJSON_CreateObject();
+							cJSON_AddStringToObject(root_obj, "adm_name", SetSettings.adm_name);
+							cJSON_AddStringToObject(root_obj, "adm_pswd", SetSettings.adm_pswd);
+							cJSON_AddStringToObject(root_obj, "lang", SetSettings.lang);
+							cJSON_AddNumberToObject(root_obj, "timezone", SetSettings.timezone);
+							cJSON_AddNumberToObject(root_obj, "lon_de", SetSettings.lon_de);
+							cJSON_AddNumberToObject(root_obj, "lat_de", SetSettings.lat_de);
+							cJSON_AddNumberToObject(root_obj, "ip1_sntp0", SetSettings.ip1_sntp0);
+							cJSON_AddNumberToObject(root_obj, "ip1_sntp1", SetSettings.ip1_sntp1);
+							cJSON_AddNumberToObject(root_obj, "ip1_sntp2", SetSettings.ip1_sntp2);
+							cJSON_AddNumberToObject(root_obj, "ip1_sntp3", SetSettings.ip1_sntp3);
+							cJSON_AddNumberToObject(root_obj, "ip2_sntp0", SetSettings.ip2_sntp0);
+							cJSON_AddNumberToObject(root_obj, "ip2_sntp1", SetSettings.ip2_sntp1);
+							cJSON_AddNumberToObject(root_obj, "ip2_sntp2", SetSettings.ip2_sntp2);
+							cJSON_AddNumberToObject(root_obj, "ip2_sntp3", SetSettings.ip2_sntp3);
+							cJSON_AddNumberToObject(root_obj, "ip3_sntp0", SetSettings.ip3_sntp0);
+							cJSON_AddNumberToObject(root_obj, "ip3_sntp1", SetSettings.ip3_sntp1);
+							cJSON_AddNumberToObject(root_obj, "ip3_sntp2", SetSettings.ip3_sntp2);
+							cJSON_AddNumberToObject(root_obj, "ip3_sntp3", SetSettings.ip3_sntp3);
+							cJSON_AddNumberToObject(root_obj, "check_mqtt", SetSettings.check_mqtt);
+							cJSON_AddNumberToObject(root_obj, "mqtt_prt", SetSettings.mqtt_prt);
+							cJSON_AddStringToObject(root_obj, "mqtt_clt", SetSettings.mqtt_clt);
+							cJSON_AddStringToObject(root_obj, "mqtt_usr", SetSettings.mqtt_usr);
+							cJSON_AddStringToObject(root_obj, "mqtt_pswd", SetSettings.mqtt_pswd);
+							cJSON_AddStringToObject(root_obj, "mqtt_tpc", SetSettings.mqtt_tpc);
+							cJSON_AddStringToObject(root_obj, "mqtt_ftpc", SetSettings.mqtt_ftpc);
+							cJSON_AddNumberToObject(root_obj, "mqtt_hst0", SetSettings.mqtt_hst0);
+							cJSON_AddNumberToObject(root_obj, "mqtt_hst1", SetSettings.mqtt_hst1);
+							cJSON_AddNumberToObject(root_obj, "mqtt_hst2", SetSettings.mqtt_hst2);
+							cJSON_AddNumberToObject(root_obj, "mqtt_hst3", SetSettings.mqtt_hst3);
+							cJSON_AddNumberToObject(root_obj, "check_ip", SetSettings.check_ip);
+							cJSON_AddNumberToObject(root_obj, "ip_addr0", SetSettings.ip_addr0);
+							cJSON_AddNumberToObject(root_obj, "ip_addr1", SetSettings.ip_addr1);
+							cJSON_AddNumberToObject(root_obj, "ip_addr2", SetSettings.ip_addr2);
+							cJSON_AddNumberToObject(root_obj, "ip_addr3", SetSettings.ip_addr3);
+							cJSON_AddNumberToObject(root_obj, "sb_mask0", SetSettings.sb_mask0);
+							cJSON_AddNumberToObject(root_obj, "sb_mask1", SetSettings.sb_mask1);
+							cJSON_AddNumberToObject(root_obj, "sb_mask2", SetSettings.sb_mask2);
+							cJSON_AddNumberToObject(root_obj, "sb_mask3", SetSettings.sb_mask3);
+							cJSON_AddNumberToObject(root_obj, "gateway0", SetSettings.gateway0);
+							cJSON_AddNumberToObject(root_obj, "gateway1", SetSettings.gateway1);
+							cJSON_AddNumberToObject(root_obj, "gateway2", SetSettings.gateway2);
+							cJSON_AddNumberToObject(root_obj, "gateway3", SetSettings.gateway3);
+							cJSON_AddNumberToObject(root_obj, "macaddr0", SetSettings.macaddr0);
+							cJSON_AddNumberToObject(root_obj, "macaddr1", SetSettings.macaddr1);
+							cJSON_AddNumberToObject(root_obj, "macaddr2", SetSettings.macaddr2);
+							cJSON_AddNumberToObject(root_obj, "macaddr3", SetSettings.macaddr3);
+							cJSON_AddNumberToObject(root_obj, "macaddr4", SetSettings.macaddr4);
+							cJSON_AddNumberToObject(root_obj, "macaddr5", SetSettings.macaddr5);
+
+							out_str = cJSON_PrintUnformatted(root_obj);
+							fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+
+							cJSON_Delete(root_obj);
+							f_close(&USBHFile);
+
+						}
+						break;
+					case 3:
+						break;
+					default:
+						//printf("Wrong data! \r\n");
+						break;
+					}
 					printf("+++ Received number: %u\n", usbnum);
 				}
 /******************************************************************************************/
