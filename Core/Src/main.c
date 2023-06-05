@@ -773,6 +773,7 @@ void StartConfigTask(void const * argument)
 	UINT Byteswritten; // File read/write count
 
 	cJSON *root_obj = NULL;
+	cJSON *fld = NULL;
 	char *out_str = NULL;
 
 	MX_FATFS_Init();
@@ -1071,6 +1072,30 @@ void StartConfigTask(void const * argument)
 						}
 						break;
 					case 3:
+						if (f_open(&USBHFile, (const TCHAR*) "cron.ini",
+						FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+							// Запись JSON в файл
+							printf("Write CRON in to file. \r\n");
+
+							root_obj = cJSON_CreateArray();
+							fld = cJSON_CreateObject();
+
+							for (i = 0; i < MAXSIZE; i++) {
+								cJSON_AddItemToArray(root_obj, fld = cJSON_CreateObject());
+
+								cJSON_AddStringToObject(fld, "cron", dbCrontxt[i].cron);
+								cJSON_AddStringToObject(fld, "activ", dbCrontxt[i].activ);
+								cJSON_AddNumberToObject(fld, "ptime", 0);//????????????????????????????????
+								cJSON_AddStringToObject(fld, "info", dbCrontxt[i].info);
+
+							}
+							out_str = cJSON_PrintUnformatted(root_obj);
+							fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+							printf("f_open! cron.ini \r\n");
+
+							cJSON_Delete(root_obj);
+							f_close(&USBHFile);
+						}
 						break;
 					default:
 						//printf("Wrong data! \r\n");
