@@ -1000,7 +1000,12 @@ void StartConfigTask(void const * argument)
 						xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
 					}
 				}
+/////////////////////////////
+				fresult = f_stat("cron.ini", &finfo);
+				if (fresult == FR_OK) {
+					printf("f_open OK! cron.ini \r\n");
 
+				}
 				usbflag = 0;
 			}
 
@@ -1072,8 +1077,7 @@ void StartConfigTask(void const * argument)
 						}
 						break;
 					case 3:
-						if (f_open(&USBHFile, (const TCHAR*) "cron.ini",
-						FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+						if (f_open(&USBHFile, (const TCHAR*) "cron.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 							// Запись JSON в файл
 							printf("Write CRON in to file. \r\n");
 
@@ -1091,7 +1095,7 @@ void StartConfigTask(void const * argument)
 							}
 							out_str = cJSON_PrintUnformatted(root_obj);
 							fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
-							printf("f_open! cron.ini \r\n");
+
 
 							cJSON_Delete(root_obj);
 							f_close(&USBHFile);
