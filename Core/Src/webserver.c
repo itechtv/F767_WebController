@@ -17,8 +17,8 @@
 #include "time.h"
 #include "cJSON.h"
 #include "db.h"
+#include "cmsis_os.h"
 
-//#define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
 static void *current_connection;
 static int variable = 0;
@@ -43,6 +43,8 @@ extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 
 ///////////////////////////
+
+extern osMessageQId usbQueueHandle;
 
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
@@ -77,7 +79,6 @@ int MultiPartTabCount(int num, int pinnum, int count)
 	count = 0;
 	for (int i = 0; i <= pinnum; i++){
 		if(num == PinsConf[i].topin && num == 1){
-			printf("pin  %d \n", i);
 			count++;
 		}
 		if(num == PinsConf[i].topin && num == 2){
@@ -302,6 +303,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "lat_de", SetSettings.lat_de);
 					cJSON_AddNumberToObject(root, "check_mqtt", SetSettings.check_mqtt);
 					cJSON_AddNumberToObject(root, "mqtt_prt", SetSettings.mqtt_prt);
+					cJSON_AddNumberToObject(root, "mqtt_qos", SetSettings.mqtt_qos); // (QoS)
 					cJSON_AddStringToObject(root, "mqtt_clt", SetSettings.mqtt_clt);
 					cJSON_AddStringToObject(root, "mqtt_usr", SetSettings.mqtt_usr);
 					cJSON_AddStringToObject(root, "mqtt_pswd", SetSettings.mqtt_pswd);
@@ -398,6 +400,7 @@ const char* FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char
 const char* SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -417,7 +420,8 @@ static const tCGI URL_TABLES[] = {
 		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },
 		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },
 		{"/formcron.shtml", (tCGIHandler) FormcronCGI_Handler },
-		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler }
+		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },
+		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler }
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -565,7 +569,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			// @todo проверка передзаписью превязан ли этот пин уже или нет
 			while (i <= NUMPINLINKS - 1) {
 				if (PinsLinks[i].flag == 0) {
-					printf("flag %d \n", i);
+					//printf("flag %d \n", i);
 					PinsLinks[i].idin = idin - 1;
 					PinsLinks[i].idout = idout - 1;
 					PinsLinks[i].flag = 1;
@@ -1000,6 +1004,7 @@ const char*  FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 	int del = 0;
+	uint16_t usbdata = 3;
 	if (iIndex == 17) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0) {
@@ -1011,6 +1016,8 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				memset(dbCrontxt[del].cron, '\0', sizeof(dbCrontxt[del].cron));
 				memset(dbCrontxt[del].activ, '\0', sizeof(dbCrontxt[del].activ));
 				memset(dbCrontxt[del].info, '\0', sizeof(dbCrontxt[del].info));
+
+				xQueueSend(usbQueueHandle, &usbdata, 0);
 			}
 		}
 	}
@@ -1025,6 +1032,34 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
+}
+
+// Reboot.shtml Handler (Index 18)
+const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]) {
+
+	if (iIndex == 0) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+		}	}
+
+	//printf("URL %s \n", URL_TABLES[iIndex].pcCGIName);
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		NVIC_SystemReset(); // REBOOT
+		restartSSID();
+		return URL_TABLES[iIndex].pcCGIName;
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+
 }
 ////////////////////////////// POST START //////////////////////////////////
 
@@ -1132,7 +1167,6 @@ void parserIP(char *data, unsigned char *value)
         if (isdigit((unsigned char)*data)) {
             value[index] *= 10;
             value[index] += *data - '0';
-            printf("%d - %d \n" , index, value[index]);
         } else {
             index++;
         }
@@ -1146,6 +1180,7 @@ void setSettings(char *name, char *token) {
 	char ipstr[34] = {0};
 	unsigned char value[4] = {0};
 	int values[6];
+	char decoded_url[50] = {0};
 
 	if (strcmp(name, "check_mqtt") == 0) {
 		SetSettings.check_mqtt = atoi(token);
@@ -1174,7 +1209,6 @@ void setSettings(char *name, char *token) {
 		SetSettings.gateway3 = value[3];
 	} else if (strcmp(name, "macaddr") == 0) {
 		strcpy(ipstr, token);
-		printf("MAC %s \n", ipstr);
 		//uint8_t bytes[6];
 		if( 6 == sscanf(ipstr, "%x-%x-%x-%x-%x-%x%*c", &values[0], &values[1], &values[2], &values[3], &values[4], &values[5])){
 		    /* convert to uint8_t */
@@ -1192,6 +1226,8 @@ void setSettings(char *name, char *token) {
 		SetSettings.mqtt_hst1 = value[1];
 		SetSettings.mqtt_hst2 = value[2];
 		SetSettings.mqtt_hst3 = value[3];
+	} else if (strcmp(name, "mqtt_qos") == 0) {
+			SetSettings.mqtt_qos = atoi(token);  // (QoS)
 	} else if (strcmp(name, "mqtt_prt") == 0) {
 		SetSettings.mqtt_prt = atoi(token);
 	} else if (strcmp(name, "mqtt_clt") == 0) {
@@ -1201,9 +1237,13 @@ void setSettings(char *name, char *token) {
 	} else if (strcmp(name, "mqtt_pswd") == 0) {
 		strcpy(SetSettings.mqtt_pswd, token);
 	} else if (strcmp(name, "mqtt_tpc") == 0) {
-		strcpy(SetSettings.mqtt_tpc, token);
+//		strcpy(SetSettings.mqtt_tpc, token);
+		url_decode(token, decoded_url);
+		strcpy(SetSettings.mqtt_tpc, decoded_url);
 	} else if (strcmp(name, "mqtt_ftpc") == 0) {
-		strcpy(SetSettings.mqtt_ftpc, token);
+//		strcpy(SetSettings.mqtt_ftpc, token);
+		url_decode(token, decoded_url);
+		strcpy(SetSettings.mqtt_ftpc, decoded_url);
 	} else if (strcmp(name, "lang") == 0) {
 		strcpy(SetSettings.lang, token);
 	} else if (strcmp(name, "timezone") == 0) {
@@ -1291,8 +1331,8 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
     int id = 0;
 	char *end_str;
 	char *name;
-
-	printf("POST %s \n", v_PostBufer.buf);
+	uint16_t usbdata = 0;
+	//printf("POST %s \n", v_PostBufer.buf);
 
     char *token = strtok_r(v_PostBufer.buf, "&", &end_str);
     while (token != NULL)
@@ -1305,7 +1345,6 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         	count++;
         	if(count == 1){
         	    name = token2;
-        		printf("key: %s \n", name);
         	}
         	if(count == 2){
         		// SET id
@@ -1316,24 +1355,28 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         		if (strcmp(v_PostBufer.uri, "/tabrelay.shtml") == 0 && id != 0){
         			if(token2 != NULL){
         				setPinRelay(id, name, token2);
+        				usbdata = 1;
         			}
         		}
         		// POST request Buttom
         		if (strcmp(v_PostBufer.uri, "/tabbuttom.shtml") == 0 && id != 0){
         			if(token2 != NULL){
         				setPinButtom(id, name, token2);
+        				usbdata = 1;
         			}
         		}
         		// POST request Settings
         		if (strcmp(v_PostBufer.uri, "/settings.shtml") == 0){
         			if(token2 != NULL){
         				setSettings(name, token2);
+        				usbdata = 2;
         			}
         		}
         		// POST request Cron
 				if (strcmp(v_PostBufer.uri, "/tabcron.shtml") == 0){
 					if(token2 != NULL){
 						setCron(id, name, token2);
+						usbdata = 3;
 					}
 				}
 
@@ -1348,8 +1391,16 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 	if (current_connection == connection) {
 	    /* login succeeded */
 
-		printf("URL %s \n", v_PostBufer.uri);
-		printf("SSID %s \n", ssid);
+		//printf("URL %s \n", v_PostBufer.uri);
+
+/******************************************************************************************/
+		// Отправка числа в очередь
+		if(usbdata != 0){
+			xQueueSend(usbQueueHandle, &usbdata, 0);
+		}
+		usbdata = 0;
+
+/******************************************************************************************/
 
 		restartSSID();
 		snprintf(response_uri, response_uri_len, v_PostBufer.uri);
