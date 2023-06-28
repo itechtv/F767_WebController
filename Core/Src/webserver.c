@@ -404,6 +404,7 @@ const char* FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char
 const char* SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -423,7 +424,8 @@ static const tCGI URL_TABLES[] = {
 		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },
 		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },
 		{"/formcron.shtml", (tCGIHandler) FormcronCGI_Handler },
-		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler }
+		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },
+		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler }
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -1035,6 +1037,43 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
+}
+
+// Reboot.shtml Handler (Index 18)
+const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]) {
+	int rb = 0;
+
+	if (iIndex == 18) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "rb") == 0)
+			{
+				printf("RB OK \n");
+				rb = atoi(pcValue[i]);
+				if(rb == 1){
+					printf("RB = 1 OK \n");
+					NVIC_SystemReset(); // REBOOT
+				}
+			}
+		}
+	}
+
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/reboot.shtml";
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+
 }
 ////////////////////////////// POST START //////////////////////////////////
 

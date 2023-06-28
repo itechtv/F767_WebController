@@ -28,6 +28,7 @@ void SetSetingsConfig() {
 	char *out_str = NULL;
 	FRESULT fresult;
 	UINT Byteswritten; // File read/write count
+
 	if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 
 		root_obj = cJSON_CreateObject();
@@ -100,6 +101,7 @@ void StartSetingsConfig() {
 	char *out_str = NULL;
 	FRESULT fresult;
 	UINT Byteswritten; // File read/write count
+
 	if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		printf("f_open! create setings.ini \r\n");
 		root_obj = cJSON_CreateObject();
@@ -193,6 +195,7 @@ void StartSetingsConfig() {
 void GetSetingsConfig() {
 	FILINFO finfo;
 	FRESULT fresult = f_stat("setings.ini", &finfo);
+
 	if (fresult == FR_OK) {
 		if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ) == FR_OK) {
 			char fsbuffer[1024];
@@ -266,6 +269,7 @@ void GetCronConfig() {
 	cJSON *root_obj = NULL;
 	FRESULT fresult;
 	UINT Byteswritten; // File read/write count
+
 	fresult = f_stat("cron.ini", &finfo);
 	if (fresult == FR_OK) {
 		// если файл существует, открываем его
@@ -299,6 +303,7 @@ void SetCronConfig() {
 	cJSON *fld = NULL;
 	UINT Byteswritten; // File read/write count
 	FRESULT fresult;
+
 	fresult = f_stat("cron.ini", &finfo);
 	char *out_str = NULL;
 	int i = 0;
@@ -344,6 +349,7 @@ void GetPinConfig() {
 		cJSON *root_obj = NULL;
 		FRESULT fresult;
 		UINT Byteswritten; // File read/write count
+
 		fresult = f_stat("pins.ini", &finfo);
 		if (fresult == FR_OK) {
 			// если файл существует, открываем его

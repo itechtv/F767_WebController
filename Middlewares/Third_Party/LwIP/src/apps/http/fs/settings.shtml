@@ -140,7 +140,10 @@
         </script>
       
         <form action="settings.shtml?ssid=<!--#ssid-->" method="post">
-     
+          <a href="reboot.shtml?ssid=<!--#ssid-->"><button type="button"> Reboot</button></a>
+          &nbsp;&nbsp;
+          <button type="submit">Save configuration</button>
+          <br><br>
           <table class="zebra_2" border="1" align="center" width="580">
             <tr>
               <td width="190">Login <div class="tooltip">
