@@ -34,7 +34,9 @@
               $.get("onoffset.shtml", { ssid:"<!--#ssid-->", id: id, val: 0});  
           }   
       }
-  </script>       
+  </script>    
+  
+
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
@@ -127,52 +129,55 @@
 
       </div>
       
-      <script>
-        $(document).ready(function () {
-          $.getJSON('tabjson.shtml?tab=2&ssid=<!--#ssid-->', function (data) {
-            var employee_data = '';
-            var n = 0;
-            var z = '';
-    
-            $.each(data, function (key, val) {
-              if (val.topin == 1) {
-                employee_data += '<tr>';
-                employee_data += '<td>' + val.id + '</td>';
-                employee_data += '<td>' + val.pins + '</td>';
-                employee_data += '<td align=\"center\">' + val.ptype + '</td>';
-                employee_data += '<td align=\"center\">' + val.binter + '</td>';
-                employee_data += '<td align=\"center\">' + val.hinter + '</td>';
-                employee_data += '<td align=\"center\">' + val.repeat + '</td>';
-                employee_data += '<td align=\"center\">' + val.rinter + '</td>';
-                employee_data += '<td align=\"center\">' + val.dcinter + '</td>';
-                employee_data += '<td align=\"center\">' + val.pclick + '</td>';
-                employee_data += '<td align=\"center\">';
-    
-                for (var key in val.pinact) {
-                  employee_data += '<span>' + key + '[<a href="tabbuttom.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
-                }
-    
-                employee_data += '</td>'
-                employee_data += '<td>' + val.info + '</td>';
-                if (val.onoff == 1) {
-                  employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" checked=\"checked\" onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
-                } else {
-                  employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
-                }
-                employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbuttom.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
-                employee_data += '</tr>';
-              }
-              n++;
-            });
-            $('#tab1').append(employee_data);
-          });
-        });
-      </script>       
+       
 
         <br><br>
       </center>
 
+      <script>
+        $(document).ready(function () {
+         
+            $.getJSON('tabjson.shtml?tab=2&ssid=<!--#ssid-->', function (data) {
+              var employee_data = '';
+              var n = 0;
+              var z = '';
+                    
+              $.each(data, function (key, val) {
+                if (val.topin == 1) {
+                  employee_data += '<tr>';
+                  employee_data += '<td>' + val.id + '</td>';
+                  employee_data += '<td>' + val.pins + '</td>';
+                  employee_data += '<td align=\"center\">' + val.ptype + '</td>';
+                  employee_data += '<td align=\"center\">' + val.binter + '</td>';
+                  employee_data += '<td align=\"center\">' + val.hinter + '</td>';
+                  employee_data += '<td align=\"center\">' + val.repeat + '</td>';
+                  employee_data += '<td align=\"center\">' + val.rinter + '</td>';
+                  employee_data += '<td align=\"center\">' + val.dcinter + '</td>';
+                  employee_data += '<td align=\"center\">' + val.pclick + '</td>';
+                  employee_data += '<td align=\"center\">';
+      
+                  for (var key in val.pinact) {
+                    employee_data += '<span>' + key + '[<a href="tabbuttom.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
+                  }
+      
+                  employee_data += '</td>'
+                  employee_data += '<td>' + val.info + '</td>';
+                  if (val.onoff == 1) {
+                    employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" checked=\"checked\" onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
+                  } else {
+                    employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
+                  }
+                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbuttom.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
+                  employee_data += '</tr>';
+                }
+                n++;
+              });
+              $('#tab1').append(employee_data);
+            });
 
+          });
+
+        </script> 
 
 
 </body>

@@ -111,7 +111,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 	#if LWIP_HTTPD_SSI_MULTIPART
 		if (variable == NUMPIN) {
 			variable = 0;
-			countJson = 1;
+			countJson = 0;
 			break;
 		} else {
 			///////
@@ -139,7 +139,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					str = cJSON_Print(root);
 					cJSON_Delete(root);
 
-
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
@@ -149,15 +148,17 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].pclick, str, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 
-					if(countJson == numTabLine){
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-					}
-					countJson++;
 					////////////////
+					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
 				} else {
 					pcInsert = "";
 				}
-
 
 			}
 			if(tab == 3){
@@ -173,10 +174,14 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].ponr, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 					////////////////
-					if(countJson == numTabLine){
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-					}
+
 					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
 				} else {
 					pcInsert = "";
 				}
@@ -1001,6 +1006,8 @@ const char*  FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 	int del = 0;
+	uint16_t usbdata = 3;
+
 	if (iIndex == 17) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0) {
@@ -1012,6 +1019,8 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				memset(dbCrontxt[del].cron, '\0', sizeof(dbCrontxt[del].cron));
 				memset(dbCrontxt[del].activ, '\0', sizeof(dbCrontxt[del].activ));
 				memset(dbCrontxt[del].info, '\0', sizeof(dbCrontxt[del].info));
+
+				xQueueSend(usbQueueHandle, &usbdata, 0);
 			}
 		}
 	}
@@ -1375,7 +1384,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 
 void http_server_init(void) {
 	httpd_init();
-	http_set_ssi_handler((tSSIHandler) ssi_handler, (char const**) TAGS, SSI_TAG_NUM); //
 
 	http_set_cgi_handlers(URL_TABLES, CGI_URL_NUM); //
+	http_set_ssi_handler((tSSIHandler) ssi_handler, (char const**) TAGS, SSI_TAG_NUM); //
 }

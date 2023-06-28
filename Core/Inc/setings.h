@@ -8,6 +8,14 @@
 #ifndef INC_SETINGS_H_
 #define INC_SETINGS_H_
 
+void SetSetingsConfig();
+void StartSetingsConfig();
+void GetSetingsConfig();
+void GetCronConfig();
+void SetCronConfig();
+void GetPinConfig();
+void SetPinConfig();
+
 
 #define ADM_NAME "admin"
 #define ADM_PASS "12345678"
@@ -26,6 +34,6 @@
 #define GATEWAY2 11
 #define GATEWAY3 1
 #define MQTT_PRT 1883
-
+#define MQTT_QOS 0
 
 #endif /* INC_SETINGS_H_ */

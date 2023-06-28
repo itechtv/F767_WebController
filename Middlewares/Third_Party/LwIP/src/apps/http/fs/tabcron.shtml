@@ -80,6 +80,8 @@
           var tabcron_data = '';
           var n = 0;
           var z = '';
+          
+          console.log(data);
 
           $.each(data, function (key, val) {
             n = val.id + 1;

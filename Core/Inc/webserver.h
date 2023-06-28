@@ -13,6 +13,7 @@
 
 void http_server_init (void);
 void restartSSID (void);
+void url_decode(char* url, char* decoded);
 
 
 
