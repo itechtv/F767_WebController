@@ -18,16 +18,9 @@ struct dbCron CronTask[NUMTASK];
 
 struct dbSettings SetSettings;
 
-//struct dbCron dbCrontxt[MAXSIZE] = {
-//		{"*/10 * * * * * *", "6:2;p5;6:2", 0},
-//		{"*/10 * * * * * *", "18:2;p5;18:2", 0},
-//		{"*/10 * * * * * *", "12:2;p5;12:2", 0}
-////	{"*/7 * * * * * *", "3:0;3:1", 0}
-//};
-
 struct dbCron dbCrontxt[MAXSIZE];
 
-struct dbPinsInfo PinsInfo[NUMPIN] = {
+const struct dbPinsInfo PinsInfo[NUMPIN] = {
 		// Total 89 pins
 		{"PA0", "A", 0, GPIO_PIN_0, GPIOA},
 		{"PA3", "A", 3, GPIO_PIN_3, GPIOA},

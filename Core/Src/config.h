@@ -1,21 +1,12 @@
 /*
- * setengs.h
+ * confih.h
  *
- *  Created on: 29 мая 2023 г.
+ *  Created on: 25 мая 2023 г.
  *      Author: anton
  */
 
-#ifndef INC_SETINGS_H_
-#define INC_SETINGS_H_
-
-void SetSetingsConfig();
-void StartSetingsConfig();
-void GetSetingsConfig();
-void GetCronConfig();
-void SetCronConfig();
-void GetPinConfig();
-void SetPinConfig();
-
+#ifndef SRC_CONFIG_H_
+#define SRC_CONFIG_H_
 
 #define ADM_NAME "admin"
 #define ADM_PASS "12345678"
@@ -33,7 +24,8 @@ void SetPinConfig();
 #define GATEWAY1 168
 #define GATEWAY2 11
 #define GATEWAY3 1
-#define MQTT_PRT 1883
-#define MQTT_QOS 0
+#define MQTTPORT 1883
 
-#endif /* INC_SETINGS_H_ */
+
+
+#endif /* SRC_CONFIG_H_ */

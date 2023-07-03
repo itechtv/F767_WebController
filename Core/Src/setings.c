@@ -16,7 +16,7 @@
 
 
 char fsbuffer[25500] = { 0 };//2000
-extern FILINFO finfo;
+
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
@@ -28,6 +28,7 @@ void SetSetingsConfig() {
 	char *out_str = NULL;
 	FRESULT fresult;
 	UINT Byteswritten; // File read/write count
+
 	if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 
 		root_obj = cJSON_CreateObject();
@@ -51,7 +52,7 @@ void SetSetingsConfig() {
 		cJSON_AddNumberToObject(root_obj, "ip3_sntp3", SetSettings.ip3_sntp3);
 		cJSON_AddNumberToObject(root_obj, "check_mqtt", SetSettings.check_mqtt);
 		cJSON_AddNumberToObject(root_obj, "mqtt_prt", SetSettings.mqtt_prt);
-		cJSON_AddNumberToObject(root_obj, "mqtt_qos", SetSettings.mqtt_qos);  // (QOS)
+		//cJSON_AddNumberToObject(root_obj, "mqtt_qos", SetSettings.mqtt_qos);  // (QOS)
 		cJSON_AddStringToObject(root_obj, "mqtt_clt", SetSettings.mqtt_clt);
 		cJSON_AddStringToObject(root_obj, "mqtt_usr", SetSettings.mqtt_usr);
 		cJSON_AddStringToObject(root_obj, "mqtt_pswd", SetSettings.mqtt_pswd);
@@ -83,6 +84,11 @@ void SetSetingsConfig() {
 
 		out_str = cJSON_PrintUnformatted(root_obj);
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
+
+		if(fresult == FR_OK){
+
+		}
 
 		cJSON_Delete(root_obj);
 		memset(fsbuffer, '\0', sizeof(fsbuffer));
@@ -96,6 +102,7 @@ void StartSetingsConfig() {
 	char *out_str = NULL;
 	FRESULT fresult;
 	UINT Byteswritten; // File read/write count
+
 	if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		printf("f_open! create setings.ini \r\n");
 		root_obj = cJSON_CreateObject();
@@ -152,8 +159,12 @@ void StartSetingsConfig() {
 		cJSON_AddNumberToObject(root_obj, "macaddr5", 0); // MAC address
 
 		out_str = cJSON_PrintUnformatted(root_obj);
-
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
+
+		if(fresult == FR_OK){
+
+		}
 
 		printf("f_open! setings.ini \r\n");
 
@@ -186,6 +197,7 @@ void StartSetingsConfig() {
 void GetSetingsConfig() {
 	FILINFO finfo;
 	FRESULT fresult = f_stat("setings.ini", &finfo);
+
 	if (fresult == FR_OK) {
 		if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ) == FR_OK) {
 			char fsbuffer[1024];
@@ -215,7 +227,7 @@ void GetSetingsConfig() {
 			// Настройки MQTT
 			SetSettings.check_mqtt = cJSON_GetObjectItem(root_obj, "check_mqtt")->valueint;
 			SetSettings.mqtt_prt = cJSON_GetObjectItem(root_obj, "mqtt_prt")->valueint;
-			SetSettings.mqtt_qos = cJSON_GetObjectItem(root_obj, "mqtt_qos")->valueint;
+			//SetSettings.mqtt_qos = cJSON_GetObjectItem(root_obj, "mqtt_qos")->valueint;
 			strcpy(SetSettings.mqtt_clt, cJSON_GetObjectItem(root_obj, "mqtt_clt")->valuestring);
 			strcpy(SetSettings.mqtt_usr, cJSON_GetObjectItem(root_obj, "mqtt_usr")->valuestring);
 			strcpy(SetSettings.mqtt_pswd, cJSON_GetObjectItem(root_obj, "mqtt_pswd")->valuestring);
@@ -259,6 +271,7 @@ void GetCronConfig() {
 	cJSON *root_obj = NULL;
 	FRESULT fresult;
 	UINT Byteswritten; // File read/write count
+
 	fresult = f_stat("cron.ini", &finfo);
 	if (fresult == FR_OK) {
 		// если файл существует, открываем его
@@ -292,6 +305,7 @@ void SetCronConfig() {
 	cJSON *fld = NULL;
 	UINT Byteswritten; // File read/write count
 	FRESULT fresult;
+
 	fresult = f_stat("cron.ini", &finfo);
 	char *out_str = NULL;
 	int i = 0;
@@ -314,6 +328,11 @@ void SetCronConfig() {
 		}
 		out_str = cJSON_PrintUnformatted(root_obj);
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
+
+		if(fresult == FR_OK){
+
+		}
 		printf("f_open! cron.ini \r\n");
 
 		cJSON_Delete(root_obj);
@@ -334,6 +353,7 @@ void GetPinConfig() {
 		cJSON *root_obj = NULL;
 		FRESULT fresult;
 		UINT Byteswritten; // File read/write count
+
 		fresult = f_stat("pins.ini", &finfo);
 		if (fresult == FR_OK) {
 			// если файл существует, открываем его
@@ -421,6 +441,11 @@ void SetPinConfig() {
     }
     out_str = cJSON_PrintUnformatted(root_obj);
     fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+    free(out_str);
+
+	if(fresult == FR_OK){
+
+	}
     cJSON_Delete(root_obj);
     memset(fsbuffer, '\0', sizeof(fsbuffer));
     f_close(&USBHFile);

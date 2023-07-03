@@ -95,7 +95,6 @@ struct dbSettings { 	// Cтруктура для setting
 	short mqtt_hst1; 	// Your MQTT broker address or IP
 	short mqtt_hst2; 	// Your MQTT broker address or IP
 	short mqtt_hst3; 	// Your MQTT broker address or IP
-	uint8_t mqtt_qos;       // Quality of Service (QoS)
 	// Настройки IP адреса
 	short check_ip; 	// check DHCP on/off
 	short ip_addr0; 	// IP адрес

@@ -111,7 +111,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 	#if LWIP_HTTPD_SSI_MULTIPART
 		if (variable == NUMPIN) {
 			variable = 0;
-			countJson = 1;
+			countJson = 0;
 			break;
 		} else {
 			///////
@@ -139,7 +139,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					str = cJSON_Print(root);
 					cJSON_Delete(root);
 
-
 					sprintf(pcInsert,
 							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
@@ -149,15 +148,19 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].pclick, str, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 
-					if(countJson == numTabLine){
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-					}
-					countJson++;
+					free(str);
+
 					////////////////
+					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
 				} else {
 					pcInsert = "";
 				}
-
 
 			}
 			if(tab == 3){
@@ -173,10 +176,14 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].ponr, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 					////////////////
-					if(countJson == numTabLine){
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-					}
+
 					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
 				} else {
 					pcInsert = "";
 				}
@@ -217,6 +224,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			str = cJSON_Print(root);
 			cJSON_Delete(root);
 			sprintf(pcInsert, "%s", str);
+			free(str);
 			verifyNum = 0;
 
 			return strlen(pcInsert);
@@ -303,7 +311,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "lat_de", SetSettings.lat_de);
 					cJSON_AddNumberToObject(root, "check_mqtt", SetSettings.check_mqtt);
 					cJSON_AddNumberToObject(root, "mqtt_prt", SetSettings.mqtt_prt);
-					cJSON_AddNumberToObject(root, "mqtt_qos", SetSettings.mqtt_qos); // (QoS)
 					cJSON_AddStringToObject(root, "mqtt_clt", SetSettings.mqtt_clt);
 					cJSON_AddStringToObject(root, "mqtt_usr", SetSettings.mqtt_usr);
 					cJSON_AddStringToObject(root, "mqtt_pswd", SetSettings.mqtt_pswd);
@@ -350,6 +357,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			}
 
 			sprintf(pcInsert, "%s", str);
+			free(str);
 			return strlen(pcInsert);
 			break;
 			// ssi tag <!--#cronjson-->
@@ -369,9 +377,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				}
 
 				str = cJSON_Print(root);
-				cJSON_Delete(root);
 
+				cJSON_Delete(root);
 				sprintf(pcInsert, "%s", str);
+				free(str);
+
 				return strlen(pcInsert);
 				break;
 		default:
@@ -443,7 +453,7 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	//printf("URL %s \n", URL_TABLES[iIndex].pcCGIName);
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return URL_TABLES[iIndex].pcCGIName;
@@ -497,7 +507,7 @@ const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return URL_TABLES[iIndex].pcCGIName;  //
@@ -525,7 +535,7 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabrelay.shtml"; //
@@ -587,7 +597,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabbuttom.shtml"; //
@@ -614,7 +624,7 @@ const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		printf("SSID OK \n");
 		restartSSID();
 		memset(ssid, '\0', sizeof(ssid));
@@ -643,7 +653,7 @@ const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/timers.shtml"; //
@@ -694,7 +704,7 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabjson.shtml"; //
@@ -739,7 +749,7 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/selectset.shtml"; //
@@ -778,7 +788,7 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/formrelay.shtml"; //
@@ -815,7 +825,7 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/formbuttom.shtml"; //
@@ -850,7 +860,7 @@ const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/formtopin.shtml"; //
@@ -896,7 +906,7 @@ const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/selectset.shtml"; //
@@ -928,7 +938,7 @@ const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/formjson.shtml"; //
@@ -954,7 +964,7 @@ const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/settings.shtml"; //
@@ -989,7 +999,7 @@ const char*  FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/formcron.shtml"; //
@@ -1005,6 +1015,7 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 	int del = 0;
 	uint16_t usbdata = 3;
+
 	if (iIndex == 17) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0) {
@@ -1023,7 +1034,7 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabcron.shtml"; //
@@ -1036,24 +1047,31 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 // Reboot.shtml Handler (Index 18)
 const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]) {
+	int rb = 0;
 
-	if (iIndex == 0) {
+	if (iIndex == 18) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
-		}	}
+			if (strcmp(pcParam[i], "rb") == 0)
+			{
+				rb = atoi(pcValue[i]);
+				if(rb == 1){
+					NVIC_SystemReset(); // REBOOT
+				}
+			}
+		}
+	}
 
-	//printf("URL %s \n", URL_TABLES[iIndex].pcCGIName);
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
-		NVIC_SystemReset(); // REBOOT
 		restartSSID();
-		return URL_TABLES[iIndex].pcCGIName;
+		return "/reboot.shtml";
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -1180,7 +1198,6 @@ void setSettings(char *name, char *token) {
 	char ipstr[34] = {0};
 	unsigned char value[4] = {0};
 	int values[6];
-	char decoded_url[50] = {0};
 
 	if (strcmp(name, "check_mqtt") == 0) {
 		SetSettings.check_mqtt = atoi(token);
@@ -1226,8 +1243,6 @@ void setSettings(char *name, char *token) {
 		SetSettings.mqtt_hst1 = value[1];
 		SetSettings.mqtt_hst2 = value[2];
 		SetSettings.mqtt_hst3 = value[3];
-	} else if (strcmp(name, "mqtt_qos") == 0) {
-			SetSettings.mqtt_qos = atoi(token);  // (QoS)
 	} else if (strcmp(name, "mqtt_prt") == 0) {
 		SetSettings.mqtt_prt = atoi(token);
 	} else if (strcmp(name, "mqtt_clt") == 0) {
@@ -1237,13 +1252,9 @@ void setSettings(char *name, char *token) {
 	} else if (strcmp(name, "mqtt_pswd") == 0) {
 		strcpy(SetSettings.mqtt_pswd, token);
 	} else if (strcmp(name, "mqtt_tpc") == 0) {
-//		strcpy(SetSettings.mqtt_tpc, token);
-		url_decode(token, decoded_url);
-		strcpy(SetSettings.mqtt_tpc, decoded_url);
+		strcpy(SetSettings.mqtt_tpc, token);
 	} else if (strcmp(name, "mqtt_ftpc") == 0) {
-//		strcpy(SetSettings.mqtt_ftpc, token);
-		url_decode(token, decoded_url);
-		strcpy(SetSettings.mqtt_ftpc, decoded_url);
+		strcpy(SetSettings.mqtt_ftpc, token);
 	} else if (strcmp(name, "lang") == 0) {
 		strcpy(SetSettings.lang, token);
 	} else if (strcmp(name, "timezone") == 0) {
@@ -1416,7 +1427,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 
 void http_server_init(void) {
 	httpd_init();
-	http_set_ssi_handler((tSSIHandler) ssi_handler, (char const**) TAGS, SSI_TAG_NUM); //
 
 	http_set_cgi_handlers(URL_TABLES, CGI_URL_NUM); //
+	http_set_ssi_handler((tSSIHandler) ssi_handler, (char const**) TAGS, SSI_TAG_NUM); //
 }

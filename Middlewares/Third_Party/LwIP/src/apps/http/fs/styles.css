@@ -126,8 +126,3 @@ input:checked+.slider:before {
     display: block;
     opacity: 1;
   }
-
-.mytext {
-  width: 1000px;
-  margin: 0 auto;
-}

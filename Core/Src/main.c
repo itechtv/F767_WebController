@@ -20,14 +20,11 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "fatfs.h"
-
 #include "lwip.h"
 #include "usb_host.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "SEGGER_SYSVIEW_Conf.h"
-#include "SEGGER_SYSVIEW.h"
 ///////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
@@ -38,14 +35,16 @@
 #include "lwdtc.h"
 #include "cJSON.h"
 #include "setings.h"
-#include <string.h>
+
+#include "SEGGER_SYSVIEW_Conf.h"
+#include "SEGGER_SYSVIEW.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 typedef struct data_pin_t {
-	uint8_t pin;
-	uint8_t action;
+	int pin;
+	int action;
 } data_pin_t;
 
 data_pin_t data_pin;
@@ -76,25 +75,25 @@ RTC_HandleTypeDef hrtc;
 UART_HandleTypeDef huart3;
 
 osThreadId WebServerTaskHandle;
-uint32_t WebServerTaskBuffer[2048];
+uint32_t WebServerTaskBuffer[ 2048 ];
 osStaticThreadDef_t WebServerTaskControlBlock;
 osThreadId SSIDTaskHandle;
-uint32_t SSIDTaskBuffer[256];
+uint32_t SSIDTaskBuffer[ 256 ];
 osStaticThreadDef_t SSIDTaskControlBlock;
 osThreadId CronTaskHandle;
-uint32_t CronTaskBuffer[512];
+uint32_t CronTaskBuffer[ 512 ];
 osStaticThreadDef_t CronTaskControlBlock;
 osThreadId ActionTaskHandle;
-uint32_t ActionTaskBuffer[512];
+uint32_t ActionTaskBuffer[ 512 ];
 osStaticThreadDef_t ActionTaskControlBlock;
 osThreadId ConfigTaskHandle;
-uint32_t ConfigTaskBuffer[512];
+uint32_t ConfigTaskBuffer[ 512 ];
 osStaticThreadDef_t ConfigTaskControlBlock;
 osMessageQId myQueueHandle;
-uint8_t myQueueBuffer[16 * sizeof(struct data_pin_t)];
+uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 osStaticMessageQDef_t myQueueControlBlock;
 osMessageQId usbQueueHandle;
-uint8_t myQueue02Buffer[16 * sizeof(uint16_t)];
+uint8_t myQueue02Buffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t myQueue02ControlBlock;
 /* USER CODE BEGIN PV */
 extern struct dbSettings SetSettings;
@@ -112,11 +111,11 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_RTC_Init(void);
-void StartWebServerTask(void const *argument);
-void StartSSIDTask(void const *argument);
-void StartCronTask(void const *argument);
-void StartActionTask(void const *argument);
-void StartConfigTask(void const *argument);
+void StartWebServerTask(void const * argument);
+void StartSSIDTask(void const * argument);
+void StartCronTask(void const * argument);
+void StartActionTask(void const * argument);
+void StartConfigTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -136,304 +135,318 @@ extern struct netif gnetif;
 extern char randomSSID[27];
 
 unsigned long Ti;
-uint8_t connectmqtt = 1;
+
 mqtt_client_t *client;
-char message[50];
+char pacote[50];
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
-int main(void) {
-	/* USER CODE BEGIN 1 */
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+  /* USER CODE BEGIN 1 */
 	SEGGER_SYSVIEW_Conf();
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE END Init */
+  /* USER CODE END Init */
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* Configure the system clock */
+  SystemClock_Config();
 
-	/* USER CODE BEGIN SysInit */
+  /* USER CODE BEGIN SysInit */
 
-	/* USER CODE END SysInit */
+  /* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_USART3_UART_Init();
-	MX_RTC_Init();
-	MX_FATFS_Init();
-	/* USER CODE BEGIN 2 */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART3_UART_Init();
+  MX_RTC_Init();
+//  MX_FATFS_Init();
+  /* USER CODE BEGIN 2 */
 
-	/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
-	/* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
 	/* add mutexes, ... */
-	/* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-	/* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
-	/* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-	/* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
-	/* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-	/* Create the queue(s) */
-	/* definition and creation of myQueue */
-	osMessageQStaticDef(myQueue, 16, struct data_pin_t, myQueueBuffer, &myQueueControlBlock);
-	myQueueHandle = osMessageCreate(osMessageQ(myQueue), NULL);
+  /* Create the queue(s) */
+  /* definition and creation of myQueue */
+  osMessageQStaticDef(myQueue, 16, struct data_pin_t, myQueueBuffer, &myQueueControlBlock);
+  myQueueHandle = osMessageCreate(osMessageQ(myQueue), NULL);
 
-	/* definition and creation of usbQueue */
-	osMessageQStaticDef(usbQueue, 16, uint16_t, myQueue02Buffer, &myQueue02ControlBlock);
-	usbQueueHandle = osMessageCreate(osMessageQ(usbQueue), NULL);
+  /* definition and creation of usbQueue */
+  osMessageQStaticDef(usbQueue, 16, uint16_t, myQueue02Buffer, &myQueue02ControlBlock);
+  usbQueueHandle = osMessageCreate(osMessageQ(usbQueue), NULL);
 
-	/* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
-	/* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-	/* Create the thread(s) */
-	/* definition and creation of WebServerTask */
-	osThreadStaticDef(WebServerTask, StartWebServerTask, osPriorityNormal, 0, 2048, WebServerTaskBuffer, &WebServerTaskControlBlock);
-	WebServerTaskHandle = osThreadCreate(osThread(WebServerTask), NULL);
+  /* Create the thread(s) */
+  /* definition and creation of WebServerTask */
+  osThreadStaticDef(WebServerTask, StartWebServerTask, osPriorityNormal, 0, 2048, WebServerTaskBuffer, &WebServerTaskControlBlock);
+  WebServerTaskHandle = osThreadCreate(osThread(WebServerTask), NULL);
 
-	/* definition and creation of SSIDTask */
-	osThreadStaticDef(SSIDTask, StartSSIDTask, osPriorityNormal, 0, 256, SSIDTaskBuffer, &SSIDTaskControlBlock);
-	SSIDTaskHandle = osThreadCreate(osThread(SSIDTask), NULL);
+  /* definition and creation of SSIDTask */
+  osThreadStaticDef(SSIDTask, StartSSIDTask, osPriorityNormal, 0, 256, SSIDTaskBuffer, &SSIDTaskControlBlock);
+  SSIDTaskHandle = osThreadCreate(osThread(SSIDTask), NULL);
 
-	/* definition and creation of CronTask */
-	osThreadStaticDef(CronTask, StartCronTask, osPriorityNormal, 0, 512, CronTaskBuffer, &CronTaskControlBlock);
-	CronTaskHandle = osThreadCreate(osThread(CronTask), NULL);
+  /* definition and creation of CronTask */
+  osThreadStaticDef(CronTask, StartCronTask, osPriorityNormal, 0, 512, CronTaskBuffer, &CronTaskControlBlock);
+  CronTaskHandle = osThreadCreate(osThread(CronTask), NULL);
 
-	/* definition and creation of ActionTask */
-	osThreadStaticDef(ActionTask, StartActionTask, osPriorityNormal, 0, 512, ActionTaskBuffer, &ActionTaskControlBlock);
-	ActionTaskHandle = osThreadCreate(osThread(ActionTask), NULL);
+  /* definition and creation of ActionTask */
+  osThreadStaticDef(ActionTask, StartActionTask, osPriorityNormal, 0, 512, ActionTaskBuffer, &ActionTaskControlBlock);
+  ActionTaskHandle = osThreadCreate(osThread(ActionTask), NULL);
 
-	/* definition and creation of ConfigTask */
-	osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityIdle, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
-	ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
+  /* definition and creation of ConfigTask */
+  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityIdle, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
+  ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
 
-	/* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
-	/* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-	/* Start scheduler */
-	osKernelStart();
-	/* We should never get here as control is now taken by the scheduler */
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
+  /* Start scheduler */
+  osKernelStart();
+  /* We should never get here as control is now taken by the scheduler */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 	while (1) {
-		/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 	}
-	/* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
-void SystemClock_Config(void) {
-	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure LSE Drive Capability
-	 */
-	HAL_PWR_EnableBkUpAccess();
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
 
-	/** Configure the main internal regulator output voltage
-	 */
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-	/** Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
-	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
-	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLM = 4;
-	RCC_OscInitStruct.PLL.PLLN = 216;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	RCC_OscInitStruct.PLL.PLLQ = 9;
-	RCC_OscInitStruct.PLL.PLLR = 2;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		Error_Handler();
-	}
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 216;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 9;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Activate the Over-Drive mode
-	 */
-	if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
-		Error_Handler();
-	}
+  /** Activate the Over-Drive mode
+  */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Initializes the CPU, AHB and APB buses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
-		Error_Handler();
-	}
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /**
- * @brief RTC Initialization Function
- * @param None
- * @retval None
- */
-static void MX_RTC_Init(void) {
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
 
-	/* USER CODE BEGIN RTC_Init 0 */
+  /* USER CODE BEGIN RTC_Init 0 */
 
-	/* USER CODE END RTC_Init 0 */
+  /* USER CODE END RTC_Init 0 */
 
 //  RTC_TimeTypeDef sTime = {0};
 //  RTC_DateTypeDef sDate = {0};
-	/* USER CODE BEGIN RTC_Init 1 */
 
-	/* USER CODE END RTC_Init 1 */
+  /* USER CODE BEGIN RTC_Init 1 */
 
-	/** Initialize RTC Only
-	 */
-	hrtc.Instance = RTC;
-	hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-	hrtc.Init.AsynchPrediv = 127;
-	hrtc.Init.SynchPrediv = 255;
-	hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
-	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-	hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-	if (HAL_RTC_Init(&hrtc) != HAL_OK) {
-		Error_Handler();
-	}
+  /* USER CODE END RTC_Init 1 */
 
-	/* USER CODE BEGIN Check_RTC_BKUP */
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/* USER CODE END Check_RTC_BKUP */
+  /* USER CODE BEGIN Check_RTC_BKUP */
 
-	/** Initialize RTC and set the Time and Date
-	 */
-	sTime.Hours = 0x0;
-	sTime.Minutes = 0x0;
-	sTime.Seconds = 0x0;
-	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-	if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
-		Error_Handler();
-	}
-	sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-	sDate.Month = RTC_MONTH_JANUARY;
-	sDate.Date = 0x1;
-	sDate.Year = 0x0;
+  /* USER CODE END Check_RTC_BKUP */
 
-	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN RTC_Init 2 */
+  /** Initialize RTC and set the Time and Date
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
 
-	/* USER CODE END RTC_Init 2 */
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
 
-}
-
-/**
- * @brief USART3 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_USART3_UART_Init(void) {
-
-	/* USER CODE BEGIN USART3_Init 0 */
-
-	/* USER CODE END USART3_Init 0 */
-
-	/* USER CODE BEGIN USART3_Init 1 */
-
-	/* USER CODE END USART3_Init 1 */
-	huart3.Instance = USART3;
-	huart3.Init.BaudRate = 115200;
-	huart3.Init.WordLength = UART_WORDLENGTH_8B;
-	huart3.Init.StopBits = UART_STOPBITS_1;
-	huart3.Init.Parity = UART_PARITY_NONE;
-	huart3.Init.Mode = UART_MODE_TX_RX;
-	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-	huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-	huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-	if (HAL_UART_Init(&huart3) != HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN USART3_Init 2 */
-
-	/* USER CODE END USART3_Init 2 */
+  /* USER CODE END RTC_Init 2 */
 
 }
 
 /**
- * @brief GPIO Initialization Function
- * @param None
- * @retval None
- */
-static void MX_GPIO_Init(void) {
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-	/* USER CODE BEGIN MX_GPIO_Init_1 */
-	/* USER CODE END MX_GPIO_Init_1 */
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
 
-	/* GPIO Ports Clock Enable */
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOH_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-	__HAL_RCC_GPIOG_CLK_ENABLE();
+  /* USER CODE BEGIN USART3_Init 0 */
 
-	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOB, LD1_Pin | LD3_Pin | LD2_Pin, GPIO_PIN_RESET);
+  /* USER CODE END USART3_Init 0 */
 
-	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
+  /* USER CODE BEGIN USART3_Init 1 */
 
-	/*Configure GPIO pin : USER_Btn_Pin */
-	GPIO_InitStruct.Pin = USER_Btn_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
 
-	/*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
-	GPIO_InitStruct.Pin = LD1_Pin | LD3_Pin | LD2_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  /* USER CODE END USART3_Init 2 */
 
-	/*Configure GPIO pin : USB_PowerSwitchOn_Pin */
-	GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
+}
 
-	/*Configure GPIO pin : USB_OverCurrent_Pin */
-	GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
-	/* USER CODE BEGIN MX_GPIO_Init_2 */
-	/* USER CODE END MX_GPIO_Init_2 */
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : USER_Btn_Pin */
+  GPIO_InitStruct.Pin = USER_Btn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
+  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
+  GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : USB_OverCurrent_Pin */
+  GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -503,7 +516,8 @@ void sntp_set_time(uint32_t sntp_time) {
 		Error_Handler();
 	}
 
-	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month, sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
+	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month,
+			sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
 
 //	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
 
@@ -563,7 +577,8 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 				k++;
 				// printf("action = %d\n", atoi(token2));
 			}
-			if (k == 2) {
+
+			if(k == 2) {
 				xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
 			}
 			k = 0;
@@ -580,13 +595,15 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
  * @retval None
  */
 /* USER CODE END Header_StartWebServerTask */
-void StartWebServerTask(void const *argument) {
-	/* init code for LWIP */
+void StartWebServerTask(void const * argument)
+{
+  /* init code for LWIP */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-	MX_LWIP_Init();
+  MX_LWIP_Init();
 
-	/* init code for USB_HOST */
-	/* USER CODE BEGIN 5 */
+  /* init code for USB_HOST */
+//  MX_USB_HOST_Init();
+  /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
 
@@ -602,7 +619,7 @@ void StartWebServerTask(void const *argument) {
 	for (;;) {
 		osDelay(1);
 	}
-	/* USER CODE END 5 */
+  /* USER CODE END 5 */
 }
 
 /* USER CODE BEGIN Header_StartSSIDTask */
@@ -612,8 +629,9 @@ void StartWebServerTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartSSIDTask */
-void StartSSIDTask(void const *argument) {
-	/* USER CODE BEGIN StartSSIDTask */
+void StartSSIDTask(void const * argument)
+{
+  /* USER CODE BEGIN StartSSIDTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
 	//
 	/* Infinite loop */
@@ -626,7 +644,7 @@ void StartSSIDTask(void const *argument) {
 		}
 		osDelay(1);
 	}
-	/* USER CODE END StartSSIDTask */
+  /* USER CODE END StartSSIDTask */
 }
 
 /* USER CODE BEGIN Header_StartCronTask */
@@ -636,8 +654,9 @@ void StartSSIDTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartCronTask */
-void StartCronTask(void const *argument) {
-	/* USER CODE BEGIN StartCronTask */
+void StartCronTask(void const * argument)
+{
+  /* USER CODE BEGIN StartCronTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
 
 	static lwdtc_cron_ctx_t cron_ctxs[MAXSIZE];
@@ -646,7 +665,8 @@ void StartCronTask(void const *argument) {
 	size_t fail_index;
 	printf("Count task %d\r\n", LWDTC_ARRAYSIZE(dbCrontxt));
 	/* Parse all cron strings */
-	if (lwdtc_cron_parse_multi(cron_ctxs, dbCrontxt, MAXSIZE, &fail_index) != lwdtcOK) {
+	if (lwdtc_cron_parse_multi(cron_ctxs, dbCrontxt, MAXSIZE, &fail_index)
+			!= lwdtcOK) {
 		printf("Failed to parse cron at index %d\r\n", (int) fail_index);
 	}
 	printf("CRONs parsed and ready to go\r\n");
@@ -674,7 +694,8 @@ void StartCronTask(void const *argument) {
 				i = 0;
 
 				while (i < LWDTC_ARRAYSIZE(dbCrontxt)) {
-					if (cronetime >= dbCrontxt[i].ptime && dbCrontxt[i].ptime != 0) {
+					if (cronetime >= dbCrontxt[i].ptime
+							&& dbCrontxt[i].ptime != 0) {
 
 						strcpy(str, dbCrontxt[i].activ);
 						parse_string(str, cronetime_old, i, 1);
@@ -686,7 +707,8 @@ void StartCronTask(void const *argument) {
 
 				/* Check if CRON should execute */
 				while (i < LWDTC_ARRAYSIZE(cron_ctxs)) {
-					if (lwdtc_cron_is_valid_for_time(timez, cron_ctxs, &i) == lwdtcOK) {
+					if (lwdtc_cron_is_valid_for_time(timez, cron_ctxs, &i)
+							== lwdtcOK) {
 
 						strcpy(str, dbCrontxt[i].activ);
 						parse_string(str, cronetime_old, i, 0);
@@ -698,7 +720,7 @@ void StartCronTask(void const *argument) {
 			osDelay(1);
 		}
 	}
-	/* USER CODE END StartCronTask */
+  /* USER CODE END StartCronTask */
 }
 
 /* USER CODE BEGIN Header_StartActionTask */
@@ -708,76 +730,34 @@ void StartCronTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartActionTask */
-void StartActionTask(void const *argument) {
-	/* USER CODE BEGIN StartActionTask */
+void StartActionTask(void const * argument)
+{
+  /* USER CODE BEGIN StartActionTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
 	//
-	/************ MQTT **************/
-	client = mqtt_client_new(); //Создание mqtt клиента
-	extern mqtt_client_t *client;
-	extern char message[50];
-	uint8_t pinstate = 0;
 
-	/*****************************/
 	/* Infinite loop */
 	for (;;) {
 		if (xQueueReceive(myQueueHandle, &data_pin, portMAX_DELAY) == pdTRUE) {
 			if (data_pin.action == 0) {
 				//@todo  проверить что data_pin.pin число
 				HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin, GPIO_PIN_RESET);
-
-				if (connectmqtt == 1) {
-					/************ MQTT publish **************/
-					sprintf(message, "%u-%u", data_pin.pin, data_pin.action); // Cобщение на 'MQTT' сервер.
-					//example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-					example_publish(client, SetSettings.mqtt_tpc, message);
-				} else {
-					mqtt_disconnect(client);
-					example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-					connectmqtt = 1;
-				}
+				//printf("%d-%d  \r\n", (int) data_pin.pin, (int) data_pin.action);
 			}
 			if (data_pin.action == 1) {
 				//@todo  проверить что data_pin.pin число
 				HAL_GPIO_WritePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin, GPIO_PIN_SET);
-
-				if (connectmqtt == 1) {
-					/************ MQTT publish **************/
-					sprintf(message, "%u-%u", data_pin.pin, data_pin.action); // Cобщение на 'MQTT' сервер.
-					//example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-					example_publish(client, SetSettings.mqtt_tpc, message);
-				} else {
-					mqtt_disconnect(client);
-					example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-					connectmqtt = 1;
-				}
+				//printf("%d-%d  \r\n", (int) data_pin.pin, (int) data_pin.action);
 			}
 			if (data_pin.action == 2) {
 				//@todo  проверить что data_pin.pin число
 				HAL_GPIO_TogglePin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin);
-
-				if (connectmqtt == 1) {
-					/************ MQTT publish **************/
-					pinstate = HAL_GPIO_ReadPin(PinsInfo[data_pin.pin].gpio_name, PinsInfo[data_pin.pin].hal_pin);
-					if (pinstate == 0) {
-						sprintf(message, "%u-%u", data_pin.pin, pinstate); // Cобщение на 'MQTT' сервер.
-						//example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-						example_publish(client, SetSettings.mqtt_tpc, message);
-					} else if (pinstate == 1) {
-						sprintf(message, "%u-%u", data_pin.pin, pinstate); // Cобщение на 'MQTT' сервер.
-						//example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-						example_publish(client, SetSettings.mqtt_tpc, message);
-					}
-				}else {
-					mqtt_disconnect(client);
-					example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
-					connectmqtt = 1;
-				}
+				//printf("%d-%d  \r\n", (int) data_pin.pin, (int) data_pin.action);
 			}
 		}
 		osDelay(1);
 	}
-	/* USER CODE END StartActionTask */
+  /* USER CODE END StartActionTask */
 }
 
 /* USER CODE BEGIN Header_StartConfigTask */
@@ -787,9 +767,16 @@ void StartActionTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartConfigTask */
-void StartConfigTask(void const *argument) {
-	/* USER CODE BEGIN StartConfigTask */
+void StartConfigTask(void const * argument)
+{
+  /* USER CODE BEGIN StartConfigTask */
 	int usbflag = 1;
+	//FRESULT fresult;
+	FILINFO finfo;
+	//UINT Byteswritten; // File read/write count
+
+
+
 	MX_FATFS_Init();
 	/* init code for USB_HOST */
 
@@ -802,7 +789,6 @@ void StartConfigTask(void const *argument) {
 				osDelay(1000);
 				printf("APPLICATION_READY! \r\n");
 
-				FILINFO finfo;
 				FRESULT fresult = f_stat("setings.ini", &finfo);
 				if (fresult == FR_OK) {
 					GetSetingsConfig();
@@ -851,40 +837,42 @@ void StartConfigTask(void const *argument) {
 		}
 		osDelay(1);
 	}
-	/* USER CODE END StartConfigTask */
+  /* USER CODE END StartConfigTask */
 }
 
 /**
- * @brief  Period elapsed callback in non blocking mode
- * @note   This function is called  when TIM6 interrupt took place, inside
- * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
- * a global variable "uwTick" used as application time base.
- * @param  htim : TIM handle
- * @retval None
- */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	/* USER CODE BEGIN Callback 0 */
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
 
-	/* USER CODE END Callback 0 */
-	if (htim->Instance == TIM6) {
-		HAL_IncTick();
-	}
-	/* USER CODE BEGIN Callback 1 */
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
 
-	/* USER CODE END Callback 1 */
+  /* USER CODE END Callback 1 */
 }
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
-void Error_Handler(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 	__disable_irq();
 	while (1) {
 	}
-	/* USER CODE END Error_Handler_Debug */
+  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
