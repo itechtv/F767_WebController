@@ -36,8 +36,7 @@
 #include "cJSON.h"
 #include "setings.h"
 
-#include "SEGGER_SYSVIEW_Conf.h"
-#include "SEGGER_SYSVIEW.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,7 +74,7 @@ RTC_HandleTypeDef hrtc;
 UART_HandleTypeDef huart3;
 
 osThreadId WebServerTaskHandle;
-uint32_t WebServerTaskBuffer[ 2048 ];
+uint32_t WebServerTaskBuffer[ 2048 ]; // 2048
 osStaticThreadDef_t WebServerTaskControlBlock;
 osThreadId SSIDTaskHandle;
 uint32_t SSIDTaskBuffer[ 256 ];
@@ -147,7 +146,7 @@ char pacote[50];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	SEGGER_SYSVIEW_Conf();
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -170,7 +169,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-//  MX_FATFS_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -599,16 +598,15 @@ void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-  MX_LWIP_Init();
+	MX_LWIP_Init();
 
   /* init code for USB_HOST */
-//  MX_USB_HOST_Init();
   /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
 
 	client = mqtt_client_new();
-	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
+	example_do_connect(client, "Zagotovka"); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
