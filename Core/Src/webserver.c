@@ -148,6 +148,8 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 							PinsConf[variable].pclick, str, PinsConf[variable].info,
 							PinsConf[variable].onoff);
 
+					free(str);
+
 					////////////////
 					countJson++;
 
@@ -222,6 +224,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			str = cJSON_Print(root);
 			cJSON_Delete(root);
 			sprintf(pcInsert, "%s", str);
+			free(str);
 			verifyNum = 0;
 
 			return strlen(pcInsert);
@@ -354,6 +357,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			}
 
 			sprintf(pcInsert, "%s", str);
+			free(str);
 			return strlen(pcInsert);
 			break;
 			// ssi tag <!--#cronjson-->
@@ -373,9 +377,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				}
 
 				str = cJSON_Print(root);
-				cJSON_Delete(root);
 
+				cJSON_Delete(root);
 				sprintf(pcInsert, "%s", str);
+				free(str);
+
 				return strlen(pcInsert);
 				break;
 		default:
@@ -405,6 +411,7 @@ const char* SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char
 const char* FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -425,7 +432,8 @@ static const tCGI URL_TABLES[] = {
 		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },
 		{"/formcron.shtml", (tCGIHandler) FormcronCGI_Handler },
 		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },
-		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler }
+		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler },
+		{"/api.shtml", (tCGIHandler) ApiCGI_Handler }
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -529,7 +537,7 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabrelay.shtml"; //
@@ -591,7 +599,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabbuttom.shtml"; //
@@ -618,7 +626,7 @@ const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		printf("SSID OK \n");
 		restartSSID();
 		memset(ssid, '\0', sizeof(ssid));
@@ -647,7 +655,7 @@ const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/timers.shtml"; //
@@ -698,7 +706,7 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabjson.shtml"; //
@@ -1052,10 +1060,8 @@ const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *
 			}
 			if (strcmp(pcParam[i], "rb") == 0)
 			{
-				printf("RB OK \n");
 				rb = atoi(pcValue[i]);
 				if(rb == 1){
-					printf("RB = 1 OK \n");
 					NVIC_SystemReset(); // REBOOT
 				}
 			}
@@ -1073,6 +1079,36 @@ const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
+
+}
+
+// api.shtml Handler (Index 19)
+const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]) {
+	int pinid = 0;
+	int action = 0;
+	char token[11] = {0};
+
+	if (iIndex == 19) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "token") == 0)
+			{
+				strcpy(token, pcValue[i]);
+				memset(token, '\0', sizeof(token));
+			}
+			if (strcmp(pcParam[i], "pinid") == 0)
+			{
+				pinid = atoi(pcValue[i]);
+
+			}
+			if (strcmp(pcParam[i], "action") == 0)
+			{
+				action = atoi(pcValue[i]);
+
+			}
+		}
+	}
+
+	return "/api.shtml";
 
 }
 ////////////////////////////// POST START //////////////////////////////////

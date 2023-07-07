@@ -84,6 +84,7 @@ void SetSetingsConfig() {
 
 		out_str = cJSON_PrintUnformatted(root_obj);
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
 
 		if(fresult == FR_OK){
 
@@ -158,8 +159,9 @@ void StartSetingsConfig() {
 		cJSON_AddNumberToObject(root_obj, "macaddr5", 0); // MAC address
 
 		out_str = cJSON_PrintUnformatted(root_obj);
-
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
+
 		if(fresult == FR_OK){
 
 		}
@@ -326,6 +328,8 @@ void SetCronConfig() {
 		}
 		out_str = cJSON_PrintUnformatted(root_obj);
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
+
 		if(fresult == FR_OK){
 
 		}
@@ -437,6 +441,8 @@ void SetPinConfig() {
     }
     out_str = cJSON_PrintUnformatted(root_obj);
     fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+    free(out_str);
+
 	if(fresult == FR_OK){
 
 	}

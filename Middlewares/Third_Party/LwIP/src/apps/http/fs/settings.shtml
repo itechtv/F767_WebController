@@ -316,6 +316,24 @@
           </table>
       
           <br>
+          <h3 class="center"> Настройки API </h3>
+          
+          <table class="zebra_2" border="1" align="center" id="tab2" width="580">    
+            <tr class="cls">
+              <td>Token
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Сгенерируйте токен</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="7" maxlength="15" size="15" id="token" name="token"
+                  value=""> <button type="button" onclick="generateToken(10);"> Генерировать </button>
+              </td>
+            </tr>
+          </table>
+
+          <br>
           <h3 class="center"> Настройки MQTT </h3>
           <table class="zebra_2" border="1" align="center" id="tab2" width="580">      
             <tr>
@@ -584,7 +602,17 @@
             //getValue('tb4', 'tb0');
             getValue('ttb4','ttb0');
           }
-      
+
+          function generateToken(length) {
+              var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+              var password = "";
+              for (var i = 0; i < length; i++) {
+                  var randomIndex = Math.floor(Math.random() * charset.length);
+                  password += charset[randomIndex];
+              }
+              document.getElementById('token').value = password;
+    
+          }
         </script>
       
       </center>
