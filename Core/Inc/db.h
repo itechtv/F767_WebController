@@ -67,6 +67,7 @@ struct dbPinToPin { // привязка кнопок к реле
 struct dbSettings { 	// Cтруктура для setting
 	char adm_name[10];  // Имя пользователя для авторизации
 	char adm_pswd[15]; // Пароль для авторизации
+	char token[11]; // Token для API
 	char lang[3]; //
 	int timezone;		// UTC
 	double lon_de;    	// Longitude / Долгота
