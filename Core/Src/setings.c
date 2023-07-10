@@ -454,3 +454,21 @@ void SetPinConfig() {
     f_close(&USBHFile);
 	}
 }
+
+void InitPin() {
+	int i = 0;
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    for (i = 0; i < NUMPIN; i++){
+    	if(PinsConf[i].topin == 2){
+    		GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
+    		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
+    		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
+    		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+    	}
+
+    }
+	//PinsInfo[i].hal_pin
+	//PinsInfo[i].gpio_name
+
+}
