@@ -606,7 +606,7 @@ void StartWebServerTask(void const * argument)
 	osDelay(1000);
 
 	client = mqtt_client_new();
-	example_do_connect(client, "Zagotovka"); // Подписались на топик"Zagotovka"
+	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
@@ -792,6 +792,8 @@ void StartConfigTask(void const * argument)
 					GetSetingsConfig();
 					GetCronConfig();
 					GetPinConfig();
+
+					InitPin();
 
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask

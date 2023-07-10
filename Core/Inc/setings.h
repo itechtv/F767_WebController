@@ -15,6 +15,7 @@ void GetCronConfig();
 void SetCronConfig();
 void GetPinConfig();
 void SetPinConfig();
+void InitPin();
 
 
 #define ADM_NAME "admin"

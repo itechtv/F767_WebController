@@ -50,6 +50,7 @@
   
                   else if(key == 'adm_name'){ $('#adm_name').val(val); }             
                   else if(key == 'adm_pswd'){ $('#adm_pswd').val(val); }  
+                  else if(key == 'token'){ $('#token').val(val); }  
 
                   else if(key == 'mqtt_hst0'){ mqtt_hst0 = val; }                
                   else if(key == 'mqtt_hst1'){ mqtt_hst1 = val; }              
@@ -327,7 +328,7 @@
                   </a>
                 </div>
               </td>
-              <td class="center"> <input type="text" minlength="7" maxlength="15" size="15" id="token" name="token"
+              <td class="center"> <input type="text" minlength="1" maxlength="10" size="15" id="token" name="token"
                   value=""> <button type="button" onclick="generateToken(10);"> Генерировать </button>
               </td>
             </tr>

@@ -34,6 +34,7 @@ void SetSetingsConfig() {
 		root_obj = cJSON_CreateObject();
 		cJSON_AddStringToObject(root_obj, "adm_name", SetSettings.adm_name);
 		cJSON_AddStringToObject(root_obj, "adm_pswd", SetSettings.adm_pswd);
+		cJSON_AddStringToObject(root_obj, "token", SetSettings.token);
 		cJSON_AddStringToObject(root_obj, "lang", SetSettings.lang);
 		cJSON_AddNumberToObject(root_obj, "timezone", SetSettings.timezone);
 		cJSON_AddNumberToObject(root_obj, "lon_de", SetSettings.lon_de);
@@ -109,6 +110,7 @@ void StartSetingsConfig() {
 
 		cJSON_AddStringToObject(root_obj, "adm_name", ADM_NAME);
 		cJSON_AddStringToObject(root_obj, "adm_pswd", ADM_PASS); // Пароль для авторизации
+		cJSON_AddStringToObject(root_obj, "token", "");
 		cJSON_AddStringToObject(root_obj, "lang", LANG); //
 		cJSON_AddNumberToObject(root_obj, "timezone", 0); // UTC
 		cJSON_AddNumberToObject(root_obj, "lon_de", 0); // Longitude / Долгота
@@ -208,6 +210,7 @@ void GetSetingsConfig() {
 
 			strcpy(SetSettings.adm_name, cJSON_GetObjectItem(root_obj, "adm_name")->valuestring);
 			strcpy(SetSettings.adm_pswd, cJSON_GetObjectItem(root_obj, "adm_pswd")->valuestring);
+			strcpy(SetSettings.token, cJSON_GetObjectItem(root_obj, "token")->valuestring);
 			strcpy(SetSettings.lang, cJSON_GetObjectItem(root_obj, "lang")->valuestring);
 			SetSettings.timezone = cJSON_GetObjectItem(root_obj, "timezone")->valueint;
 			SetSettings.lon_de = cJSON_GetObjectItem(root_obj, "lon_de")->valueint;
@@ -450,4 +453,22 @@ void SetPinConfig() {
     memset(fsbuffer, '\0', sizeof(fsbuffer));
     f_close(&USBHFile);
 	}
+}
+
+void InitPin() {
+	int i = 0;
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    for (i = 0; i < NUMPIN; i++){
+    	if(PinsConf[i].topin == 2){
+    		GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
+    		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
+    		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
+    		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+    	}
+
+    }
+	//PinsInfo[i].hal_pin
+	//PinsInfo[i].gpio_name
+
 }

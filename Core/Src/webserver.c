@@ -338,6 +338,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddStringToObject(root, "macaddr", macStr);
 					cJSON_AddStringToObject(root, "adm_name", SetSettings.adm_name);
 					cJSON_AddStringToObject(root, "adm_pswd", SetSettings.adm_pswd);
+					cJSON_AddStringToObject(root, "token", SetSettings.token);
 					cJSON_AddNumberToObject(root, "timezone", SetSettings.timezone);
 
 
@@ -1092,8 +1093,9 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "token") == 0)
 			{
-				strcpy(token, pcValue[i]);
 				memset(token, '\0', sizeof(token));
+				strcpy(token, pcValue[i]);
+
 			}
 			if (strcmp(pcParam[i], "pinid") == 0)
 			{
@@ -1107,6 +1109,13 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 			}
 		}
 	}
+	if(strcmp(token, SetSettings.token) == 0 && pinid != 0){
+		printf("token OK \n");
+		if(PinsConf[pinid-1].topin == 2){
+			printf("relay OK \n");
+		}
+	}
+
 
 	return "/api.shtml";
 
@@ -1295,6 +1304,8 @@ void setSettings(char *name, char *token) {
 		strcpy(SetSettings.adm_name, token);
 	} else if (strcmp(name, "adm_pswd") == 0) {
 		strcpy(SetSettings.adm_pswd, token);
+	} else if (strcmp(name, "token") == 0) {
+		strcpy(SetSettings.token, token);
 	} else {
 
 	}
