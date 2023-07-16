@@ -74,7 +74,7 @@ RTC_HandleTypeDef hrtc;
 UART_HandleTypeDef huart3;
 
 osThreadId WebServerTaskHandle;
-uint32_t WebServerTaskBuffer[ 2048 ]; // 2048
+uint32_t WebServerTaskBuffer[ 2048 ];
 osStaticThreadDef_t WebServerTaskControlBlock;
 osThreadId SSIDTaskHandle;
 uint32_t SSIDTaskBuffer[ 256 ];
@@ -82,18 +82,21 @@ osStaticThreadDef_t SSIDTaskControlBlock;
 osThreadId CronTaskHandle;
 uint32_t CronTaskBuffer[ 512 ];
 osStaticThreadDef_t CronTaskControlBlock;
-osThreadId ActionTaskHandle;
-uint32_t ActionTaskBuffer[ 512 ];
-osStaticThreadDef_t ActionTaskControlBlock;
+osThreadId OutputTaskHandle;
+uint32_t OutputTaskBuffer[ 512 ];
+osStaticThreadDef_t OutputTaskControlBlock;
 osThreadId ConfigTaskHandle;
 uint32_t ConfigTaskBuffer[ 512 ];
 osStaticThreadDef_t ConfigTaskControlBlock;
+osThreadId InputTaskHandle;
+uint32_t InputTaskBuffer[ 512 ];
+osStaticThreadDef_t InputTaskControlBlock;
 osMessageQId myQueueHandle;
 uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 osStaticMessageQDef_t myQueueControlBlock;
 osMessageQId usbQueueHandle;
-uint8_t myQueue02Buffer[ 16 * sizeof( uint16_t ) ];
-osStaticMessageQDef_t myQueue02ControlBlock;
+uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
+osStaticMessageQDef_t usbQueueControlBlock;
 /* USER CODE BEGIN PV */
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
@@ -113,8 +116,9 @@ static void MX_RTC_Init(void);
 void StartWebServerTask(void const * argument);
 void StartSSIDTask(void const * argument);
 void StartCronTask(void const * argument);
-void StartActionTask(void const * argument);
+void StartOutputTask(void const * argument);
 void StartConfigTask(void const * argument);
+void StartInputTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -135,6 +139,7 @@ extern char randomSSID[27];
 
 unsigned long Ti;
 
+//////////////////////////////////////????????
 mqtt_client_t *client;
 char pacote[50];
 /* USER CODE END 0 */
@@ -169,7 +174,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-  MX_FATFS_Init();
+
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -192,7 +197,7 @@ int main(void)
   myQueueHandle = osMessageCreate(osMessageQ(myQueue), NULL);
 
   /* definition and creation of usbQueue */
-  osMessageQStaticDef(usbQueue, 16, uint16_t, myQueue02Buffer, &myQueue02ControlBlock);
+  osMessageQStaticDef(usbQueue, 16, uint16_t, usbQueueBuffer, &usbQueueControlBlock);
   usbQueueHandle = osMessageCreate(osMessageQ(usbQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -212,13 +217,17 @@ int main(void)
   osThreadStaticDef(CronTask, StartCronTask, osPriorityNormal, 0, 512, CronTaskBuffer, &CronTaskControlBlock);
   CronTaskHandle = osThreadCreate(osThread(CronTask), NULL);
 
-  /* definition and creation of ActionTask */
-  osThreadStaticDef(ActionTask, StartActionTask, osPriorityNormal, 0, 512, ActionTaskBuffer, &ActionTaskControlBlock);
-  ActionTaskHandle = osThreadCreate(osThread(ActionTask), NULL);
+  /* definition and creation of OutputTask */
+  osThreadStaticDef(OutputTask, StartOutputTask, osPriorityNormal, 0, 512, OutputTaskBuffer, &OutputTaskControlBlock);
+  OutputTaskHandle = osThreadCreate(osThread(OutputTask), NULL);
 
   /* definition and creation of ConfigTask */
   osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityIdle, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
   ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
+
+  /* definition and creation of InputTask */
+  osThreadStaticDef(InputTask, StartInputTask, osPriorityNormal, 0, 512, InputTaskBuffer, &InputTaskControlBlock);
+  InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -597,10 +606,11 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-	ulTaskNotifyTake(0, portMAX_DELAY);
-	MX_LWIP_Init();
+  ulTaskNotifyTake(0, portMAX_DELAY);
+  MX_LWIP_Init();
 
   /* init code for USB_HOST */
+
   /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
@@ -721,21 +731,20 @@ void StartCronTask(void const * argument)
   /* USER CODE END StartCronTask */
 }
 
-/* USER CODE BEGIN Header_StartActionTask */
+/* USER CODE BEGIN Header_StartOutputTask */
 /**
- * @brief Function implementing the ActionTask thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartActionTask */
-void StartActionTask(void const * argument)
+* @brief Function implementing the OutputTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartOutputTask */
+void StartOutputTask(void const * argument)
 {
-  /* USER CODE BEGIN StartActionTask */
+  /* USER CODE BEGIN StartOutputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-	//
-
-	/* Infinite loop */
-	for (;;) {
+  /* Infinite loop */
+  for(;;)
+  {
 		if (xQueueReceive(myQueueHandle, &data_pin, portMAX_DELAY) == pdTRUE) {
 			if (data_pin.action == 0) {
 				//@todo  проверить что data_pin.pin число
@@ -753,9 +762,9 @@ void StartActionTask(void const * argument)
 				//printf("%d-%d  \r\n", (int) data_pin.pin, (int) data_pin.action);
 			}
 		}
-		osDelay(1);
-	}
-  /* USER CODE END StartActionTask */
+    osDelay(1);
+  }
+  /* USER CODE END StartOutputTask */
 }
 
 /* USER CODE BEGIN Header_StartConfigTask */
@@ -798,14 +807,16 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
-					xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
+					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
+					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
 
 				} else {
 					StartSetingsConfig();
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
-					xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
+					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
+					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
 				}
 				usbflag = 0;
 			}
@@ -838,6 +849,26 @@ void StartConfigTask(void const * argument)
 		osDelay(1);
 	}
   /* USER CODE END StartConfigTask */
+}
+
+/* USER CODE BEGIN Header_StartInputTask */
+/**
+* @brief Function implementing the InputTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartInputTask */
+void StartInputTask(void const * argument)
+{
+
+  /* USER CODE BEGIN StartInputTask */
+	ulTaskNotifyTake(0, portMAX_DELAY);
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartInputTask */
 }
 
 /**
