@@ -174,7 +174,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-
+//  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -235,6 +235,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -606,17 +607,17 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-  ulTaskNotifyTake(0, portMAX_DELAY);
+	ulTaskNotifyTake(0, portMAX_DELAY);  //
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
-
+//  MX_USB_HOST_Init();
   /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
 
 	client = mqtt_client_new();
-	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
+	example_do_connect(client, "Zagotovka"); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
@@ -860,7 +861,6 @@ void StartConfigTask(void const * argument)
 /* USER CODE END Header_StartInputTask */
 void StartInputTask(void const * argument)
 {
-
   /* USER CODE BEGIN StartInputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
   /* Infinite loop */

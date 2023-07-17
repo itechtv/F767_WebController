@@ -105,8 +105,6 @@
 #define LWIP_HTTPD_MAX_TAG_INSERT_LEN 1024
 /*----- Default Value for LWIP_HTTPD_SSI_INCLUDE_TAG: 1 ---*/
 #define LWIP_HTTPD_SSI_INCLUDE_TAG 0
-/*----- Value in opt.h for HTTPD_USE_CUSTOM_FSDATA: 0 -----*/
-#define HTTPD_USE_CUSTOM_FSDATA 1
 /*----- Default Value for LWIP_SNTP: 0 ---*/
 #define LWIP_SNTP 1
 /*----- Default Value for SNTP_MAX_SERVERS: 1 ---*/
