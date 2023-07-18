@@ -547,6 +547,7 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 	char *saveptr;
 	int flag = 0;
 	int k = 0;
+	int pin = 0;
 	char delim[] = ";";
 
 	// Разбиваем строку на элементы, разделенные точкой с запятой
@@ -573,7 +574,10 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 			while (token2 != NULL) {
 				// тут отправляем в очередь
 				if (k == 0) {
-					data_pin.pin = atoi(token2);
+					pin = atoi(token2);
+					if(pin != 0){
+						data_pin.pin = pin-1;
+					}
 					//printf("pin = %s\n", token2);
 				}
 				if (k == 1) {

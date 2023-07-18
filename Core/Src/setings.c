@@ -22,6 +22,51 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
 
+/**************************************************************************/
+// Функция включает тактирование на указанном порту.
+int enablePort(char *portName) {
+
+	switch (*portName) {
+	case 'A':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+		break;
+	case 'B':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+		break;
+	case 'C':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+		break;
+	case 'D':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+		break;
+	case 'E':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
+		break;
+	case 'F':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOFEN;
+		break;
+	case 'G':
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOGEN;
+		break;
+	default:
+		printf("Invalid port '%s'!\n", portName);
+		return 0; // Вернем '0' если ошибка!
+	}
+	return 1;// Вернем '1' если все OK!
+}
+
+// Функция для проверки, включено ли тактирование порта
+void checkPortClockStatus(char *portName, int isClockEnabled) {
+    if (isClockEnabled) {
+        printf("port '%s' is ON!\n", portName);
+    } else {
+        printf("port '%s' is OFF!\n", portName);
+        enablePort(portName); // Подаем тактирование на не активный порт.
+        printf("port '%s' is ON!\n", portName);
+    }
+}
+/**************************************************************************/
+
 // Когда форму сохраняем
 void SetSetingsConfig() {
 	cJSON *root_obj = NULL;
@@ -461,12 +506,22 @@ void InitPin() {
 
     for (i = 0; i < NUMPIN; i++){
     	if(PinsConf[i].topin == 2){
+
+    		// проверяем тактирование порта
+			checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+
+			// инициализация пина OUTPUT
     		GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
     		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
     		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
     		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
     	}
     	if(PinsConf[i].topin == 1){
+
+    		// проверяем тактирование порта
+			checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+
+			// инициализация пина  INPUT
     	    GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
     	    // @todo поменять на int
     	    if (strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) {
