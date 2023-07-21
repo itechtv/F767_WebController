@@ -42,12 +42,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct data_pin_t {
-	int pin;
-	int action;
-} data_pin_t;
 
 data_pin_t data_pin;
+
 
 uint16_t usbnum = 0;
 /* USER CODE END PTD */
@@ -175,7 +172,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-//  MX_FATFS_Init();
+
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -236,7 +233,6 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
-
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -549,6 +545,7 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 	char *saveptr;
 	int flag = 0;
 	int k = 0;
+	int pin = 0;
 	char delim[] = ";";
 
 	// Разбиваем строку на элементы, разделенные точкой с запятой
@@ -575,7 +572,10 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 			while (token2 != NULL) {
 				// тут отправляем в очередь
 				if (k == 0) {
-					data_pin.pin = atoi(token2);
+					pin = atoi(token2);
+					if(pin != 0){
+						data_pin.pin = pin-1;
+					}
 					//printf("pin = %s\n", token2);
 				}
 				if (k == 1) {
@@ -608,17 +608,17 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-	ulTaskNotifyTake(0, portMAX_DELAY);  //
+  ulTaskNotifyTake(0, portMAX_DELAY);
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
-//  MX_USB_HOST_Init();
+
   /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
 
 	client = mqtt_client_new();
-	example_do_connect(client, "Zagotovka"); // Подписались на топик"Zagotovka"
+	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
@@ -862,6 +862,7 @@ void StartConfigTask(void const * argument)
 /* USER CODE END Header_StartInputTask */
 void StartInputTask(void const * argument)
 {
+
   /* USER CODE BEGIN StartInputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
   /* Infinite loop */

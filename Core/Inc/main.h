@@ -111,6 +111,10 @@ void Error_Handler(void);
 #define LD2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+typedef struct data_pin_t {
+	int pin;
+	int action;
+} data_pin_t;
 
 /* USER CODE END Private defines */
 
