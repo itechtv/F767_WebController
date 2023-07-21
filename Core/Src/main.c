@@ -41,12 +41,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct data_pin_t {
-	int pin;
-	int action;
-} data_pin_t;
 
 data_pin_t data_pin;
+
 
 uint16_t usbnum = 0;
 /* USER CODE END PTD */

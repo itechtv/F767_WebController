@@ -19,6 +19,7 @@
 #include "db.h"
 #include "cmsis_os.h"
 
+//#include "data_pin_t"
 
 static void *current_connection;
 static int variable = 0;
@@ -45,6 +46,8 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 ///////////////////////////
 
 extern osMessageQId usbQueueHandle;
+extern osMessageQId myQueueHandle;
+extern data_pin_t data_pin;
 
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
@@ -1089,6 +1092,8 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 	int action = 0;
 	char token[11] = {0};
 
+
+
 	if (iIndex == 19) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "token") == 0)
@@ -1113,6 +1118,9 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 		printf("token OK \n");
 		if(PinsConf[pinid-1].topin == 2){
 			printf("relay OK \n");
+			data_pin.pin = pinid-1;
+			data_pin.action = action;
+			xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
 		}
 	}
 
