@@ -537,7 +537,7 @@ void InitPin() {
     	    }
 
     	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
-    	    GPIO_InitStruct.Pull = GPIO_PULLUP; // устанавливаем подтяжку к питанию
+    	    //GPIO_InitStruct.Pull = GPIO_PULLUP; // устанавливаем подтяжку к питанию
     	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
     	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
     	}

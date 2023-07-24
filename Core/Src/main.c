@@ -95,8 +95,10 @@ osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
 /* USER CODE BEGIN PV */
+
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
+extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 
 extern ApplicationTypeDef Appli_state;
@@ -863,10 +865,27 @@ void StartInputTask(void const * argument)
 {
 
   /* USER CODE BEGIN StartInputTask */
-	ulTaskNotifyTake(0, portMAX_DELAY);
+  ulTaskNotifyTake(0, portMAX_DELAY);
+
+  uint8_t pinStates[NUMPIN] = {0};
+  uint32_t pinTimes[NUMPIN] = {0};
+  uint32_t millis;
+
   /* Infinite loop */
   for(;;)
   {
+	millis = HAL_GetTick();
+	for (uint8_t i = 0; i < NUMPIN; i++) {
+		if(PinsConf[i].topin == 1){
+			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 150){
+				pinTimes[i] = millis;
+				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+			}
+
+		}
+	}
     osDelay(1);
   }
   /* USER CODE END StartInputTask */
