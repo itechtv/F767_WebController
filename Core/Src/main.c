@@ -36,7 +36,6 @@
 #include "cJSON.h"
 #include "setings.h"
 
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -411,6 +410,7 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
 /* USER CODE END MX_GPIO_Init_1 */
@@ -880,10 +880,11 @@ void StartInputTask(void const * argument)
 	for (uint8_t i = 0; i < NUMPIN; i++) {
 		if(PinsConf[i].topin == 1){
 			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
-			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 150){
+			//pinStates[i] = HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_9);
+			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 200){
 				pinTimes[i] = millis;
 				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
-
+				HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 			}
 
 		}
