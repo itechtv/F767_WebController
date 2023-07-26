@@ -41,12 +41,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct data_pin_t {
-	int pin;
-	int action;
-} data_pin_t;
 
 data_pin_t data_pin;
+
 
 uint16_t usbnum = 0;
 /* USER CODE END PTD */
@@ -98,8 +95,10 @@ osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
 /* USER CODE BEGIN PV */
+
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
+extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 
 extern ApplicationTypeDef Appli_state;
@@ -412,6 +411,8 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -548,6 +549,7 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 	char *saveptr;
 	int flag = 0;
 	int k = 0;
+	int pin = 0;
 	char delim[] = ";";
 
 	// Разбиваем строку на элементы, разделенные точкой с запятой
@@ -574,7 +576,10 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 			while (token2 != NULL) {
 				// тут отправляем в очередь
 				if (k == 0) {
-					data_pin.pin = atoi(token2);
+					pin = atoi(token2);
+					if(pin != 0){
+						data_pin.pin = pin-1;
+					}
 					//printf("pin = %s\n", token2);
 				}
 				if (k == 1) {
@@ -607,7 +612,7 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-	ulTaskNotifyTake(0, portMAX_DELAY);  //
+	  ulTaskNotifyTake(0, portMAX_DELAY);  //
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
@@ -617,7 +622,7 @@ void StartWebServerTask(void const * argument)
 	osDelay(1000);
 
 	client = mqtt_client_new();
-	example_do_connect(client, "Zagotovka"); // Подписались на топик"Zagotovka"
+	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
@@ -862,10 +867,27 @@ void StartConfigTask(void const * argument)
 void StartInputTask(void const * argument)
 {
   /* USER CODE BEGIN StartInputTask */
-	ulTaskNotifyTake(0, portMAX_DELAY);
+  ulTaskNotifyTake(0, portMAX_DELAY);
+
+  uint8_t pinStates[NUMPIN] = {0};
+  uint32_t pinTimes[NUMPIN] = {0};
+  uint32_t millis;
+
   /* Infinite loop */
   for(;;)
   {
+	millis = HAL_GetTick();
+	for (uint8_t i = 0; i < NUMPIN; i++) {
+		if(PinsConf[i].topin == 1){
+			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 150){
+				pinTimes[i] = millis;
+				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+			}
+
+		}
+	}
     osDelay(1);
   }
   /* USER CODE END StartInputTask */

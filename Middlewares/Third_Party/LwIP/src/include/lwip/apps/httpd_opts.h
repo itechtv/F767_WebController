@@ -43,7 +43,7 @@
 
 #include "lwip/opt.h"
 #include "lwip/prot/iana.h"
-
+#define HTTPD_FSDATA_FILE   "fsdata_custom.c"
 /**
  * @defgroup httpd_opts Options
  * @ingroup httpd
@@ -385,7 +385,7 @@
 #if defined(HTTPD_USE_CUSTOM_FSDATA) && (HTTPD_USE_CUSTOM_FSDATA != 0)
 #define HTTPD_FSDATA_FILE "fsdata_custom.c"
 #else
-#define HTTPD_FSDATA_FILE "fsdata_custom.c"
+#define HTTPD_FSDATA_FILE "fsdata.c"
 #endif
 #endif
 

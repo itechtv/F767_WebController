@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 open(OUTPUT, "> fsdata_custom.c");
-#open(OUTPUT, "> fsdata.c");
 
 chdir("fs");
 open(FILES, "find . -type f |");
