@@ -56,15 +56,15 @@ int enablePort(char *portName) {
 }
 
 // Функция для проверки, включено ли тактирование порта
-void checkPortClockStatus(char *portName, int isClockEnabled) {
-    if (isClockEnabled) {
-        printf("port '%s' is ON!\n", portName);
-    } else {
-        printf("port '%s' is OFF!\n", portName);
-        enablePort(portName); // Подаем тактирование на не активный порт.
-        printf("port '%s' is ON!\n", portName);
-    }
-}
+//void checkPortClockStatus(char *portName, int isClockEnabled) {
+//    if (isClockEnabled) {
+//        printf("port '%s' is ON!\n", portName);
+//    } else {
+//        printf("port '%s' is OFF!\n", portName);
+//        enablePort(portName); // Подаем тактирование на не активный порт.
+//        printf("port '%s' is ON!\n", portName);
+//    }
+//}
 /**************************************************************************/
 
 // Когда форму сохраняем
@@ -508,7 +508,8 @@ void InitPin() {
     	if(PinsConf[i].topin == 2){
 
     		// проверяем тактирование порта
-			checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+    		HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
 
 			// инициализация пина OUTPUT
     		GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
@@ -519,10 +520,16 @@ void InitPin() {
     	if(PinsConf[i].topin == 1){
 
     		// проверяем тактирование порта
-			checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+
+            // сбрасываем биты для данного пина
+            HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+
 
 			// инициализация пина  INPUT
     	    GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
+    	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
+
     	    // @todo поменять на int
     	    if (strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) {
     	    	GPIO_InitStruct.Pull = GPIO_PULLUP;
@@ -536,8 +543,7 @@ void InitPin() {
     	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
     	    }
 
-    	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
-    	    //GPIO_InitStruct.Pull = GPIO_PULLUP; // устанавливаем подтяжку к питанию
+
     	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
     	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
     	}
