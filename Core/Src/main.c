@@ -99,6 +99,7 @@ extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
+extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 
 extern ApplicationTypeDef Appli_state;
 
@@ -880,11 +881,21 @@ void StartInputTask(void const * argument)
 	for (uint8_t i = 0; i < NUMPIN; i++) {
 		if(PinsConf[i].topin == 1){
 			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
-			//pinStates[i] = HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_9);
+			//printf(" STpin %d \r\n", pinStates[i]);
 			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 200){
 				pinTimes[i] = millis;
 				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
-				HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+
+				for(uint8_t a = 0; a < NUMPINLINKS; a++){
+					printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+					if(PinsLinks[a].idin == i){
+						data_pin.pin = PinsLinks[a].idout;
+						data_pin.action = 2;
+						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+
+					}
+				}
+
 			}
 
 		}
