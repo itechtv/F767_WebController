@@ -15,6 +15,8 @@ void GetCronConfig();
 void SetCronConfig();
 void GetPinConfig();
 void SetPinConfig();
+void GetPinToPin();
+void SetPinToPin();
 void InitPin();
 
 

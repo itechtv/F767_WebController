@@ -560,6 +560,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	int idout = 0;
 	int i = 0;
 	int del = 0;
+	uint16_t usbdata = 0;
 
 	if (iIndex == 4) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -589,11 +590,17 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 					PinsLinks[i].idin = idin - 1;
 					PinsLinks[i].idout = idout - 1;
 					PinsLinks[i].flag = 1;
+					usbdata = 4;
 					break;
 				}
 				i++;
 			}
-			printf("NOT NULL \n");
+			if(usbdata != 0){
+				xQueueSend(usbQueueHandle, &usbdata, 0);
+				printf("usbdata = 4 \n");
+			}
+			usbdata = 0;
+
 		}
 		if(del != 0){
 			PinsLinks[del-1].idin = 0;

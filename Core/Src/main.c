@@ -808,6 +808,7 @@ void StartConfigTask(void const * argument)
 					GetSetingsConfig();
 					GetCronConfig();
 					GetPinConfig();
+					GetPinToPin();
 
 					InitPin();
 
@@ -839,6 +840,9 @@ void StartConfigTask(void const * argument)
 					break;
 				case 3:
 					SetCronConfig();
+					break;
+				case 4:
+					SetPinToPin();
 					break;
 				default:
 					//printf("Wrong data! \r\n");
