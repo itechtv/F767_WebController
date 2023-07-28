@@ -21,6 +21,7 @@ extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
+extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 
 /**************************************************************************/
 // Функция включает тактирование на указанном порту.
@@ -346,6 +347,7 @@ void GetCronConfig() {
 		}
 	}
 }
+
 // Если файл не существует, создаем его и записываем данные
 void SetCronConfig() {
 	FILINFO finfo;
@@ -388,62 +390,59 @@ void SetCronConfig() {
 		f_close(&USBHFile);
 	}
 
-//		xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
-//		xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
-//		xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
-//		xTaskNotifyGive(ActionTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ ActionTask
+
 
 }
 // если файл "pins.ini" существует, открываем для чтения.
 void GetPinConfig() {
-	{
-		FILINFO finfo;
-		cJSON *root_obj = NULL;
-		FRESULT fresult;
-		UINT Byteswritten; // File read/write count
 
-		fresult = f_stat("pins.ini", &finfo);
-		if (fresult == FR_OK) {
-			// если файл существует, открываем его
-			if (f_open(&USBHFile, (const TCHAR*) "pins.ini", FA_READ) == FR_OK) {
+	FILINFO finfo;
+	cJSON *root_obj = NULL;
+	FRESULT fresult;
+	UINT Byteswritten; // File read/write count
 
-				fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer), &Byteswritten);
-				printf("PINS file EXISTS! \r\n");
-				root_obj = cJSON_Parse(fsbuffer);
+	fresult = f_stat("pins.ini", &finfo);
+	if (fresult == FR_OK) {
+		// если файл существует, открываем его
+		if (f_open(&USBHFile, (const TCHAR*) "pins.ini", FA_READ) == FR_OK) {
 
-				for (int i = 0; i < cJSON_GetArraySize(root_obj); i++) {
-					cJSON *pins_item = cJSON_GetArrayItem(root_obj, i);
+			fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer), &Byteswritten);
+			printf("PINS file EXISTS! \r\n");
+			root_obj = cJSON_Parse(fsbuffer);
 
-					cJSON *topin = cJSON_GetObjectItem(pins_item, "topin");
-					PinsConf[i].topin = topin->valueint;
+			for (int i = 0; i < cJSON_GetArraySize(root_obj); i++) {
+				cJSON *pins_item = cJSON_GetArrayItem(root_obj, i);
 
-					PinsConf[i].pwm = cJSON_GetObjectItem(pins_item, "pwm")->valueint;
-					PinsConf[i].on = cJSON_GetObjectItem(pins_item, "on")->valueint;
-					PinsConf[i].istate = cJSON_GetObjectItem(pins_item, "istate")->valueint;
-					PinsConf[i].dvalue = cJSON_GetObjectItem(pins_item, "dvalue")->valueint;
-					PinsConf[i].ponr = cJSON_GetObjectItem(pins_item, "ponr")->valueint;
-					strcpy(PinsConf[i].ptype, cJSON_GetObjectItem(pins_item, "ptype")->valuestring);
-					PinsConf[i].binter = cJSON_GetObjectItem(pins_item, "binter")->valueint;
-					PinsConf[i].hinter = cJSON_GetObjectItem(pins_item, "hinter")->valueint;
-					PinsConf[i].repeat = cJSON_GetObjectItem(pins_item, "repeat")->valueint;
-					PinsConf[i].rinter = cJSON_GetObjectItem(pins_item, "rinter")->valueint;
-					PinsConf[i].dcinter = cJSON_GetObjectItem(pins_item, "dcinter")->valueint;
-					PinsConf[i].pclick = cJSON_GetObjectItem(pins_item, "pclick")->valueint;
-					strcpy(PinsConf[i].info, cJSON_GetObjectItem(pins_item, "info")->valuestring);
-					PinsConf[i].onoff = cJSON_GetObjectItem(pins_item, "onoff")->valueint;
-					PinsConf[i].event = cJSON_GetObjectItem(pins_item, "event")->valueint;
-					PinsConf[i].act = cJSON_GetObjectItem(pins_item, "act")->valueint;
-					PinsConf[i].parametr = cJSON_GetObjectItem(pins_item, "parametr")->valueint;
-					PinsConf[i].timeout = cJSON_GetObjectItem(pins_item, "timeout")->valueint;
-					strcpy(PinsConf[i].condit, cJSON_GetObjectItem(pins_item, "condit")->valuestring);
-				}
+				cJSON *topin = cJSON_GetObjectItem(pins_item, "topin");
+				PinsConf[i].topin = topin->valueint;
 
-				cJSON_Delete(root_obj);
-				memset(fsbuffer, '\0', sizeof(fsbuffer));
-				f_close(&USBHFile);
+				PinsConf[i].pwm = cJSON_GetObjectItem(pins_item, "pwm")->valueint;
+				PinsConf[i].on = cJSON_GetObjectItem(pins_item, "on")->valueint;
+				PinsConf[i].istate = cJSON_GetObjectItem(pins_item, "istate")->valueint;
+				PinsConf[i].dvalue = cJSON_GetObjectItem(pins_item, "dvalue")->valueint;
+				PinsConf[i].ponr = cJSON_GetObjectItem(pins_item, "ponr")->valueint;
+				strcpy(PinsConf[i].ptype, cJSON_GetObjectItem(pins_item, "ptype")->valuestring);
+				PinsConf[i].binter = cJSON_GetObjectItem(pins_item, "binter")->valueint;
+				PinsConf[i].hinter = cJSON_GetObjectItem(pins_item, "hinter")->valueint;
+				PinsConf[i].repeat = cJSON_GetObjectItem(pins_item, "repeat")->valueint;
+				PinsConf[i].rinter = cJSON_GetObjectItem(pins_item, "rinter")->valueint;
+				PinsConf[i].dcinter = cJSON_GetObjectItem(pins_item, "dcinter")->valueint;
+				PinsConf[i].pclick = cJSON_GetObjectItem(pins_item, "pclick")->valueint;
+				strcpy(PinsConf[i].info, cJSON_GetObjectItem(pins_item, "info")->valuestring);
+				PinsConf[i].onoff = cJSON_GetObjectItem(pins_item, "onoff")->valueint;
+				PinsConf[i].event = cJSON_GetObjectItem(pins_item, "event")->valueint;
+				PinsConf[i].act = cJSON_GetObjectItem(pins_item, "act")->valueint;
+				PinsConf[i].parametr = cJSON_GetObjectItem(pins_item, "parametr")->valueint;
+				PinsConf[i].timeout = cJSON_GetObjectItem(pins_item, "timeout")->valueint;
+				strcpy(PinsConf[i].condit, cJSON_GetObjectItem(pins_item, "condit")->valuestring);
 			}
+
+			cJSON_Delete(root_obj);
+			memset(fsbuffer, '\0', sizeof(fsbuffer));
+			f_close(&USBHFile);
 		}
 	}
+
 }
 
 // Если файл "pins.ini" не существует, создаем его и записываем данные
@@ -457,90 +456,170 @@ void SetPinConfig() {
 	int i = 0;
 	if (f_open(&USBHFile, (const TCHAR*) "pins.ini",FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		// Запись JSON в файл
-		printf("Write CRON in to file. \r\n");
 
-    root_obj = cJSON_CreateArray();
-    fld = cJSON_CreateObject();
+		root_obj = cJSON_CreateArray();
+		fld = cJSON_CreateObject();
 
-    for (i = 0; i < NUMPIN; i++)
-    {
-        cJSON_AddItemToArray(root_obj, fld = cJSON_CreateObject());
+		for (i = 0; i < NUMPIN; i++)
+		{
+			cJSON_AddItemToArray(root_obj, fld = cJSON_CreateObject());
 
-        cJSON_AddNumberToObject(fld, "topin", PinsConf[i].topin);
-        cJSON_AddNumberToObject(fld, "pwm", PinsConf[i].pwm);
-        cJSON_AddNumberToObject(fld, "on", PinsConf[i].on);
-        cJSON_AddNumberToObject(fld, "istate", PinsConf[i].istate);
-        cJSON_AddNumberToObject(fld, "dvalue", PinsConf[i].dvalue);
-        cJSON_AddNumberToObject(fld, "ponr", PinsConf[i].ponr);
-        cJSON_AddStringToObject(fld, "ptype", PinsConf[i].ptype);
-        cJSON_AddNumberToObject(fld, "binter", PinsConf[i].binter);
-        cJSON_AddNumberToObject(fld, "hinter", PinsConf[i].hinter);
-        cJSON_AddNumberToObject(fld, "repeat", PinsConf[i].repeat);
-        cJSON_AddNumberToObject(fld, "rinter", PinsConf[i].rinter);
-        cJSON_AddNumberToObject(fld, "dcinter", PinsConf[i].dcinter);
-        cJSON_AddNumberToObject(fld, "pclick", PinsConf[i].pclick);
-        cJSON_AddStringToObject(fld, "info", PinsConf[i].info);
-        cJSON_AddNumberToObject(fld, "onoff", PinsConf[i].onoff);
-        cJSON_AddNumberToObject(fld, "event", PinsConf[i].event);
-        cJSON_AddNumberToObject(fld, "act", PinsConf[i].act);
-        cJSON_AddNumberToObject(fld, "parametr", PinsConf[i].parametr);
-        cJSON_AddNumberToObject(fld, "timeout", PinsConf[i].timeout);
-        cJSON_AddStringToObject(fld, "condit", PinsConf[i].condit);
-    }
-    out_str = cJSON_PrintUnformatted(root_obj);
-    fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
-    free(out_str);
+			cJSON_AddNumberToObject(fld, "topin", PinsConf[i].topin);
+			cJSON_AddNumberToObject(fld, "pwm", PinsConf[i].pwm);
+			cJSON_AddNumberToObject(fld, "on", PinsConf[i].on);
+			cJSON_AddNumberToObject(fld, "istate", PinsConf[i].istate);
+			cJSON_AddNumberToObject(fld, "dvalue", PinsConf[i].dvalue);
+			cJSON_AddNumberToObject(fld, "ponr", PinsConf[i].ponr);
+			cJSON_AddStringToObject(fld, "ptype", PinsConf[i].ptype);
+			cJSON_AddNumberToObject(fld, "binter", PinsConf[i].binter);
+			cJSON_AddNumberToObject(fld, "hinter", PinsConf[i].hinter);
+			cJSON_AddNumberToObject(fld, "repeat", PinsConf[i].repeat);
+			cJSON_AddNumberToObject(fld, "rinter", PinsConf[i].rinter);
+			cJSON_AddNumberToObject(fld, "dcinter", PinsConf[i].dcinter);
+			cJSON_AddNumberToObject(fld, "pclick", PinsConf[i].pclick);
+			cJSON_AddStringToObject(fld, "info", PinsConf[i].info);
+			cJSON_AddNumberToObject(fld, "onoff", PinsConf[i].onoff);
+			cJSON_AddNumberToObject(fld, "event", PinsConf[i].event);
+			cJSON_AddNumberToObject(fld, "act", PinsConf[i].act);
+			cJSON_AddNumberToObject(fld, "parametr", PinsConf[i].parametr);
+			cJSON_AddNumberToObject(fld, "timeout", PinsConf[i].timeout);
+			cJSON_AddStringToObject(fld, "condit", PinsConf[i].condit);
+		}
+		out_str = cJSON_PrintUnformatted(root_obj);
+		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
 
-	if(fresult == FR_OK){
+		if(fresult == FR_OK){
 
-	}
-    cJSON_Delete(root_obj);
-    memset(fsbuffer, '\0', sizeof(fsbuffer));
-    f_close(&USBHFile);
+		}
+		cJSON_Delete(root_obj);
+		memset(fsbuffer, '\0', sizeof(fsbuffer));
+		f_close(&USBHFile);
 	}
 }
 
+
+void GetPinToPin() {
+	FILINFO finfo;
+	cJSON *root_obj = NULL;
+	FRESULT fresult;
+	UINT Byteswritten; // File read/write count
+
+	fresult = f_stat("pintopin.ini", &finfo);
+	if (fresult == FR_OK) {
+		// если файл существует, открываем его
+		if (f_open(&USBHFile, (const TCHAR*) "pintopin.ini", FA_READ) == FR_OK) {
+
+			fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer), &Byteswritten);
+
+			root_obj = cJSON_Parse(fsbuffer);
+
+			for (int i = 0; i < cJSON_GetArraySize(root_obj); i++) {
+				cJSON *pins_item = cJSON_GetArrayItem(root_obj, i);
+
+				PinsLinks[i].idin = cJSON_GetObjectItem(pins_item, "idin")->valueint;
+				PinsLinks[i].idout = cJSON_GetObjectItem(pins_item, "idout")->valueint;
+				PinsLinks[i].flag = cJSON_GetObjectItem(pins_item, "flag")->valueint;
+
+			}
+
+			cJSON_Delete(root_obj);
+			memset(fsbuffer, '\0', sizeof(fsbuffer));
+			f_close(&USBHFile);
+		}
+	}
+
+
+}
+
+// Если файл "pintopin.ini" не существует, создаем его и записываем данные
+void SetPinToPin() {
+	cJSON *root_obj = NULL;
+	cJSON *fld = NULL;
+	UINT Byteswritten; // File read/write count
+	FRESULT fresult;
+	char *out_str = NULL;
+	int i = 0;
+	if (f_open(&USBHFile, (const TCHAR*) "pintopin.ini",FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+		// Запись JSON в файл
+
+		root_obj = cJSON_CreateArray();
+		fld = cJSON_CreateObject();
+		for (i = 0; i < NUMPINLINKS; i++)
+		{
+			cJSON_AddItemToArray(root_obj, fld = cJSON_CreateObject());
+
+			cJSON_AddNumberToObject(fld, "idin", PinsLinks[i].idin);
+			cJSON_AddNumberToObject(fld, "idout", PinsLinks[i].idout);
+			cJSON_AddNumberToObject(fld, "flag", PinsLinks[i].flag);
+
+		}
+		out_str = cJSON_PrintUnformatted(root_obj);
+		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
+		free(out_str);
+
+		if(fresult == FR_OK){
+
+		}
+		cJSON_Delete(root_obj);
+		memset(fsbuffer, '\0', sizeof(fsbuffer));
+		f_close(&USBHFile);
+	}
+
+}
+
+
+
+
 void InitPin() {
-    int i = 0;
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+	int i = 0;
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    for (i = 0; i < NUMPIN; i++) {
-        if (PinsConf[i].topin == 2) {
-            // проверяем тактирование порта
-//            checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+    for (i = 0; i < NUMPIN; i++){
+    	if(PinsConf[i].topin == 2){
+
+    		// проверяем тактирование порта
+			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+    		HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+
+			// инициализация пина OUTPUT
+    		GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
+    		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
+    		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
+    		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+    	}
+    	if(PinsConf[i].topin == 1){
+
+    		// проверяем тактирование порта
+			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
 
             // сбрасываем биты для данного пина
             HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
 
-            // инициализация пина OUTPUT
-            GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
-            GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
-            GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW; //
-            HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
-        }
-        if (PinsConf[i].topin == 1) {
-            // проверяем тактирование порта
-//            checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
 
-            // сбрасываем биты для данного пина
-            HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+			// инициализация пина  INPUT
+    	    GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
+    	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
 
-            // инициализация пина INPUT
-            GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
-            GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
+    	    // @todo поменять на int
+    	    if (strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) {
+    	    	GPIO_InitStruct.Pull = GPIO_PULLUP;
+    	    }
+    	    else if (strcmp(PinsConf[i].ptype, "GPIO_PULLDOWN") == 0) {
+    	    	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    	    }
+    	    else if (strcmp(PinsConf[i].ptype, "None") == 0) {
+    	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+    	    } else {
+    	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+    	    }
 
-            if (strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) {
-                GPIO_InitStruct.Pull = GPIO_PULLUP;
-            } else if (strcmp(PinsConf[i].ptype, "GPIO_PULLDOWN") == 0) {
-                GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-            } else if (strcmp(PinsConf[i].ptype, "None") == 0) {
-                GPIO_InitStruct.Pull = GPIO_NOPULL;
-            } else {
-                GPIO_InitStruct.Pull = GPIO_NOPULL;
-            }
 
-            GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
-            HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
-        }
+    	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
+    	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
+    	}
     }
+	//PinsInfo[i].hal_pin
+	//PinsInfo[i].gpio_name
+
 }
