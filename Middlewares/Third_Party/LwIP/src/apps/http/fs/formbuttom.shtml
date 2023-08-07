@@ -14,79 +14,82 @@
 
 <body>
 
+  <center>
+    <h1>NUCLEO-F767ZI</h1>
+
+    <!--#menu-->
+
+    <h2 id="title1">Edit Buttom pin</h2>
+
+
+    <form action="tabbuttom.shtml?ssid=<!--#ssid-->" method="post">
+      <table class="zebra_2" border="1" align="center" id="tab1">
+
+      </table>
+      <br>
       <center>
-        <h1>NUCLEO-F767ZI</h1>        
-
-        <!--#menu-->
-
-        <h2 id="title1">Edit Buttom pin</h2>
-
-        
-        <form action="tabbuttom.shtml?ssid=<!--#ssid-->" method="post">
-            <table class="zebra_2" border="1" align="center" id="tab1">
-        
-            </table>
-            <br>
-            <center>
-              <button> Save pin </button>
-            </center>
-        </form>       
-
+        <button> Save pin </button>
       </center>
+    </form>
+
+  </center>
+
+  <script>
+    // Получаем ответ от сервера в формате JSON
+    var response = '<!--#formjson-->';
+
+    $(document).ready(function () {
+
+      // Парсим ответ в объект JavaScript
+      var val = JSON.parse(response);
+
+      // Строки для заполнения таблицы
+      var employee_data = '';
+      var employee_data_pin = '';
+      employee_data_pin += ' ' + val.pins + ' ';
+      // Заполнение таблицы данными
+      employee_data += '<tr><td>ID <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[1] + '</span></a></div></td><td><div>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></div></td></tr>';
+      employee_data += '<tr><td>Pin <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[2] + '</span></a></div></td><td><div>' + val.pins + '</div></td></tr>';
+      employee_data += '<tr><td>Pullup type <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[3] + '</span></a></div></td>';
+
+      employee_data += '<td><select name=\"ptype\">';
+      if (val.ptype == 'None') {
+        employee_data += ' <option value=\"None\" selected>None</option>';
+      } else {
+        employee_data += ' <option value=\"None\">None</option>';
+      }
+      if (val.ptype == 'GPIO_PULLUP') {
+        employee_data += ' <option value=\"GPIO_PULLUP\" selected>GPIO_PULLUP</option>';
+      } else {
+        employee_data += ' <option value=\"GPIO_PULLUP\">GPIO_PULLUP</option>';
+      }
+      if (val.ptype == 'GPIO_PULLDOWN') {
+        employee_data += ' <option value=\"GPIO_PULLDOWN\" selected>GPIO_PULLDOWN</option>';
+      } else {
+        employee_data += ' <option value=\"GPIO_PULLDOWN\">GPIO_PULLDOWN</option>';
+      }
+
+      employee_data += '</select></td></tr>';
+      employee_data += '<tr><td>Bounce interval (ms) <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[4] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"99\" name=\"binter" value=\"' + val.binter + '\"  size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Hold interval (ms) <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[5] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"999\" name=\"hinter" value=\"' + val.hinter + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Repeat interval (ms) <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[6] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"999\" name=\"rinter" value=\"' + val.rinter + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Double-click interval (ms) <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[8] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"999\" name=\"dcinter" value=\"' + val.dcinter + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Prevent Click <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[9] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"1\" name=\"pclick" value=\"' + val.pclick + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>INFO <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[11] + '</span></a></div></td><td><div><input type=\"text\" name=\"info" value=\"' + val.info + '\"></div></td></tr>';
+      if (val.onoff == 1) {
+        employee_data += '<tr><td>On/Off <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[12] + '</span></a></div></td><td><div><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></div></td></tr>';
+      } else {
+        employee_data += '<tr><td>On/Off <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditbutton[12] + '</span></a></div></td><td><div><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" unchecked=\"unchecked\"><span class=\"sliderround\"></span></label></div></td></tr>';
+      }
+
+      // Добавляем строки в таблицу и заголовок
+      $('#tab1').append(employee_data);
+      $('#title1').append(employee_data_pin);
+
+    });
 
 
-      <script>
-        var response = '<!--#formjson-->';
-    
-        $(document).ready(function () {
-    
-          var val = JSON.parse(response);
-          var employee_data = '';
-    
-          var employee_data_pin = '';
-          employee_data_pin += ' ' + val.pins + ' ';
-    
-          employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></td></tr>';
-          employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
-          employee_data += '<tr><td>Pullup type</td>';
-    
-          employee_data += '<td><select name=\"ptype">';
-          if (val.ptype == 'None') {
-            employee_data += ' <option value=\"None\" selected>None</option>';
-          } else {
-            employee_data += ' <option value=\"None\">None</option>';
-          }
-          if (val.ptype == 'GPIO_PULLUP') {
-            employee_data += ' <option value=\"GPIO_PULLUP\" selected>GPIO_PULLUP</option>';
-          } else {
-            employee_data += ' <option value=\"GPIO_PULLUP\">GPIO_PULLUP</option>';
-          }
-          if (val.ptype == 'GPIO_PULLDOWN') {
-            employee_data += ' <option value=\"GPIO_PULLDOWN\" selected>GPIO_PULLDOWN</option>';
-          } else {
-            employee_data += ' <option value=\"GPIO_PULLDOWN\">GPIO_PULLDOWN</option>';
-          }
-    
-          employee_data += '</select></td></tr>';
-    
-          employee_data += '<tr><td>Bounce interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"99\" name=\"binter" value=\"' + val.binter + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Hold interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"hinter" value=\"' + val.hinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Repeat</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"repeat" value=\"' + val.repeat + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Repeat interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"rinter" value=\"' + val.rinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Double-click interval (ms)</td><td><input type=\"number\" min=\"0\" max=\"999\" name=\"dcinter" value=\"' + val.dcinter + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Prevent Click</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"pclick" value=\"' + val.pclick + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info" value=\"' + val.info + '\"></td></tr>';
-          if (val.onoff == 1) {
-            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></td></tr>';
-          } else {
-            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" unchecked=\"unchecked\"><span class=\"slider round\"></span></label></td></tr>';
-          }
-    
-          $('#tab1').append(employee_data);
-          $('#title1').append(employee_data_pin);
-        
-        });
-    
-      </script>
+  </script>
 </body>
+
 </html>

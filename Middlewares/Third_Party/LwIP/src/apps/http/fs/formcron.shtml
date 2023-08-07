@@ -32,7 +32,22 @@
     </form>
 
   </center>
+
+  <div id="help1">
+  </div>
+
   <script>
+    $(document).ready(function () {
+      var flaglang = "<!--#lang-->";
+      if (flaglang == '/js/rulang.js') {
+        $('#help1').load('help1ru.shtml');
+      }
+      if (flaglang == '/js/enlang.js') {
+        $('#help1').load('help1eng.shtml');
+      }
+    });
+
+
     var response = '<!--#formjson-->';
 
     $(document).ready(function () {
@@ -44,10 +59,10 @@
       n = val.id + 1;
       formcron_data_pin += ' ' + val.pins + ' ';
 
-      formcron_data += '<tr><td>ID</td><td>' + n + '<input type=\"hidden\" name=\"id\" value=\"' + n + '\"></td></tr>';
-      formcron_data += '<tr><td>CRON</td><td><input type=\"text\" id=\"cron\" name=\"cron\" value=\"' + val.cron + '\"><br><span id=\"error1\"></span></td></tr>';
-      formcron_data += '<tr><td>ACTION</td><td><input type=\"text\" id=\"action\" name=\"activ\" value=\"' + val.activ + '\"><br><span id=\"error2\"></span></td></tr>';
-      formcron_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info\" value=\"' + val.info + '\"></td></tr>';
+      formcron_data += '<tr><td>ID <div class=\"tooltip\"><a class=\"support\" href=\"#\">(?) <span class=\"tooltiptext\">' + langtimers[1] + '</span></a></div></td><td><div>' + n + '<input type=\"hidden\" name=\"id\" value=\"' + n + '\"></div></td></tr>';
+      formcron_data += '<tr><td>CRON <div class=\"tooltip\"><a class=\"support\" href=\"#\">(?) <span class=\"tooltiptext\">' + langtimers[2] + '</span></a></div></td><td><input type=\"text\" id=\"cron\" name=\"cron\" value=\"' + val.cron + '\"><br><span id=\"error1\"></span></td></tr>';
+      formcron_data += '<tr><td>ACTION <div class=\"tooltip\"><a class=\"support\" href=\"#\">(?) <span class=\"tooltiptext\">' + langtimers[3] + '</span></a></div></td><td><input type=\"text\" id=\"action\" name=\"activ\" value=\"' + val.activ + '\"><br><span id=\"error2\"></span></td></tr>';
+      formcron_data += '<tr><td>INFO <div class=\"tooltip\"><a class=\"support\" href=\"#\">(?) <span class=\"tooltiptext\">' + langtimers[4] + '</span></a></div></td><td><input type=\"text\" name=\"info\" value=\"' + val.info + '\"></td></tr>';
 
       $('#tab1').append(formcron_data);
       $('#title1').append(formcron_data_pin);

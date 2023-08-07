@@ -330,7 +330,7 @@ void GetCronConfig() {
 			printf("CRON file EXISTS! \r\n");
 			root_obj = cJSON_Parse(fsbuffer);
 
-			for (int i = 0; i < cJSON_GetArraySize(root_obj); i++) {
+			for (uint8_t i = 0; i < cJSON_GetArraySize(root_obj); i++) {
 				cJSON *cron_item = cJSON_GetArrayItem(root_obj, i);
 
 				strcpy(dbCrontxt[i].cron, cJSON_GetObjectItem(cron_item, "cron")->valuestring);
@@ -358,7 +358,7 @@ void SetCronConfig() {
 
 	fresult = f_stat("cron.ini", &finfo);
 	char *out_str = NULL;
-	int i = 0;
+	uint8_t i = 0;
 	if (f_open(&USBHFile, (const TCHAR*) "cron.ini",
 	FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		// Запись JSON в файл
@@ -410,7 +410,7 @@ void GetPinConfig() {
 			printf("PINS file EXISTS! \r\n");
 			root_obj = cJSON_Parse(fsbuffer);
 
-			for (int i = 0; i < cJSON_GetArraySize(root_obj); i++) {
+			for (uint8_t i = 0; i < cJSON_GetArraySize(root_obj); i++) {
 				cJSON *pins_item = cJSON_GetArrayItem(root_obj, i);
 
 				cJSON *topin = cJSON_GetObjectItem(pins_item, "topin");
@@ -453,7 +453,7 @@ void SetPinConfig() {
 	UINT Byteswritten; // File read/write count
 	FRESULT fresult;
 	char *out_str = NULL;
-	int i = 0;
+	uint8_t i = 0;
 	if (f_open(&USBHFile, (const TCHAR*) "pins.ini",FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		// Запись JSON в файл
 
@@ -514,7 +514,7 @@ void GetPinToPin() {
 
 			root_obj = cJSON_Parse(fsbuffer);
 
-			for (int i = 0; i < cJSON_GetArraySize(root_obj); i++) {
+			for (uint8_t i = 0; i < cJSON_GetArraySize(root_obj); i++) {
 				cJSON *pins_item = cJSON_GetArrayItem(root_obj, i);
 
 				PinsLinks[i].idin = cJSON_GetObjectItem(pins_item, "idin")->valueint;
@@ -539,7 +539,7 @@ void SetPinToPin() {
 	UINT Byteswritten; // File read/write count
 	FRESULT fresult;
 	char *out_str = NULL;
-	int i = 0;
+	uint8_t i = 0;
 	if (f_open(&USBHFile, (const TCHAR*) "pintopin.ini",FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		// Запись JSON в файл
 

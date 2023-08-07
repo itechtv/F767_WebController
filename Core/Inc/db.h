@@ -59,9 +59,9 @@ struct dbPinsInfo { // Создали структуру с необходимы
 
 
 struct dbPinToPin { // привязка кнопок к реле
-	int idin;
-	int idout;
-	int flag;
+	uint8_t idin;
+	uint8_t idout;
+	uint8_t flag;
 };
 
 struct dbSettings { 	// Cтруктура для setting
