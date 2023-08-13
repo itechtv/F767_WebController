@@ -544,6 +544,7 @@ PUTCHAR_PROTOTYPE {
 	return ch;
 }
 
+
 // int pause  0 - до паузы 1 - после паузы
 void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 	char *token;
