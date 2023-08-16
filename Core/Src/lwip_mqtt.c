@@ -60,7 +60,7 @@ static void mqtt_sub_request_cb(void *arg, err_t result) {
 }
 
 static void mqtt_connection_cb(mqtt_client_t *client, void *arg,mqtt_connection_status_t status) {
-	const char *topico = arg;
+	//const char *topico = arg;
 	err_t err;
 	if (status == MQTT_CONNECT_ACCEPTED) {
 		sprintf(buffer, "mqtt_connection_cb: Successfully connected\n");
@@ -106,7 +106,7 @@ void example_do_connect(mqtt_client_t *client, const char *topic) {
 	 to establish a connection with the server.
 	 For now MQTT version 3.1.1 is always used */
 	ip_addr_t mqttServerIP;
-	IP4_ADDR(&mqttServerIP, 192, 168, 11, 11);
+	IP4_ADDR(&mqttServerIP, 192, 168, 18, 100);
 //  err = mqtt_client_connect(client, &mqttServerIP, MQTT_PORT, mqtt_connection_cb, 0, &ci);
 	err = mqtt_client_connect(client, &mqttServerIP, MQTT_PORT,mqtt_connection_cb, topic, &ci);
 

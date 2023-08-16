@@ -558,12 +558,12 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 	int idin = 0;
 	int idout = 0;
-	uint8_t i = 0;
+	int i = 0;
 	int del = 0;
 	uint16_t usbdata = 0;
 
 	if (iIndex == 4) {
-		for (i = 0; i < iNumParams; i++) {
+		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
 				memset(ssid, '\0', sizeof(ssid));
