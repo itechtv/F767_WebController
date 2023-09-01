@@ -2,7 +2,7 @@
 
 **Based on:**
 
-* STM32CubeIDE Version: 1.11.2
+* STM32CubeIDE Version: 1.13.0
 * FREERTOS Version: 10.2.1 CMSIS_V1
 * LWIP 2.1.2
 
