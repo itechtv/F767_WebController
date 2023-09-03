@@ -15,6 +15,8 @@ void GetCronConfig();
 void SetCronConfig();
 void GetPinConfig();
 void SetPinConfig();
+void GetPinToPin();
+void SetPinToPin();
 void InitPin();
 
 
@@ -24,15 +26,15 @@ void InitPin();
 
 #define IP_ADDR0 192
 #define IP_ADDR1 168
-#define IP_ADDR2 11
-#define IP_ADDR3 80
+#define IP_ADDR2 18
+#define IP_ADDR3 88
 #define SB_MASK0 255
 #define SB_MASK1 255
 #define SB_MASK2 255
 #define SB_MASK3 0
 #define GATEWAY0 192
 #define GATEWAY1 168
-#define GATEWAY2 11
+#define GATEWAY2 18
 #define GATEWAY3 1
 #define MQTT_PRT 1883
 #define MQTT_QOS 0

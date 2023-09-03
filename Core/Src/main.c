@@ -96,10 +96,13 @@ osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
 /* USER CODE BEGIN PV */
+
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
+extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
-
+extern struct dbPinToPin PinsLinks[NUMPINLINKS];
+extern uint8_t IP_ADDRESS[4];
 extern ApplicationTypeDef Appli_state;
 
 RTC_TimeTypeDef sTime = { 0 };
@@ -172,7 +175,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-
+//  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -220,7 +223,7 @@ int main(void)
   OutputTaskHandle = osThreadCreate(osThread(OutputTask), NULL);
 
   /* definition and creation of ConfigTask */
-  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityIdle, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
+  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityNormal, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
   ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
 
   /* definition and creation of InputTask */
@@ -233,6 +236,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -409,6 +413,9 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -608,17 +615,20 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-  ulTaskNotifyTake(0, portMAX_DELAY);
+	ulTaskNotifyTake(0, portMAX_DELAY);  //
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
-
+//  MX_USB_HOST_Init();
   /* USER CODE BEGIN 5 */
+
 	http_server_init();
 	osDelay(1000);
 
+	printf("My IP adress is - %d.%d.%d.%d \r\n",IP_ADDRESS[0],IP_ADDRESS[1],IP_ADDRESS[2],IP_ADDRESS[3]);
+
 	client = mqtt_client_new();
-	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
+	example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
@@ -779,7 +789,7 @@ void StartOutputTask(void const * argument)
 void StartConfigTask(void const * argument)
 {
   /* USER CODE BEGIN StartConfigTask */
-	int usbflag = 1;
+	uint8_t  usbflag = 1;
 	//FRESULT fresult;
 	FILINFO finfo;
 	//UINT Byteswritten; // File read/write count
@@ -803,6 +813,7 @@ void StartConfigTask(void const * argument)
 					GetSetingsConfig();
 					GetCronConfig();
 					GetPinConfig();
+					GetPinToPin();
 
 					InitPin();
 
@@ -835,6 +846,9 @@ void StartConfigTask(void const * argument)
 				case 3:
 					SetCronConfig();
 					break;
+				case 4:
+					SetPinToPin();
+					break;
 				default:
 					//printf("Wrong data! \r\n");
 					break;
@@ -862,12 +876,36 @@ void StartConfigTask(void const * argument)
 /* USER CODE END Header_StartInputTask */
 void StartInputTask(void const * argument)
 {
-
   /* USER CODE BEGIN StartInputTask */
-	ulTaskNotifyTake(0, portMAX_DELAY);
+  ulTaskNotifyTake(0, portMAX_DELAY);
+
+  uint8_t pinStates[NUMPIN] = {0};
+  uint32_t pinTimes[NUMPIN] = {0};
+  uint32_t millis;
+
   /* Infinite loop */
   for(;;)
   {
+	millis = HAL_GetTick();
+	for (uint8_t i = 0; i < NUMPIN; i++) {
+		if(PinsConf[i].topin == 1){
+			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+			//printf(" STpin %d \r\n", pinStates[i]);
+			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 200){
+				pinTimes[i] = millis;
+				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+				for(uint8_t a = 0; a < NUMPINLINKS; a++){
+					printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+					if(PinsLinks[a].idin == i){
+						data_pin.pin = PinsLinks[a].idout;
+						data_pin.action = 2;
+						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+					}
+				}
+			}
+		}
+	}
     osDelay(1);
   }
   /* USER CODE END StartInputTask */

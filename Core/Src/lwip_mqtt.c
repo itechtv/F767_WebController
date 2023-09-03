@@ -2,8 +2,12 @@
 #include <string.h>
 #include "stm32f7xx_hal.h"
 
+#include <db.h>
+extern struct dbSettings SetSettings;// Для получения IP из web.морды.
+extern uint8_t connectmqtt;
 extern UART_HandleTypeDef huart3;
 char buffer[1000];
+
 /* The idea is to demultiplex topic and create some reference to be used in data callbacks
  Example here uses a global variable, better would be to use a member in arg
  If RAM and CPU budget allows it, the easiest implementation might be to just take a copy of
@@ -16,7 +20,7 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic,
 			topic, (unsigned int) tot_len);
 	HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
 	/* Decode topic string into a user defined reference */
-	if (strcmp(topic, "test") == 0) {
+	if (strcmp(topic, SetSettings.mqtt_tpc) == 0) {
 		inpub_id = 0;
 	} else if (topic[0] == 'A') {
 		/* All topics starting with 'A' might be handled at the same way */
@@ -60,7 +64,7 @@ static void mqtt_sub_request_cb(void *arg, err_t result) {
 }
 
 static void mqtt_connection_cb(mqtt_client_t *client, void *arg,mqtt_connection_status_t status) {
-//	const char *topico = arg;
+	//const char *topico = arg;
 	err_t err;
 	if (status == MQTT_CONNECT_ACCEPTED) {
 		sprintf(buffer, "mqtt_connection_cb: Successfully connected\n");
@@ -71,7 +75,7 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg,mqtt_connection_
 				mqtt_incoming_data_cb, arg);
 
 		/* Subscribe to a topic named "placa" with QoS level 0, call mqtt_sub_request_cb with result */
-		err = mqtt_subscribe(client, "test", 0, mqtt_sub_request_cb, arg);
+		err = mqtt_subscribe(client, SetSettings.mqtt_tpc, 0, mqtt_sub_request_cb, arg);
 
 		if (err != ERR_OK) {
 			sprintf(buffer, "mqtt_subscribe return: %d\n", err);
@@ -79,48 +83,49 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg,mqtt_connection_
 
 		}
 	} else {
-		sprintf(buffer, "mqtt_connection_cb: Disconnected, reason: %d\n",
-				status);
+		sprintf(buffer, "mqtt_connection_cb: Disconnected, reason: %d\n",status);
 		HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
 
 		/* Its more nice to be connected, so try to reconnect */
-		example_do_connect(client);
+		//example_do_connect(client);
 	}
 
 }
 
 void example_do_connect(mqtt_client_t *client, const char *topic) {
-	struct mqtt_connect_client_info_t ci;
-	err_t err;
+	if (SetSettings.mqtt_hst0 != 0 && SetSettings.mqtt_hst1 != 0 && SetSettings.mqtt_hst2 != 0 && SetSettings.mqtt_hst3 != 0) {
+		struct mqtt_connect_client_info_t ci;
+		err_t err;
 
-	/* Setup an empty client info structure */
-	memset(&ci, 0, sizeof(ci));
+		/* Setup an empty client info structure */
+		memset(&ci, 0, sizeof(ci));
 
-	/* Minimal amount of information required is client identifier, so set it here */
-	ci.client_id = "stm32";
-	//ci.client_user = "mosquitto";
-	//ci.client_pass = "chupasangre"; /* Tiempo en mi caso */
+		/* Minimal amount of information required is client identifier, so set it here */
+		ci.client_id = SetSettings.mqtt_clt;
+		//ci.client_user = "mosquitto";
+		//ci.client_pass = "chupasangre"; /* Tiempo en mi caso */
 
-	/* Initiate client and connect to server, if this fails immediately an error code is returned
-	 otherwise mqtt_connection_cb will be called with connection result after attempting
-	 to establish a connection with the server.
-	 For now MQTT version 3.1.1 is always used */
-	ip_addr_t mqttServerIP;
-	IP4_ADDR(&mqttServerIP, 192, 168, 18, 100);
+		/* Initiate client and connect to server, if this fails immediately an error code is returned
+		 otherwise mqtt_connection_cb will be called with connection result after attempting
+		 to establish a connection with the server.
+		 For now MQTT version 3.1.1 is always used */
+		ip_addr_t mqttServerIP;
+		//IP4_ADDR(&mqttServerIP, 192, 168, 18, 100);
+		IP4_ADDR(&mqttServerIP, SetSettings.mqtt_hst0, SetSettings.mqtt_hst1, SetSettings.mqtt_hst2, SetSettings.mqtt_hst3);
 //  err = mqtt_client_connect(client, &mqttServerIP, MQTT_PORT, mqtt_connection_cb, 0, &ci);
-	err = mqtt_client_connect(client, &mqttServerIP, MQTT_PORT,mqtt_connection_cb, topic, &ci);
+		err = mqtt_client_connect(client, &mqttServerIP, MQTT_PORT, mqtt_connection_cb, (void*) topic, &ci);
 
-	/* For now just print the result code if connection is ON. */
-	if (err == ERR_ISCONN)
-	{
-		//sprintf(buffer, "MQTT connection already established. %d\n\r", err);
-		//HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
-	} else if ((err != ERR_OK) && (err != ERR_ISCONN))
-	{/* For now just print the result code if something goes wrong */
-		sprintf(buffer, "mqtt_connect return %d\n\r", err);
-		HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
-	} else {
+		/* For now just print the result code if connection is ON. */
+		if (err == ERR_ISCONN) {
+			//sprintf(buffer, "MQTT connection already established. %d\n\r", err);
+			//HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
+		} else if ((err != ERR_OK) && (err != ERR_ISCONN)) {/* For now just print the result code if something goes wrong */
+			sprintf(buffer, "mqtt_connect return %d\n\r", err);
+			HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
 
+		} else {
+
+		}
 	}
 }
 
@@ -131,17 +136,18 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
 		HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
 	}
 }
-void example_publish(mqtt_client_t *client, void *arg) {
+//void example_publish(mqtt_client_t *client, void *arg) {
+  void example_publish(mqtt_client_t *client, char *topic, void *arg) {
 	//const char *pub_payload= "Hola mundo de mierda!";
 	const char *pub_payload = arg;
 	err_t err;
 	u8_t qos = 0; /* 0 1 or 2, see MQTT specification */
 	u8_t retain = 0; /* No don't retain such crappy payload... */
-	err = mqtt_publish(client, "test", pub_payload, strlen(pub_payload),
-			qos, retain, mqtt_pub_request_cb, arg);
+	//err = mqtt_publish(client, "test", pub_payload, strlen(pub_payload),qos, retain, mqtt_pub_request_cb, arg);
+	err = mqtt_publish(client, topic, pub_payload, strlen(pub_payload),qos, retain, mqtt_pub_request_cb, arg);
 	if (err != ERR_OK) {
+		connectmqtt = 0;
 		sprintf(buffer, "Publish err: %d\n\r", err);
 		HAL_UART_Transmit(&huart3, (uint8_t*) buffer, strlen(buffer), 1000);
 	}
 }
-

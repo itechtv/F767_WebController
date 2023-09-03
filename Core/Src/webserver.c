@@ -128,7 +128,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			}
 			if(tab == 2){
 				if(PinsConf[variable].topin == 1){
-					// buttoms json
+					// buttons json
 					idplus = variable + 1;
 
 				    root = cJSON_CreateObject();
@@ -235,7 +235,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 		// ssi tag <!--#menu-->
 		case 3:
-			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabbuttom.shtml?ssid=%s\">Buttom pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
+			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Buttons pins</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relays pins</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
 			return strlen(pcInsert);
 			break;
 
@@ -422,14 +422,14 @@ static const tCGI URL_TABLES[] = {
 		{"/logon.shtml", (tCGIHandler) LoginCGI_Handler },
 		{"/select.shtml", (tCGIHandler) SelectCGI_Handler },
 		{"/tabrelay.shtml", (tCGIHandler) RelayCGI_Handler },
-		{"/tabbuttom.shtml", (tCGIHandler) ButtonCGI_Handler },
+		{"/tabbutton.shtml", (tCGIHandler) ButtonCGI_Handler },
 		{"/settings.shtml", (tCGIHandler) SettingCGI_Handler },
 		{"/timers.shtml", (tCGIHandler) TimerCGI_Handler },
 		{"/logout.shtml", (tCGIHandler) LogoutCGI_Handler },
 		{"/tabjson.shtml", (tCGIHandler) TabjsonCGI_Handler },
 		{"/selectset.shtml", (tCGIHandler) SelectSetCGI_Handler },
 		{"/formrelay.shtml", (tCGIHandler) FormRelayCGI_Handler },
-		{"/formbuttom.shtml", (tCGIHandler) FormButtonCGI_Handler },
+		{"/formbutton.shtml", (tCGIHandler) FormButtonCGI_Handler },
 		{"/formtopin.shtml", (tCGIHandler) FormPinToPinCGI_Handler },
 		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler },
 		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },
@@ -552,7 +552,7 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// tabbuttom.shtml Handler (Index 4)
+// tabbutton.shtml Handler (Index 4)
 const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -560,6 +560,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	int idout = 0;
 	int i = 0;
 	int del = 0;
+	uint16_t usbdata = 0;
 
 	if (iIndex == 4) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -589,11 +590,17 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 					PinsLinks[i].idin = idin - 1;
 					PinsLinks[i].idout = idout - 1;
 					PinsLinks[i].flag = 1;
+					usbdata = 4;
 					break;
 				}
 				i++;
 			}
-			printf("NOT NULL \n");
+			if(usbdata != 0){
+				xQueueSend(usbQueueHandle, &usbdata, 0);
+				printf("usbdata = 4 \n");
+			}
+			usbdata = 0;
+
 		}
 		if(del != 0){
 			PinsLinks[del-1].idin = 0;
@@ -606,7 +613,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if(1){
 		//printf("SSID OK \n");
 		restartSSID();
-		return "/tabbuttom.shtml"; //
+		return "/tabbutton.shtml"; //
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -768,7 +775,7 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 }
 
 
-// formbuttom.shtml Handler (Index 10)
+// formbutton.shtml Handler (Index 10)
 const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -805,7 +812,7 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// formbuttom.shtml Handler (Index 11)
+// formbutton.shtml Handler (Index 11)
 const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -834,7 +841,7 @@ const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		//printf("SSID OK \n");
 		restartSSID();
-		return "/formbuttom.shtml"; //
+		return "/formbutton.shtml"; //
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -1159,8 +1166,8 @@ void setPinRelay(int idpin, char *name, char *token) {
 }
 
 
-// POST request Buttom
-void setPinButtom(int idpin, char *name, char *token) {
+// POST request Button
+void setPinButton(int idpin, char *name, char *token) {
 
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
@@ -1420,10 +1427,10 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         				usbdata = 1;
         			}
         		}
-        		// POST request Buttom
-        		if (strcmp(v_PostBufer.uri, "/tabbuttom.shtml") == 0 && id != 0){
+        		// POST request Button
+        		if (strcmp(v_PostBufer.uri, "/tabbutton.shtml") == 0 && id != 0){
         			if(token2 != NULL){
-        				setPinButtom(id, name, token2);
+        				setPinButton(id, name, token2);
         				usbdata = 1;
         			}
         		}
