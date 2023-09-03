@@ -33,7 +33,8 @@
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
 /* USER CODE BEGIN 0 */
-
+#include <db.h>
+extern struct dbSettings SetSettings;
 /* USER CODE END 0 */
 
 /* Private define ------------------------------------------------------------*/
@@ -219,7 +220,23 @@ static void low_level_init(struct netif *netif)
   heth.Init.RxBuffLen = 1536;
 
   /* USER CODE BEGIN MACADDRESS */
-
+	if (SetSettings.macaddr0 == 0 && SetSettings.macaddr1 == 0
+			&& SetSettings.macaddr2 == 0 && SetSettings.macaddr3 == 0
+			&& SetSettings.macaddr4 == 0 && SetSettings.macaddr5 == 0) {
+		MACAddr[0] = 0x00;
+		MACAddr[1] = 0x80;
+		MACAddr[2] = 0xE1;
+		MACAddr[3] = 0x00;
+		MACAddr[4] = 0x00;
+		MACAddr[5] = 0x00;
+	} else {
+		MACAddr[0] = SetSettings.macaddr0;
+		MACAddr[1] = SetSettings.macaddr1;
+		MACAddr[2] = SetSettings.macaddr2;
+		MACAddr[3] = SetSettings.macaddr3;
+		MACAddr[4] = SetSettings.macaddr4;
+		MACAddr[5] = SetSettings.macaddr5;
+	}
   /* USER CODE END MACADDRESS */
 
   hal_eth_init_status = HAL_ETH_Init(&heth);

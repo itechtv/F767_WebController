@@ -6,139 +6,153 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
-  <script src="js/jquerymin.js"></script>
 
+  <script src="js/jquerymin.js"></script>
+  <script src="<!--#lang-->"></script>
 
 </head>
 
-<body>
+
+<body onload="">
+
+  <script>
+
+   function getLang(langs){
+     langs.forEach(function(element, key){
+       var fieldNameElement = document.getElementById('lang' + key);
+       fieldNameElement.innerHTML = element;
+       console.log(key + ': ' + element);
+     });
+   }
+           
+  </script>
+  <script>
+    $(document).ready(function () {
+      var mqtt_hst0, mqtt_hst1, mqtt_hst2, mqtt_hst3;
+      var ip_addr0, ip_addr1, ip_addr2, ip_addr3;
+      var sb_mask0, sb_mask1, sb_mask2, sb_mask3;
+      var gateway0, gateway1, gateway2, gateway3;
+
+      $.getJSON('formjson.shtml?tab=4&ssid=<!--#ssid-->', function (data) {
+        $.each(data, function(key, val) {
+            if(key == 'lang'){ 
+              document.getElementById('lang').value = val;
+            }   
+            else if(key == 'lon_de'){ $('#lon_de').val(val); }              
+            else if(key == 'lat_de'){ $('#lat_de').val(val); }
+            
+            else if(key == 'check_mqtt'){ 
+              $('#ttb0').val(val); 
+              if(val == 1){
+                $('#ttb4').prop('checked', true);
+              } else {
+                $('#ttb4').prop('checked', false);
+              }                   
+            }
+            else if(key == 'mqtt_prt'){ $('#mqtt_prt').val(val); }               
+            else if(key == 'mqtt_clt'){ $('#mqtt_clt').val(val); }               
+            else if(key == 'mqtt_usr'){ $('#mqtt_usr').val(val); }             
+            else if(key == 'mqtt_pswd'){ $('#mqtt_pswd').val(val); }                
+            else if(key == 'mqtt_tpc'){ $('#mqtt_tpc').val(val); }               
+            else if(key == 'mqtt_ftpc'){ $('#mqtt_ftpc').val(val); }
+
+            else if(key == 'adm_name'){ $('#adm_name').val(val); }             
+            else if(key == 'adm_pswd'){ $('#adm_pswd').val(val); }  
+            else if(key == 'token'){ $('#token').val(val); }  
+
+            else if(key == 'mqtt_hst0'){ mqtt_hst0 = val; }                
+            else if(key == 'mqtt_hst1'){ mqtt_hst1 = val; }              
+            else if(key == 'mqtt_hst2'){ mqtt_hst2 = val; }               
+            else if(key == 'mqtt_hst3'){ mqtt_hst3 = val; }
+
+            else if(key == 'check_ip'){ 
+              $('#tb0').val(val); 
+              if(val == 1){
+                $('#tb4').prop('checked', true);
+              } else {
+                $('#tb4').prop('checked', false);
+              }
+              
+            }
+            else if(key == 'ip_addr0'){ ip_addr0 = val; }                
+            else if(key == 'ip_addr1'){ ip_addr1 = val; }             
+            else if(key == 'ip_addr2'){ ip_addr2 = val; }                
+            else if(key == 'ip_addr3'){ ip_addr3 = val; }
+            
+            else if(key == 'sb_mask0'){ sb_mask0 = val; }
+            else if(key == 'sb_mask1'){ sb_mask1 = val; }                
+            else if(key == 'sb_mask2'){ sb_mask2 = val; }                
+            else if(key == 'sb_mask3'){ sb_mask3 = val; }
+          
+            else if(key == 'gateway0'){ gateway0 = val; }              
+            else if(key == 'gateway1'){ gateway1 = val; }              
+            else if(key == 'gateway2'){ gateway2 = val; }          
+            else if(key == 'gateway3'){ gateway3 = val; } 
+          
+            else if(key == 'macaddr'){ 
+              $('#macaddr').val(val);
+            }
+            else if(key == 'timezone'){  
+              document.getElementById('timezone').value = val;
+            }
+            else { }
+          });
+
+          if(typeof mqtt_hst0 !== 'undefined' || typeof mqtt_hst1 !== 'undefined'  || typeof mqtt_hst2 !== 'undefined'  || typeof mqtt_hst3 !== 'undefined' ){
+             var mqtt_hst = mqtt_hst0 + '.' +  mqtt_hst1 + '.' +  mqtt_hst2 + '.' +  mqtt_hst3;
+          } else {                
+            var mqtt_hst = '0.0.0.0';
+          }
+          $('#mqtt_hst').val(mqtt_hst);
+
+          if(typeof ip_addr0 !== 'undefined' || typeof ip_addr1 !== 'undefined' ||  typeof ip_addr2 !== 'undefined'  || typeof ip_addr3 !== 'undefined'){
+             var ip_addr = ip_addr0 + '.' +  ip_addr1 + '.' +  ip_addr2 + '.' +  ip_addr3;
+          } else {                
+            var ip_addr= '0.0.0.0';
+          }
+          $('#ip_addr').val(ip_addr);
+
+          if(typeof sb_mask0 !== 'undefined' || typeof sb_mask1 !== 'undefined' ||  typeof sb_mask2 !== 'undefined'  || typeof sb_mask3 !== 'undefined'){
+             var sb_mask = sb_mask0 + '.' +  sb_mask1 + '.' +  sb_mask2 + '.' +  sb_mask3;
+          } else {                
+            var sb_mask = '0.0.0.0';
+          }
+          $('#sb_mask').val(sb_mask);
+
+          if(typeof gateway0 !== 'undefined' || typeof gateway1 !== 'undefined' ||  typeof gateway2 !== 'undefined'  || typeof gateway3 !== 'undefined'){
+             var gateway = gateway0 + '.' +  gateway1 + '.' +  gateway2 + '.' +  gateway3;
+          } else {                
+            var gateway = '0.0.0.0';
+          }
+          $('#gateway').val(gateway);
+
+          ///
+          checkip();
+          chmqtt();
+          
+      //getValue('tb4', 'tb0');
+      //getValue('ttb4','ttb0');
+
+      });
+     
+    });
+    $(document).ready(function() {
+   // Ваш скрипт
+     getLang(langsettings);
+    });
+  </script>     
+
+
 
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
         <h2>Settings</h2>
 
-        <script>
-          $(document).ready(function () {
-            var mqtt_hst0, mqtt_hst1, mqtt_hst2, mqtt_hst3;
-            var ip_addr0, ip_addr1, ip_addr2, ip_addr3;
-            var sb_mask0, sb_mask1, sb_mask2, sb_mask3;
-            var gateway0, gateway1, gateway2, gateway3;
 
-            $.getJSON('formjson.shtml?tab=4&ssid=<!--#ssid-->', function (data) {
-              $.each(data, function(key, val) {
-                  if(key == 'lang'){ 
-                    document.getElementById('lang').value = val;
-                  }   
-                  else if(key == 'lon_de'){ $('#lon_de').val(val); }              
-                  else if(key == 'lat_de'){ $('#lat_de').val(val); }
-                  
-                  else if(key == 'check_mqtt'){ 
-                    $('#ttb0').val(val); 
-                    if(val == 1){
-                      $('#ttb4').prop('checked', true);
-                    } else {
-                      $('#ttb4').prop('checked', false);
-                    }                   
-                  }
-                  else if(key == 'mqtt_prt'){ $('#mqtt_prt').val(val); }               
-                  else if(key == 'mqtt_clt'){ $('#mqtt_clt').val(val); }               
-                  else if(key == 'mqtt_usr'){ $('#mqtt_usr').val(val); }             
-                  else if(key == 'mqtt_pswd'){ $('#mqtt_pswd').val(val); }                
-                  else if(key == 'mqtt_tpc'){ $('#mqtt_tpc').val(val); }               
-                  else if(key == 'mqtt_ftpc'){ $('#mqtt_ftpc').val(val); }
-  
-                  else if(key == 'adm_name'){ $('#adm_name').val(val); }             
-                  else if(key == 'adm_pswd'){ $('#adm_pswd').val(val); }  
-                  else if(key == 'token'){ $('#token').val(val); }  
+ 
 
-                  else if(key == 'mqtt_hst0'){ mqtt_hst0 = val; }                
-                  else if(key == 'mqtt_hst1'){ mqtt_hst1 = val; }              
-                  else if(key == 'mqtt_hst2'){ mqtt_hst2 = val; }               
-                  else if(key == 'mqtt_hst3'){ mqtt_hst3 = val; }
-
-                  else if(key == 'check_ip'){ 
-                    $('#tb0').val(val); 
-                    if(val == 1){
-                      $('#tb4').prop('checked', true);
-                    } else {
-                      $('#tb4').prop('checked', false);
-                    }
-                    
-                  }
-                  else if(key == 'ip_addr0'){ ip_addr0 = val; }                
-                  else if(key == 'ip_addr1'){ ip_addr1 = val; }             
-                  else if(key == 'ip_addr2'){ ip_addr2 = val; }                
-                  else if(key == 'ip_addr3'){ ip_addr3 = val; }
-                  
-                  else if(key == 'sb_mask0'){ sb_mask0 = val; }
-                  else if(key == 'sb_mask1'){ sb_mask1 = val; }                
-                  else if(key == 'sb_mask2'){ sb_mask2 = val; }                
-                  else if(key == 'sb_mask3'){ sb_mask3 = val; }
-                
-                  else if(key == 'gateway0'){ gateway0 = val; }              
-                  else if(key == 'gateway1'){ gateway1 = val; }              
-                  else if(key == 'gateway2'){ gateway2 = val; }          
-                  else if(key == 'gateway3'){ gateway3 = val; } 
-                
-                  else if(key == 'macaddr'){ 
-                    $('#macaddr').val(val);
-                  }
-                  else if(key == 'timezone'){  
-                    document.getElementById('timezone').value = val;
-                  }
-                  else { }
-                });
-
-                if(typeof mqtt_hst0 !== 'undefined' || typeof mqtt_hst1 !== 'undefined'  || typeof mqtt_hst2 !== 'undefined'  || typeof mqtt_hst3 !== 'undefined' ){
-                   var mqtt_hst = mqtt_hst0 + '.' +  mqtt_hst1 + '.' +  mqtt_hst2 + '.' +  mqtt_hst3;
-                } else {                
-                  var mqtt_hst = '0.0.0.0';
-                }
-                $('#mqtt_hst').val(mqtt_hst);
-
-                if(typeof ip_addr0 !== 'undefined' || typeof ip_addr1 !== 'undefined' ||  typeof ip_addr2 !== 'undefined'  || typeof ip_addr3 !== 'undefined'){
-                   var ip_addr = ip_addr0 + '.' +  ip_addr1 + '.' +  ip_addr2 + '.' +  ip_addr3;
-                } else {                
-                  var ip_addr= '0.0.0.0';
-                }
-                $('#ip_addr').val(ip_addr);
-
-                if(typeof sb_mask0 !== 'undefined' || typeof sb_mask1 !== 'undefined' ||  typeof sb_mask2 !== 'undefined'  || typeof sb_mask3 !== 'undefined'){
-                   var sb_mask = sb_mask0 + '.' +  sb_mask1 + '.' +  sb_mask2 + '.' +  sb_mask3;
-                } else {                
-                  var sb_mask = '0.0.0.0';
-                }
-                $('#sb_mask').val(sb_mask);
-
-                if(typeof gateway0 !== 'undefined' || typeof gateway1 !== 'undefined' ||  typeof gateway2 !== 'undefined'  || typeof gateway3 !== 'undefined'){
-                   var gateway = gateway0 + '.' +  gateway1 + '.' +  gateway2 + '.' +  gateway3;
-                } else {                
-                  var gateway = '0.0.0.0';
-                }
-                $('#gateway').val(gateway);
-
-                ///
-                checkip();
-
-                chmqtt();
-            //getValue('tb4', 'tb0');
-            //getValue('ttb4','ttb0');
-
-            });
-          });
-        </script>     
-
-        <script>
-          function onclickRadio() {
       
-            var x = document.getElementsByName('tlon_de');
-            var y = document.getElementsByName('tlat_de');
-      
-
-          }
-      
-        </script>
       
         <form action="settings.shtml?ssid=<!--#ssid-->" method="post">
           <a href="reboot.shtml?ssid=<!--#ssid-->"><button type="button"> Reboot</button></a>
@@ -148,9 +162,9 @@
           <table class="zebra_2" border="1" align="center" width="580">
             <tr>
               <td width="190">Login <div class="tooltip">
-                  <a class="support" href="#">(?)
-                    <span class="tooltiptext"> </span>
-                  </a>
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang1"> </span>
+                </a>
                 </div>
               </td>
               <td>
@@ -160,7 +174,7 @@
             <tr>
               <td width="190">Password <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext"> </span>
+                    <span class="tooltiptext" id="lang2"> </span>
                   </a>
                 </div>
               </td>
@@ -171,7 +185,7 @@
             <tr>
               <td width="190">Язык <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Язык</span>
+                    <span class="tooltiptext" id="lang3"> </span>
                   </a>
                 </div>
               </td>
@@ -186,7 +200,7 @@
             <tr>
               <td width="190">Часовой пояс UTC<div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Язык</span>
+                    <span class="tooltiptext" id="lang4"> </span>
                   </a>
                 </div>
               </td>
@@ -256,8 +270,7 @@
               <td width="190">IP address:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Введите статический ip адрес. После перезагрузки "STM-32" будет доступна по
-                      введенному адресу!</span>
+                    <span class="tooltiptext" id="lang5"> </span>
                   </a>
                 </div>
               </td>
@@ -271,11 +284,13 @@
       
             <tr class="cls" id="hide_show2" style="display:none">
               <td>Subnet mask:</address>
+
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Введите маску подсети!</span>
+                    <span class="tooltiptext" id="lang6"> </span>
                   </a>
                 </div>
+                
               </td>
               <td class="center">
                 <input type="text" minlength="7" maxlength="15" size="15" id="sb_mask" name="sb_mask"
@@ -288,7 +303,7 @@
               <td>Default gateway:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Введите шлюз по умолчанию!</span>
+                    <span class="tooltiptext" id="lang7"> </span>
                   </a>
                 </div>
               </td>
@@ -302,8 +317,7 @@
               <td>MAC address:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Если у Вас более одного устройства необходимо каждому устройству прописать
-                      уникальный MAC адрес!</span>
+                    <span class="tooltiptext" id="lang8"> </span>
                   </a>
                 </div>
               </td>
@@ -361,7 +375,7 @@
               <td width="190">Host:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Введите ip адрес "MQTT" брокера.</span>
+                    <span class="tooltiptext" id="lang9"> </span>
                   </a>
                 </div>
               </td>
@@ -376,7 +390,7 @@
               <td>Port:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Укажите порт "MQTT" брокера.</span>
+                    <span class="tooltiptext" id="lang10"> </span>
                   </a>
                 </div>
               </td>
@@ -390,7 +404,7 @@
               <td>Client:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Укажите клиент "id".</span>
+                    <span class="tooltiptext" id="lang11"> </span>
                   </a>
                 </div>
               </td>
@@ -403,7 +417,7 @@
               <td>User:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Укажите имя пользователя.</span>
+                    <span class="tooltiptext" id="lang12"> </span>
                   </a>
                 </div>
               </td>
@@ -416,7 +430,7 @@
               <td>Password:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Укажите пароль.</span>
+                    <span class="tooltiptext" id="lang13"> </span>
                   </a>
                 </div>
               </td>
@@ -429,7 +443,7 @@
               <td>Topic:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Укажите пояснительное имя.</span>
+                    <span class="tooltiptext" id="lang14"> </span>
                   </a>
                 </div>
               </td>
@@ -442,7 +456,7 @@
               <td>Full Topic:
                 <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Full Topic.</span>
+                    <span class="tooltiptext" id="lang15"> </span>
                   </a>
                 </div>
               </td>
@@ -450,7 +464,8 @@
                   value="">
               </td>
             </tr>
-      
+
+
           </table>
       
           <br>
@@ -462,7 +477,7 @@
             <tr>
               <td width="190">Longitude <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Долгота́ (Longitude). Округлите до трёх знаков после запятой!</span>
+                    <span class="tooltiptext" id="lang17"> </span>
                   </a>
                 </div>
               </td>
@@ -472,7 +487,7 @@
             <tr>
               <td>Latitude <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Широта (Latitude). Округлите до трёх знаков после запятой!</span>
+                    <span class="tooltiptext" id="lang18"> </span>
                   </a>
                 </div>
               </td>
@@ -482,8 +497,7 @@
             <tr>
               <td>Sunrise <div class="tooltip">
                   <a class="support" href="#">(?)
-                    <span class="tooltiptext">Восход солнца (Sunrise). Значение установится автоматически согласно Вашим
-                      координатам!</span>
+                    <span class="tooltiptext" id="lang19"> </span>
                   </a>
                 </div>
               </td>
@@ -492,8 +506,7 @@
       
             <td>Sunset <div class="tooltip">
                 <a class="support" href="#">(?)
-                  <span class="tooltiptext">Закат солнца (Sunrise). Значение установится автоматически согласно Вашим
-                    координатам!</span>
+                  <span class="tooltiptext" id="lang20"> </span>
                 </a>
               </div>
             </td>
@@ -590,19 +603,7 @@
             console.log("value = ", result);
           }
       
-          function codeAddress() {
-            onclickRadio();
-          }
-          window.onload = codeAddress;
-      
-      
-          function setFirstSettings() {
-            checkip();
-            getValue('tb4', 'tb0');
-            checkip();
-            //getValue('tb4', 'tb0');
-            getValue('ttb4','ttb0');
-          }
+  
 
           function generateToken(length) {
               var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

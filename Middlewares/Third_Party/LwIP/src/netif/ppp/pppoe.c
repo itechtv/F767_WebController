@@ -175,10 +175,8 @@ ppp_pcb *pppoe_create(struct netif *pppif,
 {
   ppp_pcb *ppp;
   struct pppoe_softc *sc;
-#if !PPPOE_SCNAME_SUPPORT
   LWIP_UNUSED_ARG(service_name);
   LWIP_UNUSED_ARG(concentrator_name);
-#endif /* !PPPOE_SCNAME_SUPPORT */
   LWIP_ASSERT_CORE_LOCKED();
 
   sc = (struct pppoe_softc *)LWIP_MEMPOOL_ALLOC(PPPOE_IF);
@@ -195,10 +193,6 @@ ppp_pcb *pppoe_create(struct netif *pppif,
   memset(sc, 0, sizeof(struct pppoe_softc));
   sc->pcb = ppp;
   sc->sc_ethif = ethif;
-#if PPPOE_SCNAME_SUPPORT
-  sc->sc_service_name = service_name;
-  sc->sc_concentrator_name = concentrator_name;
-#endif /* PPPOE_SCNAME_SUPPORT */
   /* put the new interface at the head of the list */
   sc->next = pppoe_softc_list;
   pppoe_softc_list = sc;
@@ -306,6 +300,15 @@ pppoe_destroy(ppp_pcb *ppp, void *ctx)
        break;
     }
   }
+
+#ifdef PPPOE_TODO
+  if (sc->sc_concentrator_name) {
+    mem_free(sc->sc_concentrator_name);
+  }
+  if (sc->sc_service_name) {
+    mem_free(sc->sc_service_name);
+  }
+#endif /* PPPOE_TODO */
   LWIP_MEMPOOL_FREE(PPPOE_IF, sc);
 
   return ERR_OK;
@@ -754,13 +757,13 @@ pppoe_send_padi(struct pppoe_softc *sc)
   struct pbuf *pb;
   u8_t *p;
   int len;
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   int l1 = 0, l2 = 0; /* XXX: gcc */
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
 
   /* calculate length of frame (excluding ethernet header + pppoe header) */
   len = 2 + 2 + 2 + 2 + sizeof sc;  /* service name tag is required, host unique is send too */
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   if (sc->sc_service_name != NULL) {
     l1 = (int)strlen(sc->sc_service_name);
     len += l1;
@@ -769,7 +772,7 @@ pppoe_send_padi(struct pppoe_softc *sc)
     l2 = (int)strlen(sc->sc_concentrator_name);
     len += 2 + 2 + l2;
   }
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
   LWIP_ASSERT("sizeof(struct eth_hdr) + PPPOE_HEADERLEN + len <= 0xffff",
     sizeof(struct eth_hdr) + PPPOE_HEADERLEN + len <= 0xffff);
 
@@ -784,24 +787,24 @@ pppoe_send_padi(struct pppoe_softc *sc)
   /* fill in pkt */
   PPPOE_ADD_HEADER(p, PPPOE_CODE_PADI, 0, (u16_t)len);
   PPPOE_ADD_16(p, PPPOE_TAG_SNAME);
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   if (sc->sc_service_name != NULL) {
     PPPOE_ADD_16(p, l1);
     MEMCPY(p, sc->sc_service_name, l1);
     p += l1;
   } else
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
   {
     PPPOE_ADD_16(p, 0);
   }
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   if (sc->sc_concentrator_name != NULL) {
     PPPOE_ADD_16(p, PPPOE_TAG_ACNAME);
     PPPOE_ADD_16(p, l2);
     MEMCPY(p, sc->sc_concentrator_name, l2);
     p += l2;
   }
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
   PPPOE_ADD_16(p, PPPOE_TAG_HUNIQUE);
   PPPOE_ADD_16(p, sizeof(sc));
   MEMCPY(p, &sc, sizeof sc);
@@ -979,17 +982,17 @@ pppoe_send_padr(struct pppoe_softc *sc)
   struct pbuf *pb;
   u8_t *p;
   size_t len;
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   size_t l1 = 0; /* XXX: gcc */
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
 
   len = 2 + 2 + 2 + 2 + sizeof(sc);    /* service name, host unique */
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   if (sc->sc_service_name != NULL) {    /* service name tag maybe empty */
     l1 = strlen(sc->sc_service_name);
     len += l1;
   }
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
   if (sc->sc_ac_cookie_len > 0) {
     len += 2 + 2 + sc->sc_ac_cookie_len;  /* AC cookie */
   }
@@ -1003,13 +1006,13 @@ pppoe_send_padr(struct pppoe_softc *sc)
   p = (u8_t*)pb->payload;
   PPPOE_ADD_HEADER(p, PPPOE_CODE_PADR, 0, len);
   PPPOE_ADD_16(p, PPPOE_TAG_SNAME);
-#if PPPOE_SCNAME_SUPPORT
+#ifdef PPPOE_TODO
   if (sc->sc_service_name != NULL) {
     PPPOE_ADD_16(p, l1);
     MEMCPY(p, sc->sc_service_name, l1);
     p += l1;
   } else
-#endif /* PPPOE_SCNAME_SUPPORT */
+#endif /* PPPOE_TODO */
   {
     PPPOE_ADD_16(p, 0);
   }
