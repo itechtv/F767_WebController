@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Buttom</title>
+  <title>Button</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
@@ -40,7 +40,7 @@
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Buttom pin</h2>
+        <h2>Button pin</h2>
 
       <div class="tab">
         <table class="zebra_2" border="1" align="center" id="tab1" >
@@ -157,7 +157,7 @@
                   employee_data += '<td align=\"center\">';
       
                   for (var key in val.pinact) {
-                    employee_data += '<span>' + key + '[<a href="tabbuttom.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
+                    employee_data += '<span>' + key + '[<a href="tabbutton.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
                   }
       
                   employee_data += '</td>'
@@ -167,7 +167,7 @@
                   } else {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
                   }
-                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbuttom.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
+                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbutton.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
                   employee_data += '</tr>';
                 }
                 n++;

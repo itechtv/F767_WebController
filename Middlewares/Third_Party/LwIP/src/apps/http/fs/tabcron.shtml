@@ -9,19 +9,28 @@
   <script src="js/jquerymin.js"></script>
   <script src="<!--#lang-->"></script>
 
-
 </head>
 
-<body>
+<body onload="getLang(langtimers);">
 
   <script>
     function getLang(langs) {
       langs.forEach(function (element, key) {
         var fieldNameElement = document.getElementById('lang' + key);
         fieldNameElement.innerHTML = element;
-        console.log(key + ': ' + element);
+        //console.log(key + ': ' + element);
       });
     }
+
+    $(document).ready(function () {
+      var flaglang = "<!--#lang-->";
+      if (flaglang == '/js/rulang.js') {
+        $('#help1').load('help1rus.html');
+      }
+      if (flaglang == '/js/enlang.js') {
+        $('#help1').load('help1eng.html');
+      }
+    });
 
   </script>
 
@@ -43,21 +52,21 @@
           <th>Cron
             <div class="tooltip">
               <a class="support" href="#">(?)
-                <span class="tooltiptext" id="lang8"></span>
+                <span class="tooltiptext" id="lang2"></span>
               </a>
             </div>
           </th>
           <th>Script
             <div class="tooltip">
               <a class="support" href="#">(?)
-                <span class="tooltiptext" id="lang9"></span>
+                <span class="tooltiptext" id="lang3"></span>
               </a>
             </div>
           </th>
           <th>Info
             <div class="tooltip">
               <a class="support" href="#">(?)
-                <span class="tooltiptext" id="lang10"></span>
+                <span class="tooltiptext" id="lang4"></span>
               </a>
             </div>
           </th>
@@ -65,45 +74,44 @@
           <th>Action
             <div class="tooltip">
               <a class="support" href="#">(?)
-                <span class="tooltiptext" id="lang10"></span>
+                <span class="tooltiptext" id="lang5"></span>
               </a>
             </div>
           </th>
         </tr>
-
       </table>
     </div>
-
-    <script>
-      $(document).ready(function () {
-        $.getJSON('cronjson.shtml?ssid=<!--#ssid-->', function (data) {
-          var tabcron_data = '';
-          var n = 0;
-          var z = '';
-          
-          console.log(data);
-
-          $.each(data, function (key, val) {
-            n = val.id + 1;
-            tabcron_data += '<tr>';
-            tabcron_data += '<td>' + n + '</td>';
-            //console.log(val.id);
-            tabcron_data += '<td>' + val.cron + '</td>';
-            tabcron_data += '<td>' + val.activ + '</td>';
-            tabcron_data += '<td>' + val.info + '</td>';
-            tabcron_data += '<td><a href=\"formcron.shtml?ssid=<!--#ssid-->&id=' + n + '&tab=5\">Edit cron</a> | <a href=\"tabcron.shtml?ssid=<!--#ssid-->&id=' + n + '&del=' + n + '\">Delete</a></td>';
-            tabcron_data += '</tr>';
-
-            n++;
-          });
-          $('#tab1').append(tabcron_data);
-        });
-      });
-    </script>
-
-
-    <br><br>
   </center>
+  <!-- Добавляем раздел текста-->
+
+  <div id="help1">
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      $.getJSON('cronjson.shtml?ssid=<!--#ssid-->', function (data) {
+        var tabcron_data = '';
+        var n = 0;
+        var z = '';
+
+        $.each(data, function (key, val) {
+          n = val.id + 1;
+          tabcron_data += '<tr>';
+          tabcron_data += '<td>' + n + '</td>';
+          tabcron_data += '<td align=\"center\">' + val.cron + '</td>';
+          tabcron_data += '<td align=\"center\">' + val.activ + '</td>';
+          tabcron_data += '<td align=\"center\">' + val.info + '</td>';
+          tabcron_data += '<td><a href=\"formcron.shtml?ssid=<!--#ssid-->&id=' + n + '&tab=5\">Edit cron</a> | <a href=\"tabcron.shtml?ssid=<!--#ssid-->&id=' + n + '&del=' + n + '\">Delete</a></td>';
+          tabcron_data += '</tr>';
+          n++;
+        });
+        $('#tab1').append(tabcron_data);
+      });
+    });
+  </script>
+
+  <br><br>
+
 </body>
 
 </html>
