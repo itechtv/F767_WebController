@@ -14,60 +14,88 @@
 
 <body>
 
+  <center>
+    <h1>NUCLEO-F767ZI</h1>
+
+    <!--#menu-->
+
+    <h2 id="title1">Edit Relay pin</h2>
+
+
+    <form action="tabrelay.shtml?ssid=<!--#ssid-->" method="post">
+      <table class="zebra_2" border="1" align="center" id="tab1">
+
+      </table>
+      <br>
       <center>
-        <h1>NUCLEO-F767ZI</h1>        
-
-        <!--#menu-->
-
-        <h2  id="title1">Edit Relay pin</h2>
-
-
-        
-
-        <form action="tabrelay.shtml?ssid=<!--#ssid-->" method="post">
-            <table class="zebra_2" border="1" align="center" id="tab1">
-        
-            </table>
-            <br>
-            <center>
-              <button> Save pin </button>
-            </center>
-        </form>  
-
+        <button> Save pin </button>
       </center>
-      <script>
-        var response = '<!--#formjson-->';
-    
-        $(document).ready(function () {
-    
-          var val = JSON.parse(response);
-          var employee_data = '';
-    
-          var employee_data_pin = '';
-          employee_data_pin += ' ' + val.pins + ' ';
+    </form>
 
-          employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></td></tr>';
-          employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
-    
-          employee_data += '<tr><td>PWM Frequency (Hz)</td><td><input type=\"number\" min=\"0\" max=\"9999\" name=\"pwm" value=\"' + val.pwm + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>ON)</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"on" value=\"' + val.on + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Invert State</td><td><input type=\"number\"min=\"0\" max=\"1\" name=\"istate\" value=\"' + val.istate + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Dimmer value (0-255)</td><td><input type=\"number\" min=\"0\" max=\"255\" name=\"dvalue" value=\"' + val.dvalue + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Power On Restore)</td><td><input type=\"number\" min=\"0\" max=\"4\" name=\"ponr\" value=\"' + val.ponr + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-    
-          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info" value=\"' + val.info + '\"></td></tr>';
-          if (val.onoff == 1) {
-            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></td></tr>';
-          } else {
-            employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" unchecked=\"unchecked\"><span class=\"slider round\"></span></label></td></tr>';
-          }
-    
-          $('#tab1').append(employee_data);
-          $('#title1').append(employee_data_pin);
-        
-        });
-    
-      </script>
+  </center>
 
+  <script>
+    // Получаем ответ от сервера в формате JSON
+    var response = '<!--#formjson-->';
+
+    $(document).ready(function () {
+
+      // Получаем ответ от сервера в формате JSON
+      var response = '<!--#formjson-->';
+
+      // Парсим ответ в объект JavaScript
+      var val = JSON.parse(response);
+      // Строки для заполнения таблицы
+      var employee_data = '';
+      var employee_data_pin = '';
+      employee_data_pin += ' ' + val.pins + ' ';
+
+      // Заполнение таблицы данными
+      employee_data += '<tr><td>ID <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[1] + '</span></a></div></td><td><div>' + val.id + '<input type=\"hidden\" name=\"id\" value=\"' + val.id + '\"></div></td></tr>';
+      employee_data += '<tr><td>Pin <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[2] + '</span></a></div></td><td><div>' + val.pins + '</div></td></tr>';
+      employee_data += '<tr><td>PWM Frequency (Hz) <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[3] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"9999\" name=\"pwm" value=\"' + val.pwm + '\"  size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>ON <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[4] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"1\" name=\"on" value=\"' + val.on + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Invert State <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[5] + '</span></a></div></td><td><div><input type=\"number\"min=\"0\" max=\"1\" name=\"istate\" value=\"' + val.istate + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Dimmer value (0-255) <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[6] + '</span></a></div></td><td><div><input type=\"number\" min=\"0\" max=\"255\" name=\"dvalue" value=\"' + val.dvalue + '\" size=\"5\" style=\"width:45px;\"></div></td></tr>';
+      employee_data += '<tr><td>Power On Restore <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[7] + '</span></a></div></td>';
+
+      employee_data += '<td><select name=\"ponr\">';
+      if (val.ptype == "None") {
+        employee_data += ' <option value=\"None\" selected>None</option>';
+      } else {
+        employee_data += ' <option value=\"0\">None</option>';
+      }
+      if (val.ptype == "State") {
+        employee_data += ' <option value=\"State\" selected>State</option>';
+      } else {
+        employee_data += ' <option value=\"1\">State</option>';
+      }
+      if (val.ptype == "Value") {
+        employee_data += ' <option value=\"Value\" selected>Value</option>';
+      } else {
+        employee_data += ' <option value=\"2\">Value</option>';
+      }
+      if (val.ptype == "State&Value") {
+        employee_data += ' <option value=\"State&Value\" selected>State&Value</option>';
+      } else {
+        employee_data += ' <option value=\"3\">State&Value</option>';
+      }
+      employee_data += '</select></td></tr>';
+      employee_data += '<tr><td>INFO <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[8] + '</span></a></div></td><td><div><input type=\"text\" name=\"info" value=\"' + val.info + '\"></div></td></tr>';
+
+      if (val.onoff == 1) {
+        employee_data += '<tr><td>On/Off <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[9] + '</span></a></div></td><td><div><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></div></td></tr>';
+      } else {
+        employee_data += '<tr><td>On/Off <div class=\"tooltip\"><a class=\"support\" href="#">(?) <span class=\"tooltiptext\">' + langeditrelay[9] + '</span></a></div></td><td><div><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" unchecked=\"unchecked\"><span class=\"sliderround\"></span></label></div></td></tr>';
+      }
+
+      // Добавляем строки в таблицу и заголовок
+      $('#tab1').append(employee_data);
+      $('#title1').append(employee_data_pin);
+
+    });
+
+  </script>
 </body>
+
 </html>

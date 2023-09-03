@@ -42,16 +42,16 @@
         <table class="zebra_3" border="1" align="center" id="tab1" class="tab">
           <tr>
             <th>ID <div class="tooltip">
-              <a class="support" href="#">(?)
-                <span class="tooltiptext" id="lang1"></span>
-              </a>
-            </div>
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang1"></span>
+                </a>
+              </div>
             </th>
             <th>Pin<div class="tooltip">
-              <a class="support" href="#">(?)
-                <span class="tooltiptext" id="lang2"></span>
-              </a>
-            </div>
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang2"></span>
+                </a>
+              </div>
             </th>
             <th class="firstline">PWM Frequency (Hz)
               <div class="tooltip">
@@ -110,8 +110,9 @@
               </div>
             </th>
           </tr>
-    
-        </table>
+  
+        </table>       
+     
       </div>
     
         <script>
