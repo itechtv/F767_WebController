@@ -123,6 +123,8 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 header file. */
 /* USER CODE BEGIN 1 */
 #define configASSERT( x ) if ((x) == 0) {taskDISABLE_INTERRUPTS(); for( ;; );}
+#define INCLUDE_xTaskGetIdleTaskHandle       1
+#define INCLUDE_pxTaskGetStackStart          1
 /* USER CODE END 1 */
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
@@ -137,6 +139,7 @@ standard names. */
 
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */
+#include "SEGGER_SYSVIEW_FreeRTOS.h"
 /* USER CODE END Defines */
 
 #endif /* FREERTOS_CONFIG_H */

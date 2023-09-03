@@ -36,7 +36,8 @@
 #include "cJSON.h"
 #include "setings.h"
 
-
+#include "SEGGER_SYSVIEW_Conf.h"
+#include "SEGGER_SYSVIEW.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -146,7 +147,7 @@ char pacote[50];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	SEGGER_SYSVIEW_Conf();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
