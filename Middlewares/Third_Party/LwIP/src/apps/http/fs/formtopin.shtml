@@ -21,7 +21,7 @@
     <h2  id="title1">Edit Connection</h2>
     
   
-    <form action="tabbuttom.shtml?ssid=<!--#ssid-->" method="get">
+    <form action="tabbutton.shtml?ssid=<!--#ssid-->" method="get">
       <input type="hidden" name="ssid" value="<!--#ssid-->">
       <table class="zebra_2" border="1" align="center" id="tab1">
   
