@@ -6,7 +6,14 @@
 * FREERTOS Version: 10.2.1 CMSIS_V1
 * LWIP 2.1.2
 
+## Инструкция на русском языке ["Заготовка stm32"]( https://youtu.be/JxwXzxJd2BU)
+## Instructions in english ["stm32 billet"]( https://youtu.be/lx6RB74Y36U )
 
+## Видео на русском языке ["Segger RUS"]( https://youtu.be/NSek_xzT6Cw)
+## Video in english ["Segger ENG"]( https://youtu.be/sJGeLHSzgfM )
+
+## Для избежания поиска решения в слепую после генерации кода, посмотрите это видео. ["Бубен"]( https://youtu.be/g2xZnmcszZo )
+## To avoid running around the campfire with a tambourine after generating code, watch this video! ["Tambourine"]( https://youtu.be/g2xZnmcszZo )
 
 **Notice:**
 
