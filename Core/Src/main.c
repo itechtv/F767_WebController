@@ -872,41 +872,74 @@ void StartConfigTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartInputTask */
-void StartInputTask(void const * argument)
-{
-  /* USER CODE BEGIN StartInputTask */
-  ulTaskNotifyTake(0, portMAX_DELAY);
+void StartInputTask(void const *argument) {
+	/* USER CODE BEGIN StartInputTask */
+	ulTaskNotifyTake(0, portMAX_DELAY);
 
-  uint8_t pinStates[NUMPIN] = {0};
-  uint32_t pinTimes[NUMPIN] = {0};
-  uint32_t millis;
+	uint8_t pinStates[NUMPIN] = { 0 };
+	uint32_t pinTimes[NUMPIN] = { 0 };
+	uint32_t millis;
+	uint8_t pinLevel[NUMPIN] = { 0 };
 
-  /* Infinite loop */
-  for(;;)
-  {
-	millis = HAL_GetTick();
-	for (uint8_t i = 0; i < NUMPIN; i++) {
-		if(PinsConf[i].topin == 1){
-			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
-			//printf(" STpin %d \r\n", pinStates[i]);
-			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 200){
-				pinTimes[i] = millis;
-				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+	/* Infinite loop */
+	for (;;) {
+		millis = HAL_GetTick();
+		for (uint8_t i = 0; i < NUMPIN; i++) {
+			if (PinsConf[i].topin == 1) { // Для 'button'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,
+						PinsInfo[i].hal_pin);
+				//printf(" STpin %d \r\n", pinStates[i]);
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200) { //Для PC13 pinStates[i] == 1!
+//					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
-				for(uint8_t a = 0; a < NUMPINLINKS; a++){
-					printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
-					if(PinsLinks[a].idin == i){
-						data_pin.pin = PinsLinks[a].idout;
-						data_pin.action = 2;
-						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 2;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+			}
+			if (PinsConf[i].topin == 3) { // Для 'switch'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
+				//printf(" STpin %d \r\n", pinStates[i]);
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
+					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 1;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
+					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 0;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
 					}
 				}
 			}
 		}
+		//osDelay(5);
 	}
-    osDelay(1);
-  }
-  /* USER CODE END StartInputTask */
+	/* USER CODE END StartInputTask */
 }
 
 /**

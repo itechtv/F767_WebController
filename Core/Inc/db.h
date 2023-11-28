@@ -26,7 +26,7 @@ struct dbCron {
 };
 
 struct dbPinsConf {    // Создали структуру с необходимым набором типов элиментов.
-	int topin;		// Type of pins: 0 - ON; 1 - buttons; 2 - relay
+	int topin;		// Type of pins: 0 - NONE; 1 - BUTTON; 2 - RELAY; 3 - SWITCH;  4 - 1-WIRE; 5 - PWM; 6 - I2C;
 	int pwm;		// PWM frequency
 	int on;			// ON
 	int istate;		// Invert state
@@ -55,6 +55,9 @@ struct dbPinsInfo { // Создали структуру с необходимы
 	int number;
 	uint16_t hal_pin;
 	GPIO_TypeDef* gpio_name;
+	short pwm; // 0 - Not able; 1 - Able
+	short i2cdata; // 0 - Not able; 1 - Able
+	short i2cclok; // 0 - Not able; 1 - Able
 };
 
 

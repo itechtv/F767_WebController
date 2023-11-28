@@ -119,8 +119,8 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 		} else {
 			///////
 			if(tab == 1){
-				sprintf(pcInsert,"{\"id\":%d,\"pins\":\"%s\",\"topin\":%d},",
-						variable, PinsInfo[variable].pins, PinsConf[variable].topin);
+				sprintf(pcInsert,"{\"id\":%d,\"pins\":\"%s\",\"topin\":%d,\"pwm\":%d,\"i2cdata\":%d,\"i2cclok\":%d},",
+						variable, PinsInfo[variable].pins, PinsConf[variable].topin,PinsInfo[variable].pwm,PinsInfo[variable].i2cdata,PinsInfo[variable].i2cclok);
 
 				if(variable == (NUMPIN-1)){
 					pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
