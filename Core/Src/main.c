@@ -889,7 +889,7 @@ void StartInputTask(void const *argument) {
 				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,
 						PinsInfo[i].hal_pin);
 				//printf(" STpin %d \r\n", pinStates[i]);
-				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200) { //Для PC13 pinStates[i] == 1!
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200) {
 //					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
 					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);

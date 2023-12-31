@@ -15,14 +15,14 @@
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Select pin</h2>
+        <h2>Select pin(s)</h2>
       </center>
 
     <table class="zebra" border="1" align="center" id="tab1">
       <tr>
         <th>ID</th>
         <th>Pin</th>
-        <th>Types of Pins</th>
+        <th>Type(s) of pin(s)</th>
       </tr>
         
     </table>
