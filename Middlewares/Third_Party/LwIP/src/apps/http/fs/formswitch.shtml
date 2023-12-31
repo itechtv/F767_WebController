@@ -19,10 +19,10 @@
 
     <!--#menu-->
 
-    <h2 id="title1">Edit button pin</h2>
+    <h2 id="title1">Edit switch pin</h2>
 
 
-    <form action="tabbutton.shtml?ssid=<!--#ssid-->" method="post">
+    <form action="tabswitch.shtml?ssid=<!--#ssid-->" method="post">
       <table class="zebra_2" border="1" align="center" id="tab1">
 
       </table>

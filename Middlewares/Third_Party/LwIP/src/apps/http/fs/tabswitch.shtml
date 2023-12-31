@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Button(s) pin(s)</title>
+  <title>Switch(es) pin(s)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
@@ -40,7 +40,7 @@
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Button(s) pin(s)</h2>
+        <h2>Switch(es) pin(s)</h2>
 
       <div class="tab">
         <table class="zebra_2" border="1" align="center" id="tab1" >
@@ -137,13 +137,13 @@
       <script>
         $(document).ready(function () {
          
-            $.getJSON('tabjson.shtml?tab=2&ssid=<!--#ssid-->', function (data) {
+            $.getJSON('tabjson.shtml?tab=4&ssid=<!--#ssid-->', function (data) {
               var employee_data = '';
               var n = 0;
               var z = '';
                     
               $.each(data, function (key, val) {
-                if (val.topin == 1) {
+                if (val.topin == 3) {
                   employee_data += '<tr>';
                   employee_data += '<td>' + val.id + '</td>';
                   employee_data += '<td>' + val.pins + '</td>';
@@ -157,7 +157,7 @@
                   employee_data += '<td align=\"center\">';
       
                   for (var key in val.pinact) {
-                    employee_data += '<span>' + key + '[<a href="tabbutton.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
+                    employee_data += '<span>' + key + '[<a href="tabswitch.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
                   }
       
                   employee_data += '</td>'
@@ -167,7 +167,7 @@
                   } else {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
                   }
-                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbutton.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
+                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formswitch.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=6\">Edit sw.</a> |</td>';
                   employee_data += '</tr>';
                 }
                 n++;
