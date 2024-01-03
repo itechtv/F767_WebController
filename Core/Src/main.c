@@ -222,7 +222,7 @@ int main(void)
   OutputTaskHandle = osThreadCreate(osThread(OutputTask), NULL);
 
   /* definition and creation of ConfigTask */
-  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityIdle, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
+  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityNormal, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
   ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
 
   /* definition and creation of InputTask */
@@ -689,17 +689,19 @@ void StartCronTask(void const * argument)
 	struct tm stm;
 	/* Infinite loop */
 	for (;;) {
-		if (stm.tm_year != 0) {
+		if (sDate.Year != 0) {
 
 			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
-			stm.tm_year = sDate.Year + 100; //RTC_Year rang 0-99,but tm_year since 1900
-			stm.tm_mon = sDate.Month - 1; //RTC_Month rang 1-12,but tm_mon rang 0-11
+			stm.tm_year = sDate.Year; //RTC_Year rang 0-99,but tm_year since 1900
+			stm.tm_mon = sDate.Month; //RTC_Month rang 1-12,but tm_mon rang 0-11
 			stm.tm_mday = sDate.Date; //RTC_Date rang 1-31 and tm_mday rang 1-31
 			stm.tm_hour = sTime.Hours; //RTC_Hours rang 0-23 and tm_hour rang 0-23
 			stm.tm_min = sTime.Minutes; //RTC_Minutes rang 0-59 and tm_min rang 0-59
 			stm.tm_sec = sTime.Seconds;
+
+			//printf("Date %02d-%02d-20%d  %d:%d:%d \r\n", stm.tm_mday, stm.tm_mon, stm.tm_year, stm.tm_hour, stm.tm_min, stm.tm_sec);
 
 			cronetime = mktime(&stm);
 
@@ -869,47 +871,75 @@ void StartConfigTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartInputTask */
-void StartInputTask(void const * argument)
-{
+void StartInputTask(void const *argument) {
+	/* USER CODE BEGIN StartInputTask */
+	ulTaskNotifyTake(0, portMAX_DELAY);
 
-  /* USER CODE BEGIN StartInputTask */
-  ulTaskNotifyTake(0, portMAX_DELAY);
+	uint8_t pinStates[NUMPIN] = { 0 };
+	uint32_t pinTimes[NUMPIN] = { 0 };
+	uint32_t millis;
+	uint8_t pinLevel[NUMPIN] = { 0 };
 
-  uint8_t pinStates[NUMPIN] = {0};
-  uint32_t pinTimes[NUMPIN] = {0};
-  uint32_t millis;
+	/* Infinite loop */
+	for (;;) {
+		millis = HAL_GetTick();
+		for (uint8_t i = 0; i < NUMPIN; i++) {
+			if (PinsConf[i].topin == 1) { // Для 'button'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,
+						PinsInfo[i].hal_pin);
+				//printf(" STpin %d \r\n", pinStates[i]);
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200) {
+//					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
-  /* Infinite loop */
-  for(;;)
-  {
-	millis = HAL_GetTick();
-	for (uint8_t i = 0; i < NUMPIN; i++) {
-		if(PinsConf[i].topin == 1){
-			pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
-			//printf(" STpin %d \r\n", pinStates[i]);
-			if(pinStates[i] == 1 && (millis - pinTimes[i]) >= 200){
-				pinTimes[i] = millis;
-				printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
-
-				for(uint8_t a = 0; a < NUMPINLINKS; a++){
-					printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
-					if(PinsLinks[a].idin == i){
-						data_pin.pin = PinsLinks[a].idout;
-						data_pin.action = 2;
-						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
-
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 2;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
 					}
 				}
-
 			}
+			if (PinsConf[i].topin == 3) { // Для 'switch'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
+				//printf(" STpin %d \r\n", pinStates[i]);
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
+					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 1;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
+					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 0;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+			}
 		}
+		osDelay(5);
 	}
-    osDelay(1);
-  }
-  /* USER CODE END StartInputTask */
+	/* USER CODE END StartInputTask */
 }
-
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM6 interrupt took place, inside
