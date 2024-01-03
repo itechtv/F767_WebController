@@ -588,7 +588,7 @@ void InitPin() {
     		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
     		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
     	}
-    	if(PinsConf[i].topin == 1){
+    	if(PinsConf[i].topin == 1 || PinsConf[i].topin == 3){
 
     		// проверяем тактирование порта
 			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
