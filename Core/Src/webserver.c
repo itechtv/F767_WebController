@@ -159,7 +159,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					countJson++;
 
 					if(countJson == numTabLine){
-						printf("DELLL \n");
+//						printf("DELLL \n");
 						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
 					}
 
@@ -184,7 +184,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					countJson++;
 
 					if(countJson == numTabLine){
-						printf("DELLL \n");
+//						printf("DELLL \n");
 						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
 					}
 
@@ -223,7 +223,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					countJson++;
 
 					if(countJson == numTabLine){
-						printf("DELLL \n");
+//						printf("DELLL \n");
 						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
 					}
 

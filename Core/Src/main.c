@@ -36,16 +36,16 @@
 #include "cJSON.h"
 #include "setings.h"
 
-
+#include "multi_button.h"
+extern struct Button button[NUMPIN];
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 data_pin_t data_pin;
-
-
 uint16_t usbnum = 0;
+
+//const uint32_t DEBOUNCE_DELAY_MS = 150;     // Задержка для защиты от дребезга multi_button
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -490,47 +490,47 @@ uint32_t get_timestamp(void) {
  * @retval: None
  */
 void sntp_set_time(uint32_t sntp_time) {
-	char buf[80];
+    char buf[80];
 
-	if (sntp_time == 0) {
-		printf("sntp_set_time: wrong!\n");
-		return;
-	}
-	time_t rawtime = sntp_time;
+    if (sntp_time == 0) {
+        printf("sntp_set_time: wrong!\n");
+        return;
+    }
+    time_t rawtime = sntp_time;
 
-//	sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
-	timez = localtime(&rawtime);
+//    sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
+    timez = localtime(&rawtime);
 
-	strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
-	printf("%s \n", buf);
-	/*
-	 * Set the time of RTC
-	 */
-	sTime.Hours = timez->tm_hour;
-	sTime.Minutes = timez->tm_min;
-	sTime.Seconds = timez->tm_sec;
-	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-	if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
-		Error_Handler();
-	}
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
+    printf("%s \n", buf);
+    /*
+     * Set the time of RTC
+     */
+    sTime.Hours = timez->tm_hour;
+    sTime.Minutes = timez->tm_min;
+    sTime.Seconds = timez->tm_sec;
+    sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+        Error_Handler();
+    }
 
-	/*
-	 * Set the date of RTC
-	 */
-	sDate.WeekDay = timez->tm_wday;
-	sDate.Month = (timez->tm_mon) + 1;
-	sDate.Date = timez->tm_mday;
-	sDate.Year = (timez->tm_year) - 100;
+    /*
+     * Set the date of RTC
+     */
+    sDate.WeekDay = timez->tm_wday;
+    sDate.Month = (timez->tm_mon) + 1;
+    sDate.Date = timez->tm_mday;
+    sDate.Year = (timez->tm_year) - 100;
 
-	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
-		Error_Handler();
-	}
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+        Error_Handler();
+    }
 
-	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month,
-			sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
+    printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month,
+            sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
 
-//	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
+//    printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
 
 }
 /*************************** END OF SNTP **********************************/
@@ -692,13 +692,13 @@ void StartCronTask(void const * argument)
 	struct tm stm;
 	/* Infinite loop */
 	for (;;) {
-		if (stm.tm_year != 0) {
+		if (sDate.Year != 0) {
 
 			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
-			stm.tm_year = sDate.Year + 100; //RTC_Year rang 0-99,but tm_year since 1900
-			stm.tm_mon = sDate.Month - 1; //RTC_Month rang 1-12,but tm_mon rang 0-11
+			stm.tm_year = sDate.Year; //RTC_Year rang 0-99,but tm_year since 1900
+			stm.tm_mon = sDate.Month; //RTC_Month rang 1-12,but tm_mon rang 0-11
 			stm.tm_mday = sDate.Date; //RTC_Date rang 1-31 and tm_mday rang 1-31
 			stm.tm_hour = sTime.Hours; //RTC_Hours rang 0-23 and tm_hour rang 0-23
 			stm.tm_min = sTime.Minutes; //RTC_Minutes rang 0-59 and tm_min rang 0-59
@@ -815,6 +815,8 @@ void StartConfigTask(void const * argument)
 
 					InitPin();
 
+					InitMultibutton();
+
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
@@ -886,28 +888,12 @@ void StartInputTask(void const *argument) {
 		millis = HAL_GetTick();
 		for (uint8_t i = 0; i < NUMPIN; i++) {
 			if (PinsConf[i].topin == 1) { // Для 'button'
-				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,
-						PinsInfo[i].hal_pin);
-				//printf(" STpin %d \r\n", pinStates[i]);
-				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200) {
-//					pinLevel[i] = pinStates[i];
-					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
-
-					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
-						if (PinsLinks[a].idin == i) {
-							data_pin.pin = PinsLinks[a].idout;
-							data_pin.action = 2;
-							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
-						}
-					}
-				}
+				button_ticks(&button[i]);
 			}
-			if (PinsConf[i].topin == 3) { // Для 'switch'
-				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
+			if (PinsConf[i].topin == 3 && strcmp(PinsConf[i].ptype, "GPIO_PULLDOWN") == 0) { // Для 'switch'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
 				//printf(" STpin %d \r\n", pinStates[i]);
-				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
 					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
 					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
@@ -921,7 +907,39 @@ void StartInputTask(void const *argument) {
 						}
 					}
 				}
-				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
+					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 0;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+			}
+			if (PinsConf[i].topin == 3 && strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) { // Для 'switch'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+				//printf(" STpin %d \r\n", pinStates[i]);
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
+					pinLevel[i] = pinStates[i];
+					pinTimes[i] = millis;
+					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
+
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 1;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
 					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
 					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);

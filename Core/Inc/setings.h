@@ -18,7 +18,7 @@ void SetPinConfig();
 void GetPinToPin();
 void SetPinToPin();
 void InitPin();
-
+void InitMultibutton(void);
 
 #define ADM_NAME "admin"
 #define ADM_PASS "12345678"

@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include "db.h"
 #include "setings.h"
-
+#include "multi_button.h"
 
 char fsbuffer[25500] = { 0 };//2000
 
@@ -22,7 +22,7 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
-
+struct Button button[NUMPIN];
 /**************************************************************************/
 // Функция включает тактирование на указанном порту.
 int enablePort(char *portName) {
@@ -619,3 +619,32 @@ void InitPin() {
     	}
     }
 }
+
+void InitMultibutton(void) {
+    for (uint8_t i = 0; i < NUMPIN; i++) {
+        if (PinsConf[i].topin == 1) { // Если 'button'
+            if (strcmp(PinsConf[i].ptype, "GPIO_PULLDOWN") == 0) {
+                button_init(&button[i], read_button_level, 1, i);
+            }
+
+            if (strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) {
+                button_init(&button[i], read_button_level, 0, i);
+            }
+
+            if (strcmp(PinsConf[i].ptype, "NONE") != 0) {
+                button_attach(&button[i], PRESS_DOWN, button_event_handler);
+                button_attach(&button[i], PRESS_UP, button_event_handler);
+                button_attach(&button[i], LONG_PRESS_START, button_event_handler);
+                button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
+                button_attach(&button[i], SINGLE_CLICK, button_event_handler);
+                button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
+                button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+
+                button_start(&button[i]);
+            }
+        }
+    }
+}
+
+
+
