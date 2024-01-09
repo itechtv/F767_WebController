@@ -8,16 +8,17 @@
 #ifndef INC_SETINGS_H_
 #define INC_SETINGS_H_
 
-void SetSetingsConfig();
-void StartSetingsConfig();
-void GetSetingsConfig();
-void GetCronConfig();
-void SetCronConfig();
-void GetPinConfig();
-void SetPinConfig();
-void GetPinToPin();
-void SetPinToPin();
-void InitPin();
+void SetSetingsConfig(void);
+void StartSetingsConfig(void);
+void GetSetingsConfig(void);
+void GetCronConfig(void);
+void SetCronConfig(void);
+void GetPinConfig(void);
+void SetPinConfig(void);
+void GetPinToPin(void);
+void SetPinToPin(void);
+void InitPin(void);
+void InitMultibutton(void);
 
 
 #define ADM_NAME "admin"

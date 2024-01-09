@@ -51,20 +51,20 @@
           employee_data += '<tr><td>Pullup type</td>';
     
           employee_data += '<td><select name=\"ptype">';
-          if (val.ptype == 'None') {
-            employee_data += ' <option value=\"None\" selected>None</option>';
+          if (val.ptype == '0') {
+            employee_data += ' <option value=\"0\" selected>None</option>';
           } else {
-            employee_data += ' <option value=\"None\">None</option>';
+            employee_data += ' <option value=\"0\">None</option>';
           }
-          if (val.ptype == 'GPIO_PULLUP') {
-            employee_data += ' <option value=\"GPIO_PULLUP\" selected>GPIO_PULLUP</option>';
+          if (val.ptype == '1') {
+            employee_data += ' <option value=\"1\" selected>GPIO_PULLUP</option>';
           } else {
-            employee_data += ' <option value=\"GPIO_PULLUP\">GPIO_PULLUP</option>';
+            employee_data += ' <option value=\"1">GPIO_PULLUP</option>';
           }
-          if (val.ptype == 'GPIO_PULLDOWN') {
-            employee_data += ' <option value=\"GPIO_PULLDOWN\" selected>GPIO_PULLDOWN</option>';
+          if (val.ptype == '2') {
+            employee_data += ' <option value=\"2\" selected>GPIO_PULLDOWN</option>';
           } else {
-            employee_data += ' <option value=\"GPIO_PULLDOWN\">GPIO_PULLDOWN</option>';
+            employee_data += ' <option value=\"2\">GPIO_PULLDOWN</option>';
           }
     
           employee_data += '</select></td></tr>';

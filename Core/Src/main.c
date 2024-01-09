@@ -35,6 +35,7 @@
 #include "lwdtc.h"
 #include "cJSON.h"
 #include "setings.h"
+#include "multi_button.h"
 
 
 /* USER CODE END Includes */
@@ -101,6 +102,7 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
+struct Button button[NUMPIN];
 
 extern ApplicationTypeDef Appli_state;
 
@@ -142,6 +144,8 @@ unsigned long Ti;
 //////////////////////////////////////????????
 mqtt_client_t *client;
 char pacote[50];
+
+
 /* USER CODE END 0 */
 
 /**
@@ -884,17 +888,25 @@ void StartInputTask(void const *argument) {
 	for (;;) {
 		millis = HAL_GetTick();
 		for (uint8_t i = 0; i < NUMPIN; i++) {
-			if (PinsConf[i].topin == 1) { // Для 'button'
-				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,
-						PinsInfo[i].hal_pin);
-				//printf(" STpin %d \r\n", pinStates[i]);
+			// INPUT Button
+			if (PinsConf[i].topin == 1 && PinsConf[i].act == 1){
 				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200) {
-//					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
+				}
+
+			}
+
+
+			/*
+			// INPUT Button GPIO_PULLDOWN
+			if (PinsConf[i].topin == 1 && PinsConf[i].ptype == 2) { // Для 'button'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200) {
+					pinTimes[i] = millis;
+
+					// OUTPUT (вынести в отдельную функцию)
 					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
 						if (PinsLinks[a].idin == i) {
 							data_pin.pin = PinsLinks[a].idout;
 							data_pin.action = 2;
@@ -903,16 +915,35 @@ void StartInputTask(void const *argument) {
 					}
 				}
 			}
+			// INPUT Button GPIO_PULLUP
+			if (PinsConf[i].topin == 1 && PinsConf[i].ptype == 1) { // Для 'button'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200) {
+					pinTimes[i] = millis;
+
+					// OUTPUT (вынести в отдельную функцию)
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 2;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+			}
+
+			// PinsConf[i].act
+			*/
+
+			// INPUT Switch
 			if (PinsConf[i].topin == 3) { // Для 'switch'
 				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
-				//printf(" STpin %d \r\n", pinStates[i]);
 				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
 					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
+					// OUTPUT (вынести в отдельную функцию)
 					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
 						if (PinsLinks[a].idin == i) {
 							data_pin.pin = PinsLinks[a].idout;
 							data_pin.action = 1;
@@ -923,10 +954,9 @@ void StartInputTask(void const *argument) {
 				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
 					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
+					// OUTPUT (вынести в отдельную функцию)
 					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
 						if (PinsLinks[a].idin == i) {
 							data_pin.pin = PinsLinks[a].idout;
 							data_pin.action = 0;

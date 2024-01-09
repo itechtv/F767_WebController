@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include "db.h"
 #include "setings.h"
+#include "multi_button.h"
+
 
 
 char fsbuffer[25500] = { 0 };//2000
@@ -22,6 +24,7 @@ extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
+extern struct Button button[NUMPIN];
 
 /**************************************************************************/
 // Функция включает тактирование на указанном порту.
@@ -421,7 +424,7 @@ void GetPinConfig() {
 				PinsConf[i].istate = cJSON_GetObjectItem(pins_item, "istate")->valueint;
 				PinsConf[i].dvalue = cJSON_GetObjectItem(pins_item, "dvalue")->valueint;
 				PinsConf[i].ponr = cJSON_GetObjectItem(pins_item, "ponr")->valueint;
-				strcpy(PinsConf[i].ptype, cJSON_GetObjectItem(pins_item, "ptype")->valuestring);
+				PinsConf[i].ptype = cJSON_GetObjectItem(pins_item, "ptype")->valueint;
 				PinsConf[i].binter = cJSON_GetObjectItem(pins_item, "binter")->valueint;
 				PinsConf[i].hinter = cJSON_GetObjectItem(pins_item, "hinter")->valueint;
 				PinsConf[i].repeat = cJSON_GetObjectItem(pins_item, "repeat")->valueint;
@@ -470,7 +473,7 @@ void SetPinConfig() {
 			cJSON_AddNumberToObject(fld, "istate", PinsConf[i].istate);
 			cJSON_AddNumberToObject(fld, "dvalue", PinsConf[i].dvalue);
 			cJSON_AddNumberToObject(fld, "ponr", PinsConf[i].ponr);
-			cJSON_AddStringToObject(fld, "ptype", PinsConf[i].ptype);
+			cJSON_AddNumberToObject(fld, "ptype", PinsConf[i].ptype);
 			cJSON_AddNumberToObject(fld, "binter", PinsConf[i].binter);
 			cJSON_AddNumberToObject(fld, "hinter", PinsConf[i].hinter);
 			cJSON_AddNumberToObject(fld, "repeat", PinsConf[i].repeat);
@@ -576,10 +579,16 @@ void InitPin() {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     for (i = 0; i < NUMPIN; i++){
+    	// для Multi button
+    	PinsConf[i].act = 0;
+
+    	// initialization OUTPUT
     	if(PinsConf[i].topin == 2){
 
     		// проверяем тактирование порта
 			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
+
+    		//сбрасываем биты для данного пина
     		HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
 
 			// инициализация пина OUTPUT
@@ -588,6 +597,8 @@ void InitPin() {
     		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
     		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
     	}
+
+    	// initialization INPUT
     	if(PinsConf[i].topin == 1 || PinsConf[i].topin == 3){
 
     		// проверяем тактирование порта
@@ -601,14 +612,13 @@ void InitPin() {
     	    GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
     	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
 
-    	    // @todo поменять на int
-    	    if (strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) {
+    	    if (PinsConf[i].ptype == 1) {
     	    	GPIO_InitStruct.Pull = GPIO_PULLUP;
     	    }
-    	    else if (strcmp(PinsConf[i].ptype, "GPIO_PULLDOWN") == 0) {
+    	    else if (PinsConf[i].ptype == 2) {
     	    	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     	    }
-    	    else if (strcmp(PinsConf[i].ptype, "None") == 0) {
+    	    else if (PinsConf[i].ptype == 0) {
     	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
     	    } else {
     	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -619,7 +629,51 @@ void InitPin() {
     	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
     	}
     }
-	//PinsInfo[i].hal_pin
-	//PinsInfo[i].gpio_name
+}
 
+
+void InitMultibutton(void) {
+	for(uint8_t i = 0; i < NUMPIN; i++){
+
+
+		// Инциализация кнопки PULLDOWN
+		if (PinsConf[i].ptype == 2) {
+
+			button_init(&button[i], read_button_level, 1, i);
+
+			button_attach(&button[i], PRESS_DOWN, button_event_handler);
+			button_attach(&button[i], PRESS_UP, button_event_handler);
+			button_attach(&button[i], LONG_PRESS_START, button_event_handler);
+			button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
+			button_attach(&button[i], SINGLE_CLICK, button_event_handler);
+			button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
+			button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+
+			button_start(&button[i]);
+
+			// инициализация Multibutton flag
+			PinsConf[i].act = 1;
+
+		}
+
+		// Инциализация кнопки PULLUP
+		if (PinsConf[i].ptype == 1) {
+			button_init(&button[i], read_button_level, 0, i);
+
+			button_attach(&button[i], PRESS_DOWN, button_event_handler);
+			button_attach(&button[i], PRESS_UP, button_event_handler);
+			button_attach(&button[i], LONG_PRESS_START, button_event_handler);
+			button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
+			button_attach(&button[i], SINGLE_CLICK, button_event_handler);
+			button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
+			button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+
+			button_start(&button[i]);
+
+			// инициализация Multibutton flag
+			PinsConf[i].act = 1;
+		}
+
+
+	}
 }

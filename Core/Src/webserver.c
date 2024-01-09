@@ -73,6 +73,32 @@ void restartSSID(void){
 		Ti = HAL_GetTick();
 }
 
+// Clear pin
+void clearPin(int pinnum){
+	int i = 0;
+
+	PinsConf[pinnum].ptype = 0;
+	PinsConf[pinnum].binter = 0;
+	PinsConf[pinnum].hinter = 0;
+	PinsConf[pinnum].repeat = 0;
+	PinsConf[pinnum].rinter = 0;
+	PinsConf[pinnum].dcinter = 0;
+	PinsConf[pinnum].pclick = 0;
+	PinsConf[pinnum].info[0] = '\0';
+	PinsConf[pinnum].onoff = 0;
+
+	while (i <= NUMPINLINKS - 1) {
+		if (PinsLinks[i].idin == pinnum) {
+			//printf("flag %d \n", i);
+			PinsLinks[i].idin = 0;
+			PinsLinks[i].idout = 0;
+			PinsLinks[i].flag = 0;
+		}
+		i++;
+	}
+
+}
+
 //////////////////////////////  SSI MULTIPART Function  ///////////////////////
 
 
@@ -85,6 +111,9 @@ int MultiPartTabCount(int num, int pinnum, int count)
 			count++;
 		}
 		if(num == PinsConf[i].topin && num == 2){
+			count++;
+		}
+		if(num == PinsConf[i].topin && num == 3){
 			count++;
 		}
 	}
@@ -119,8 +148,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 		} else {
 			///////
 			if(tab == 1){
-				sprintf(pcInsert,"{\"id\":%d,\"pins\":\"%s\",\"topin\":%d},",
-						variable, PinsInfo[variable].pins, PinsConf[variable].topin);
+
+				sprintf(pcInsert,"{\"id\":%d,\"pins\":\"%s\",\"topin\":%d,\"pwm\":%d,\"i2cdata\":%d,\"i2cclok\":%d},",
+						variable, PinsInfo[variable].pins, PinsConf[variable].topin, PinsInfo[variable].pwm, PinsInfo[variable].i2cdata, PinsInfo[variable].i2cclok);
 
 				if(variable == (NUMPIN-1)){
 					pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
@@ -143,7 +173,69 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_Delete(root);
 
 					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+							PinsConf[variable].ptype, PinsConf[variable].binter,
+							PinsConf[variable].hinter, PinsConf[variable].repeat,
+							PinsConf[variable].rinter, PinsConf[variable].dcinter,
+							PinsConf[variable].pclick, str, PinsConf[variable].info,
+							PinsConf[variable].onoff);
+
+					free(str);
+
+					////////////////
+					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+				} else {
+					pcInsert = "";
+				}
+			}
+			if(tab == 3){
+				if(PinsConf[variable].topin == 2){
+					// relay json
+					idplus = variable + 1;
+
+					sprintf(pcInsert,
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
+							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+							PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
+							PinsConf[variable].istate, PinsConf[variable].dvalue,
+							PinsConf[variable].ponr, PinsConf[variable].info,
+							PinsConf[variable].onoff);
+					////////////////
+
+					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
+				} else {
+					pcInsert = "";
+				}
+			}
+			if(tab == 4){// tabswitch json
+				if(PinsConf[variable].topin == 3){
+					idplus = variable + 1;
+
+				    root = cJSON_CreateObject();
+				    while (i <= NUMPINLINKS - 1) {
+				    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
+				    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
+				    	}
+				    	i++;
+				    }
+
+					str = cJSON_Print(root);
+					cJSON_Delete(root);
+
+					sprintf(pcInsert,
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
 							PinsConf[variable].ptype, PinsConf[variable].binter,
 							PinsConf[variable].hinter, PinsConf[variable].repeat,
@@ -164,34 +256,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				} else {
 					pcInsert = "";
 				}
-
-			}
-			if(tab == 3){
-				if(PinsConf[variable].topin == 2){
-					// relay json
-					idplus = variable + 1;
-
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":\"%s\",\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
-							PinsConf[variable].istate, PinsConf[variable].dvalue,
-							PinsConf[variable].ponr, PinsConf[variable].info,
-							PinsConf[variable].onoff);
-					////////////////
-
-					countJson++;
-
-					if(countJson == numTabLine){
-						printf("DELLL \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
-					}
-
-				} else {
-					pcInsert = "";
-				}
-
-
 			}
 
 			*next_tag_part = variable;
@@ -235,7 +299,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 		// ssi tag <!--#menu-->
 		case 3:
-			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabbuttom.shtml?ssid=%s\">Buttom pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
+			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbuttom.shtml?ssid=%s\">Buttom pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
 			return strlen(pcInsert);
 			break;
 
@@ -257,7 +321,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
 					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
-					cJSON_AddStringToObject(root, "ptype", PinsConf[id].ptype);
+					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
 					cJSON_AddNumberToObject(root, "binter", PinsConf[id].binter);
 					cJSON_AddNumberToObject(root, "hinter", PinsConf[id].hinter);
 					cJSON_AddNumberToObject(root, "repeat", PinsConf[id].repeat);
@@ -275,7 +339,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
 					cJSON_AddNumberToObject(root, "id", id + 1);  // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
-					cJSON_AddStringToObject(root, "ptype", PinsConf[id].ptype);
+					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
 					cJSON_AddNumberToObject(root, "pwm", PinsConf[id].pwm);
 					cJSON_AddNumberToObject(root, "on", PinsConf[id].on);
 					cJSON_AddNumberToObject(root, "istate", PinsConf[id].istate);
@@ -606,6 +670,12 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			PinsLinks[del-1].idin = 0;
 			PinsLinks[del-1].idout = 0;
 			PinsLinks[del-1].flag = 0;
+			usbdata = 4;
+			if(usbdata != 0){
+				xQueueSend(usbQueueHandle, &usbdata, 0);
+				printf("usbdata = 4 \n");
+			}
+			usbdata = 0;
 		}
 	}
 
@@ -711,7 +781,10 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				{
 					numTabLine = MultiPartTabCount(2,NUMPIN-1, numTabLine);
 				}
-
+				if(tab == 4)
+				{
+					numTabLine = MultiPartTabCount(3,NUMPIN-1, numTabLine);
+				}
 			}
 		}
 	}
@@ -753,17 +826,16 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			}
 		}
 		PinsConf[varid].topin = val;
-		if (val == 1 || val == 2){
+		if (val == 1 || val == 2 || val == 3){
 			PinsConf[varid].onoff = 1;
 		}else{
 			PinsConf[varid].onoff = 0;
-			//@todo Обнулить PinsConf
+			clearPin(varid);
 		}
 	}
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
 		restartSSID();
 		return "/selectset.shtml"; //
 	} else {
@@ -909,13 +981,6 @@ const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			}
 		}
 		PinsConf[varid-1].onoff = val;
-//		PinsConf[varid].topin = val;
-//		if (val == 1 || val == 2){
-//			PinsConf[varid].onoff = 1;
-//		}else{
-//			PinsConf[varid].onoff = 0;
-//			//@todo Обнулить PinsConf
-//		}
 	}
 
 	/* login succeeded */
@@ -1171,7 +1236,7 @@ void setPinButtom(int idpin, char *name, char *token) {
 
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
-		strcpy(PinsConf[idpin].ptype, token);
+		PinsConf[idpin].ptype = atoi(token);
 	} else if (strcmp(name, "binter") == 0) {
 		PinsConf[idpin].binter = atoi(token);
 	} else if (strcmp(name, "hinter") == 0) {
