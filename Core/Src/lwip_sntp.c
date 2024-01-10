@@ -12,6 +12,8 @@
 /* lwip includes. */
 #include "lwip/apps/sntp.h"
 
+
+
 ///* segger rtt includes. */
 //#include "bsp_printlog.h"
 
@@ -56,6 +58,7 @@ void bsp_sntp_init(void)
 	//设置 SNTP 的获取方式 -> 使用向服务器获取方式
 	sntp_setoperatingmode(SNTP_OPMODE_POLL);
 
+	//sntp_setservername(0, (char*)"pool.ntp.org");
 	//SNTP 初始化
 	sntp_init();
 

@@ -110,7 +110,7 @@
 /*----- Default Value for LWIP_SNTP: 0 ---*/
 #define LWIP_SNTP 1
 /*----- Default Value for SNTP_MAX_SERVERS: 1 ---*/
-#define SNTP_MAX_SERVERS 11
+#define SNTP_MAX_SERVERS 11 //11
 /*----- Default Value for SNTP_UPDATE_DELAY: 3600000 ---*/
 #define SNTP_UPDATE_DELAY 20000
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/
@@ -140,6 +140,10 @@
 #define SNTP_DEBUG LWIP_DBG_ON
  //Define the processing function of Lwip SNTP
 #include <lwip_sntp.h>
+#define LWIP_DNS         1
+//#define SNTP_SUPPORT      1
+//#define SNTP_SERVER_DNS   1
+
 #define SNTP_SET_SYSTEM_TIME		sntp_set_time
 /* USER CODE END 1 */
 

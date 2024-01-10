@@ -8,49 +8,23 @@
   <link rel="stylesheet" href="styles.css">
 
   <script src="<!--#lang-->"></script>
-  <style>
-    .center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      height: 100vh; /* Высота экрана */
-    }
 
-    .image-container {
-      max-width: 100%; /* Максимальная ширина контейнера */
-      max-height: 80vh; /* Максимальная высота контейнера */
-    }
 
-    .image {
-      max-width: 100%; /* Максимальная ширина изображения */
-      max-height: 100%; /* Максимальная высота изображения */
-    }
-
-    /* Стили для меню */
-    .menu {
-      display: flex;
-      justify-content: center; /* Выравнивание по центру по горизонтали */
-      margin-top: 20px; /* Отступ сверху */
-    }
-
-    .menu-item {
-      margin: 0 10px; /* Отступ между элементами меню */
-    }
-  </style>
 </head>
 
 <body>
-  <div class="center">
-    <h1>NUCLEO-F767ZI</h1>
-    <div class="menu">
-      <!--#menu-->
-    </div>
-    <h2>Home</h2>
-    <div class="image-container">
-      <img class="image" src="js/picture.png" alt="picture.png">
-    </div>
-  </div>
-</body>
 
+      <center>
+        <h1>NUCLEO-F767ZI</h1>        
+
+        <!--#menu-->
+
+        <h2>Home</h2>
+       
+
+        <br><br>
+      </center>
+
+
+</body>
 </html>

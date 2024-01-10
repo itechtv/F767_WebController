@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Relay(s)</title>
+  <title>Relay</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
@@ -37,21 +37,21 @@
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Relay(s) pin(s)</h2>
+        <h2>Relay pin</h2>
        <div class="tab">
         <table class="zebra_3" border="1" align="center" id="tab1" class="tab">
           <tr>
             <th>ID <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang1"></span>
-                </a>
-              </div>
+              <a class="support" href="#">(?)
+                <span class="tooltiptext" id="lang1"></span>
+              </a>
+            </div>
             </th>
             <th>Pin<div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang2"></span>
-                </a>
-              </div>
+              <a class="support" href="#">(?)
+                <span class="tooltiptext" id="lang2"></span>
+              </a>
+            </div>
             </th>
             <th class="firstline">PWM Frequency (Hz)
               <div class="tooltip">
@@ -110,9 +110,8 @@
               </div>
             </th>
           </tr>
-  
-        </table>       
-     
+    
+        </table>
       </div>
     
         <script>

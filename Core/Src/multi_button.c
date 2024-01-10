@@ -3,7 +3,6 @@
  * All rights reserved
  */
 
-#include <stdio.h>
 #include "multi_button.h"
 #include <db.h>
 extern struct dbPinsConf PinsConf[NUMPIN];
@@ -86,7 +85,6 @@ static void button_handler(struct Button* handle)
 		if(handle->button_level == handle->active_level) {	//start press down
 			handle->event = (uint8_t)PRESS_DOWN;
 			EVENT_CB(PRESS_DOWN);
-			//printf("CASE-0: handle->repeat: %d, handle->ticks: %d\n", (handle->repeat + 1), handle->ticks);
 			handle->ticks = 0;
 			handle->repeat = 1;
 			handle->state = 1;
@@ -99,7 +97,6 @@ static void button_handler(struct Button* handle)
 		if(handle->button_level != handle->active_level) { //released press up
 			handle->event = (uint8_t)PRESS_UP;
 			EVENT_CB(PRESS_UP);
-			//printf("CASE-1: handle->repeat: %d, handle->ticks: %d\n", handle->repeat, handle->ticks);
 			handle->ticks = 0;
 			handle->state = 2;
 		} else if(handle->ticks > LONG_TICKS) {
@@ -117,7 +114,6 @@ static void button_handler(struct Button* handle)
 				handle->repeat++;
 			}
 			EVENT_CB(PRESS_REPEAT); // repeat hit
-			//printf("CASE-2: handle->repeat: %d, handle->ticks: %d\n", handle->repeat, handle->ticks);
 			handle->ticks = 0;
 			handle->state = 3;
 		} else if(handle->ticks > SHORT_TICKS) { //released timeout
@@ -215,84 +211,20 @@ void button_stop(struct Button* handle)
 //}
 
 void button_ticks(struct Button *buttons) {
-	button_handler(buttons);
+			button_handler(buttons);
 	//return 0;
 }
 
-// Функция обратного вызова для обработки событий кнопки
-void button_event_handler(Button* handle)
-{
-    // Обработчик событий кнопки
-    PressEvent event = get_button_event(handle);
 
-    switch (event) {
-        case NONE_PRESS:
-            // Нет нажатия
-            break;
-        case PRESS_DOWN:
-            // Кнопка нажата
-            printf("Button %d: PRESS_DOWN!\r\n", handle->button_id);
-            break;
-        case PRESS_UP:
-            // Кнопка отпущена
-            printf("Button %d: PRESS_UP!\r\n", handle->button_id);
-            break;
-        case LONG_PRESS_START:
-            // Начало долгого нажатия
-            printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
-            break;
-        case LONG_PRESS_HOLD:
-            // Продолжение долгого нажатия
-            printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
-            break;
-        case SINGLE_CLICK:
-            // Одиночное нажатие кнопки
-            printf("Button %d: SINGLE_CLICK!\r\n", handle->button_id);
-            break;
-        case DOUBLE_CLICK:
-            // Двойное нажатие кнопки
-            printf("Button %d: DOUBLE_CLICK!\r\n", handle->button_id);
-            break;
-        case PRESS_REPEAT:
-            // Повторное нажатие кнопки
-            printf("Button %d: PRESS_REPEAT!\r\n", handle->button_id);
-            break;
-        default:
-            // Обработка неизвестного значения event
-            break;
-    }
-}
+///////////////////////
 
-// Функция для получения состояния GPIO кнопки
- uint8_t read_button_level(uint8_t button_id)
- {
-     // Вернуть состояние GPIO пина, к которому подключена кнопка
-	 return  HAL_GPIO_ReadPin(PinsInfo[button_id].gpio_name, PinsInfo[button_id].hal_pin);
 
-     //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
- }
 
-//	void initialize_buttons(Button *buttons, uint8_t size, uint8_t (*hal_button_Level)(uint8_t button_id),uint8_t active_level) {
-//		for (uint8_t i = 0; i < size; ++i) {
-//			if (PinsConf[i].topin == 1) {
-//				button_init(&buttons[i], hal_button_Level, active_level, i);
-//			}
-//		}
-//	}
-//
-//	void attach_events_to_all_buttons(Button *buttons, uint8_t size, BtnEvent event, BtnCallback callback) {
-//		for (uint8_t i = 0; i < size; ++i) {
-//			if (PinsConf[i].topin == 1) {
-//				button_attach(&buttons[i], event, callback);
-//			}
-//		}
-//	}
-//
-//    // Запуск работы кнопки
-//	void start_all_buttons(Button *buttons, uint8_t size) {
-//		for (uint8_t i = 0; i < size; ++i) {
-//			if (PinsConf[i].topin == 1) {
-//				button_start(&buttons[i]);
-//			}
-//		}
-//	}
+
+
+
+
+
+
+
+

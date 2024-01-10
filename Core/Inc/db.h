@@ -32,7 +32,7 @@ struct dbPinsConf {    // Создали структуру с необходи�
 	int istate;		// Invert state
 	int dvalue;		// Dimmer value
 	int ponr;		// Power on restore
-	char ptype[15]; // Pullup type
+	int ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
 	int binter; 	// Bounce interval
 	int hinter; 	// Hold interval
 	int repeat; 	// Repeat

@@ -35,17 +35,18 @@
 #include "lwdtc.h"
 #include "cJSON.h"
 #include "setings.h"
-
 #include "multi_button.h"
-extern struct Button button[NUMPIN];
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-data_pin_t data_pin;
-uint16_t usbnum = 0;
 
-//const uint32_t DEBOUNCE_DELAY_MS = 150;     // Задержка для защиты от дребезга multi_button
+data_pin_t data_pin;
+
+
+uint16_t usbnum = 0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -102,6 +103,8 @@ extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern uint8_t IP_ADDRESS[4];
+struct Button button[NUMPIN];
+
 extern ApplicationTypeDef Appli_state;
 
 RTC_TimeTypeDef sTime = { 0 };
@@ -142,6 +145,68 @@ unsigned long Ti;
 //////////////////////////////////////????????
 mqtt_client_t *client;
 char pacote[50];
+
+
+// Функция обратного вызова для обработки событий кнопки
+ void button_event_handler(Button* handle)
+ {
+     // Обработчик событий кнопки
+     PressEvent event = get_button_event(handle);
+
+     switch (event) {
+         case NONE_PRESS:
+             // Нет нажатия
+             break;
+         case PRESS_DOWN:
+             // Кнопка нажата
+             printf("Button %d: PRESS_DOWN!\r\n", handle->button_id);
+             break;
+         case PRESS_UP:
+             // Кнопка отпущена
+             printf("Button %d: PRESS_UP!\r\n", handle->button_id);
+             break;
+         case LONG_PRESS_START:
+             // Начало долгого нажатия
+             printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
+             break;
+         case LONG_PRESS_HOLD:
+             // Продолжение долгого нажатия
+             printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
+             break;
+         case SINGLE_CLICK:
+             // Одиночное нажатие кнопки
+				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+					if (PinsLinks[a].idin == handle->button_id) {
+						data_pin.pin = PinsLinks[a].idout;
+						data_pin.action = 2;
+						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+					}
+				}
+             printf("Button %d: SINGLE_CLICK!\r\n", handle->button_id);
+             break;
+         case DOUBLE_CLICK:
+             // Двойное нажатие кнопки
+             printf("Button %d: DOUBLE_CLICK!\r\n", handle->button_id);
+             break;
+         case PRESS_REPEAT:
+             // Повторное нажатие кнопки
+             printf("Button %d: PRESS_REPEAT!\r\n", handle->button_id);
+             break;
+         default:
+             // Обработка неизвестного значения event
+             break;
+     }
+ }
+
+ // Функция для получения состояния GPIO кнопки
+  uint8_t read_button_level(uint8_t button_id)
+  {
+      // Вернуть состояние GPIO пина, к которому подключена кнопка
+ 	 return  HAL_GPIO_ReadPin(PinsInfo[button_id].gpio_name, PinsInfo[button_id].hal_pin);
+
+      //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
+  }
+
 /* USER CODE END 0 */
 
 /**
@@ -174,7 +239,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-//  MX_FATFS_Init();
+
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -490,47 +555,47 @@ uint32_t get_timestamp(void) {
  * @retval: None
  */
 void sntp_set_time(uint32_t sntp_time) {
-    char buf[80];
+	char buf[80];
 
-    if (sntp_time == 0) {
-        printf("sntp_set_time: wrong!\n");
-        return;
-    }
-    time_t rawtime = sntp_time;
+	if (sntp_time == 0) {
+		printf("sntp_set_time: wrong!\n");
+		return;
+	}
+	time_t rawtime = sntp_time;
 
-//    sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
-    timez = localtime(&rawtime);
+//	sntp_time += (2 * 60 * 60); ///Beijing time is 8 hours in East 8 District
+	timez = localtime(&rawtime);
 
-    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
-    printf("%s \n", buf);
-    /*
-     * Set the time of RTC
-     */
-    sTime.Hours = timez->tm_hour;
-    sTime.Minutes = timez->tm_min;
-    sTime.Seconds = timez->tm_sec;
-    sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
-        Error_Handler();
-    }
+	strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", timez);
+	printf("%s \n", buf);
+	/*
+	 * Set the time of RTC
+	 */
+	sTime.Hours = timez->tm_hour;
+	sTime.Minutes = timez->tm_min;
+	sTime.Seconds = timez->tm_sec;
+	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+	if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+		Error_Handler();
+	}
 
-    /*
-     * Set the date of RTC
-     */
-    sDate.WeekDay = timez->tm_wday;
-    sDate.Month = (timez->tm_mon) + 1;
-    sDate.Date = timez->tm_mday;
-    sDate.Year = (timez->tm_year) - 100;
+	/*
+	 * Set the date of RTC
+	 */
+	sDate.WeekDay = timez->tm_wday;
+	sDate.Month = (timez->tm_mon) + 1;
+	sDate.Date = timez->tm_mday;
+	sDate.Year = (timez->tm_year) - 100;
 
-    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
-        Error_Handler();
-    }
+	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+		Error_Handler();
+	}
 
-    printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month,
-            sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
+	printf("RTC time: 20%d-%02d-%02d %d:%d:%d\n", sDate.Year, sDate.Month,
+			sDate.Date, sTime.Hours, sTime.Minutes, sTime.Seconds);
 
-//    printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
+//	printf("rtc_get_time: c03, test get = %lu\n", get_timestamp());
 
 }
 /*************************** END OF SNTP **********************************/
@@ -613,13 +678,12 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-  ulTaskNotifyTake(0, portMAX_DELAY);  //
+  ulTaskNotifyTake(0, portMAX_DELAY);
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
-//  MX_USB_HOST_Init();
-  /* USER CODE BEGIN 5 */
 
+  /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
 
@@ -704,6 +768,8 @@ void StartCronTask(void const * argument)
 			stm.tm_min = sTime.Minutes; //RTC_Minutes rang 0-59 and tm_min rang 0-59
 			stm.tm_sec = sTime.Seconds;
 
+			//printf("Date %02d-%02d-20%d  %d:%d:%d \r\n", stm.tm_mday, stm.tm_mon, stm.tm_year, stm.tm_hour, stm.tm_min, stm.tm_sec);
+
 			cronetime = mktime(&stm);
 
 			if (cronetime != cronetime_old) {
@@ -787,7 +853,7 @@ void StartOutputTask(void const * argument)
 void StartConfigTask(void const * argument)
 {
   /* USER CODE BEGIN StartConfigTask */
-	uint8_t  usbflag = 1;
+	int usbflag = 1;
 	//FRESULT fresult;
 	FILINFO finfo;
 	//UINT Byteswritten; // File read/write count
@@ -814,8 +880,6 @@ void StartConfigTask(void const * argument)
 					GetPinToPin();
 
 					InitPin();
-
-					InitMultibutton();
 
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
@@ -883,23 +947,67 @@ void StartInputTask(void const *argument) {
 	uint32_t millis;
 	uint8_t pinLevel[NUMPIN] = { 0 };
 
+	osDelay(1000);
+	InitMultibutton();
 	/* Infinite loop */
 	for (;;) {
 		millis = HAL_GetTick();
 		for (uint8_t i = 0; i < NUMPIN; i++) {
-			if (PinsConf[i].topin == 1) { // Для 'button'
-				button_ticks(&button[i]);
+
+			// INPUT Button
+			if (PinsConf[i].topin == 1 && PinsConf[i].act == 1){
+				if ((millis - pinTimes[i]) >= 5) {
+					pinTimes[i] = millis;
+					button_ticks(&button[i]);
+				}
+
 			}
-			if (PinsConf[i].topin == 3 && strcmp(PinsConf[i].ptype, "GPIO_PULLDOWN") == 0) { // Для 'switch'
+
+			/*
+			// INPUT Button GPIO_PULLDOWN
+			if (PinsConf[i].topin == 1 && PinsConf[i].ptype == 2) { // Для 'button'
 				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
-				//printf(" STpin %d \r\n", pinStates[i]);
-				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200) {
+					pinTimes[i] = millis;
+
+					// OUTPUT (вынести в отдельную функцию)
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 2;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+			}
+			// INPUT Button GPIO_PULLUP
+			if (PinsConf[i].topin == 1 && PinsConf[i].ptype == 1) { // Для 'button'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200) {
+					pinTimes[i] = millis;
+
+					// OUTPUT (вынести в отдельную функцию)
+					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+						if (PinsLinks[a].idin == i) {
+							data_pin.pin = PinsLinks[a].idout;
+							data_pin.action = 2;
+							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						}
+					}
+				}
+			}
+
+			*/
+
+			// INPUT Switch
+			if (PinsConf[i].topin == 3) { // Для 'switch'
+				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
+				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
 					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
+					// OUTPUT (вынести в отдельную функцию)
 					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
 						if (PinsLinks[a].idin == i) {
 							data_pin.pin = PinsLinks[a].idout;
 							data_pin.action = 1;
@@ -907,45 +1015,12 @@ void StartInputTask(void const *argument) {
 						}
 					}
 				}
-				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
+				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= 200 && pinLevel[i] != pinStates[i]) {
 					pinLevel[i] = pinStates[i];
 					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
 
+					// OUTPUT (вынести в отдельную функцию)
 					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
-						if (PinsLinks[a].idin == i) {
-							data_pin.pin = PinsLinks[a].idout;
-							data_pin.action = 0;
-							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
-						}
-					}
-				}
-			}
-			if (PinsConf[i].topin == 3 && strcmp(PinsConf[i].ptype, "GPIO_PULLUP") == 0) { // Для 'switch'
-				pinStates[i] = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
-				//printf(" STpin %d \r\n", pinStates[i]);
-				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
-					pinLevel[i] = pinStates[i];
-					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
-
-					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
-						if (PinsLinks[a].idin == i) {
-							data_pin.pin = PinsLinks[a].idout;
-							data_pin.action = 1;
-							xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
-						}
-					}
-				}
-				if (pinStates[i] == 0 && (millis - pinTimes[i]) >= PinsConf[i].binter && pinLevel[i] != pinStates[i]) {
-					pinLevel[i] = pinStates[i];
-					pinTimes[i] = millis;
-					//printf(" clicks 1 %lu pin %d \r\n", (unsigned long)pinTimes[i], i);
-
-					for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-						//printf(" IN %d OUT %d \r\n", PinsLinks[a].idin, PinsLinks[a].idout);
 						if (PinsLinks[a].idin == i) {
 							data_pin.pin = PinsLinks[a].idout;
 							data_pin.action = 0;
@@ -959,7 +1034,6 @@ void StartInputTask(void const *argument) {
 	}
 	/* USER CODE END StartInputTask */
 }
-
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM6 interrupt took place, inside

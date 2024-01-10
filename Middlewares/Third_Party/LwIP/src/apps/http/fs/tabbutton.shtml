@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Button(s) pin(s)</title>
+  <title>Buttom</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
@@ -40,7 +40,7 @@
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Button(s) pin(s)</h2>
+        <h2>Button pin</h2>
 
       <div class="tab">
         <table class="zebra_2" border="1" align="center" id="tab1" >
@@ -147,7 +147,15 @@
                   employee_data += '<tr>';
                   employee_data += '<td>' + val.id + '</td>';
                   employee_data += '<td>' + val.pins + '</td>';
-                  employee_data += '<td align=\"center\">' + val.ptype + '</td>';
+
+                  if (val.ptype == 1) {
+                    employee_data += '<td align=\"center\">GPIO_PULLUP</td>';
+                  } else if (val.ptype == 2){ 
+                    employee_data += '<td align=\"center\">GPIO_PULLDOWN</td>';                  
+                  } else {
+                    employee_data += '<td align=\"center\">NONE</td>'; 
+                  }
+                 
                   employee_data += '<td align=\"center\">' + val.binter + '</td>';
                   employee_data += '<td align=\"center\">' + val.hinter + '</td>';
                   employee_data += '<td align=\"center\">' + val.repeat + '</td>';
@@ -178,8 +186,5 @@
           });
 
         </script> 
-
-
 </body>
-
 </html>

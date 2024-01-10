@@ -16,7 +16,7 @@ struct dbPinToPin PinsLinks[NUMPINLINKS];
 
 struct dbCron CronTask[NUMTASK];
 
-struct dbSettings SetSettings = {0};
+struct dbSettings SetSettings;
 
 struct dbCron dbCrontxt[MAXSIZE];
 

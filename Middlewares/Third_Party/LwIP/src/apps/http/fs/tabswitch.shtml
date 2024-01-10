@@ -9,8 +9,6 @@
 
   <script src="js/jquerymin.js"></script>
   <script src="<!--#lang-->"></script>
-
-
 </head>
 
 <body onload="getLang(langbutton);">
@@ -147,7 +145,15 @@
                   employee_data += '<tr>';
                   employee_data += '<td>' + val.id + '</td>';
                   employee_data += '<td>' + val.pins + '</td>';
-                  employee_data += '<td align=\"center\">' + val.ptype + '</td>';
+
+                  if (val.ptype == 1) {
+                    employee_data += '<td align=\"center\">GPIO_PULLUP</td>';
+                  } else if (val.ptype == 2){ 
+                    employee_data += '<td align=\"center\">GPIO_PULLDOWN</td>';                  
+                  } else {
+                    employee_data += '<td align=\"center\">NONE</td>'; 
+                  }
+                  
                   employee_data += '<td align=\"center\">' + val.binter + '</td>';
                   employee_data += '<td align=\"center\">' + val.hinter + '</td>';
                   employee_data += '<td align=\"center\">' + val.repeat + '</td>';
@@ -179,7 +185,5 @@
 
         </script> 
 
-
 </body>
-
 </html>

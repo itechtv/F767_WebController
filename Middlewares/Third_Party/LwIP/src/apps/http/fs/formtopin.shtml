@@ -21,7 +21,7 @@
     <h2  id="title1">Edit Connection</h2>
     
   
-    <form action="tabswitch.shtml?ssid=<!--#ssid-->" method="get">
+    <form action="tabbutton.shtml?ssid=<!--#ssid-->" method="get">
       <input type="hidden" name="ssid" value="<!--#ssid-->">
       <table class="zebra_2" border="1" align="center" id="tab1">
   
@@ -46,7 +46,7 @@
       var employee_data_pin = '';
       employee_data_pin += ' ' + val.pins + ' ';
 
-      employee_data += '<tr><td>ID Buttom</td><td>' + val.id + '<input type=\"hidden\" name=\"idin\" value=\"' + val.id + '\"></td></tr>';
+      employee_data += '<tr><td>ID Button</td><td>' + val.id + '<input type=\"hidden\" name=\"idin\" value=\"' + val.id + '\"></td></tr>';
       employee_data += '<tr><td>Buttom Pin</td><td>' + val.pins + '</td></tr>';
 
       employee_data += '<tr><td>Relay pin</td><td>';
