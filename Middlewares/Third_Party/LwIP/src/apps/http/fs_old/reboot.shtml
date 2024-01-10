@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Home</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="js/jquerymin.js"></script>
+</head>
+
+<body>
+
+      <center>
+        <h1>The NUCLEO-F767ZI is rebooting!</h1>        
+
+        <br><br>
+
+        <p>The NUCLEO-F767ZI will restart within <span id="countdown">25</span> </p>
+       
+        <br><br>
+      </center>
+    <script type="text/javascript">
+    $(document).ready(function () {
+        $.getJSON('reboot.shtml?ssid=<!--#ssid-->&rb=1', function(data) {
+            //
+        });
+    });
+
+    var seconds = document.getElementById("countdown").innerHTML;
+
+    function countdown() {
+				if (seconds < -2) { 
+					window.location = 'login.shtml';
+				} else {
+					// Update remaining seconds
+					if (seconds < 1) {document.getElementById("countdown").innerHTML = "...";} //Phrase used when countdown has reached zero - I'm a stickler for wording!
+					else if (seconds < 2) {
+						document.getElementById("countdown").innerHTML = "in " + seconds + " second..."; //Phrase used at the one second mark.
+					
+					}
+					else {document.getElementById("countdown").innerHTML = "in " + seconds + " seconds...";}
+					seconds = seconds - 1; //Reduce the 'seconds' variable
+					window.setTimeout("countdown()", 1000); //Countdown using javascript
+				}
+			}
+	countdown();    
+
+    </script>
+
+
+</body>
+</html>

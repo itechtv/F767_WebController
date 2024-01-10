@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Relay</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/jquerymin.js"></script>
+  <script src="<!--#lang-->"></script>
+
+
+</head>
+
+<body onload="getLang(langrelay);">
+
+  <script>
+    function getLang(langs){
+        langs.forEach(function(element, key){
+          var fieldNameElement = document.getElementById('lang' + key);
+          fieldNameElement.innerHTML = element;
+          console.log(key + ': ' + element);
+        });
+      }
+
+    function getSelect(id){
+        if(document.getElementById("s"+id).checked) {
+            console.log('checked');
+            $.get("onoffset.shtml", { ssid:"<!--#ssid-->", id: id, val: 1}); 
+        } else {
+            console.log('not checked');  
+            $.get("onoffset.shtml", { ssid:"<!--#ssid-->", id: id, val: 0});  
+        }                           
+    }
+ </script>  
+
+      <center>
+        <h1>NUCLEO-F767ZI</h1>
+        <!--#menu-->
+        <h2>Relay pin</h2>
+       <div class="tab">
+        <table class="zebra_3" border="1" align="center" id="tab1" class="tab">
+          <tr>
+            <th>ID <div class="tooltip">
+              <a class="support" href="#">(?)
+                <span class="tooltiptext" id="lang1"></span>
+              </a>
+            </div>
+            </th>
+            <th>Pin<div class="tooltip">
+              <a class="support" href="#">(?)
+                <span class="tooltiptext" id="lang2"></span>
+              </a>
+            </div>
+            </th>
+            <th class="firstline">PWM Frequency (Hz)
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang3"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">ON
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang4"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">Invert State
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang5"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">Dimmer value (0-255)
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang6"></span>
+                </a>
+              </div>
+            </th>
+            <th>Power On Restore
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang7"></span>
+                </a>
+              </div>
+            </th>
+            <th>INFO
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang8"></span>
+                </a>
+              </div>
+            </th>
+            <th>On/Off
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang9"></span>
+                </a>
+              </div>
+            </th>
+            <th>Action
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang10"></span>
+                </a>
+              </div>
+            </th>
+          </tr>
+    
+        </table>
+      </div>
+    
+        <script>
+          $(document).ready(function () {
+            $.getJSON('tabjson.shtml?tab=3&ssid=<!--#ssid-->', function (data) {
+              var employee_data = '';
+              var n = 0;
+              var z = '';
+    
+              $.each(data, function (key, val) {
+                if (val.topin == 2) {
+                  employee_data += '<tr>';
+                  employee_data += '<td>' + val.id + '</td>';
+                  employee_data += '<td>' + val.pins + '</td>';
+                  employee_data += '<td align=\"center\">' + val.pwm + '</td>';
+                  employee_data += '<td align=\"center\">' + val.on + '</td>';
+                  employee_data += '<td align=\"center\">' + val.istate + '</td>';
+                  employee_data += '<td align=\"center\">' + val.dvalue + '</td>';
+                  employee_data += '<td align=\"center\">' + val.ponr + '</td>';
+                  employee_data += '<td>' + val.info + '</td>';
+                  if (val.onoff == 1) {
+                    employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" checked=\"checked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>'
+                  } else {
+                    employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>'
+                  }
+                  employee_data += '<td>  <a href=\"formrelay.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=2\">Edit</a></td>';
+    
+     
+                  employee_data += '</tr>';
+                }
+                n++;
+              });
+              $('#tab1').append(employee_data);
+            });
+          });
+        </script>
+        
+
+        <br><br>
+      </center>
+
+
+
+
+</body>
+
+</html>

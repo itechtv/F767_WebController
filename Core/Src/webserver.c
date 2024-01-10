@@ -78,12 +78,12 @@ void clearPin(int pinnum){
 	int i = 0;
 
 	PinsConf[pinnum].ptype = 0;
-	PinsConf[pinnum].binter = 0;
-	PinsConf[pinnum].hinter = 0;
-	PinsConf[pinnum].repeat = 0;
-	PinsConf[pinnum].rinter = 0;
-	PinsConf[pinnum].dcinter = 0;
-	PinsConf[pinnum].pclick = 0;
+	PinsConf[pinnum].sclick = 0;
+	PinsConf[pinnum].dclick[0] = '\0';
+	PinsConf[pinnum].lpress[0] = '\0';
+//	PinsConf[pinnum].rinter = 0;
+//	PinsConf[pinnum].dcinter = 0;
+//	PinsConf[pinnum].pclick = 0;
 	PinsConf[pinnum].info[0] = '\0';
 	PinsConf[pinnum].onoff = 0;
 
@@ -173,13 +173,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_Delete(root);
 
 					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"sclick\":%d,\"dclick\":\"%s\",\"lpress\":\"%s\",\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, PinsConf[variable].binter,
-							PinsConf[variable].hinter, PinsConf[variable].repeat,
-							PinsConf[variable].rinter, PinsConf[variable].dcinter,
-							PinsConf[variable].pclick, str, PinsConf[variable].info,
-							PinsConf[variable].onoff);
+							PinsConf[variable].ptype, PinsConf[variable].sclick,
+							PinsConf[variable].dclick, PinsConf[variable].lpress,
+							str, PinsConf[variable].info, PinsConf[variable].onoff);
 
 					free(str);
 
@@ -235,13 +233,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_Delete(root);
 
 					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"binter\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, PinsConf[variable].binter,
-							PinsConf[variable].hinter, PinsConf[variable].repeat,
-							PinsConf[variable].rinter, PinsConf[variable].dcinter,
-							PinsConf[variable].pclick, str, PinsConf[variable].info,
-							PinsConf[variable].onoff);
+							PinsConf[variable].ptype, str, PinsConf[variable].info, PinsConf[variable].onoff);
 
 					free(str);
 
@@ -322,12 +316,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
 					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
-					cJSON_AddNumberToObject(root, "binter", PinsConf[id].binter);
-					cJSON_AddNumberToObject(root, "hinter", PinsConf[id].hinter);
-					cJSON_AddNumberToObject(root, "repeat", PinsConf[id].repeat);
-					cJSON_AddNumberToObject(root, "rinter", PinsConf[id].rinter);
-					cJSON_AddNumberToObject(root, "dcinter", PinsConf[id].dcinter);
-					cJSON_AddNumberToObject(root, "pclick", PinsConf[id].pclick);
+					cJSON_AddNumberToObject(root, "sclick", PinsConf[id].sclick);
+					cJSON_AddStringToObject(root, "dclick", PinsConf[id].dclick);
+					cJSON_AddStringToObject(root, "lpress", PinsConf[id].lpress);
 					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
 					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
 					str = cJSON_PrintUnformatted(root);
@@ -428,12 +419,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
 					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
 					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
-					cJSON_AddNumberToObject(root, "binter", PinsConf[id].binter);
-					cJSON_AddNumberToObject(root, "hinter", PinsConf[id].hinter);
-					cJSON_AddNumberToObject(root, "repeat", PinsConf[id].repeat);
-					cJSON_AddNumberToObject(root, "rinter", PinsConf[id].rinter);
-					cJSON_AddNumberToObject(root, "dcinter", PinsConf[id].dcinter);
-					cJSON_AddNumberToObject(root, "pclick", PinsConf[id].pclick);
+					cJSON_AddNumberToObject(root, "sclick", PinsConf[id].sclick);
+					cJSON_AddStringToObject(root, "dclick", PinsConf[id].dclick);
+					cJSON_AddStringToObject(root, "lpress", PinsConf[id].lpress);
 					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
 					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
 					str = cJSON_PrintUnformatted(root);
@@ -1363,18 +1351,12 @@ void setPinSwitch(int idpin, char *name, char *token) {
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
 		PinsConf[idpin].ptype = atoi(token);
-	} else if (strcmp(name, "binter") == 0) {
-		PinsConf[idpin].binter = atoi(token);
-	} else if (strcmp(name, "hinter") == 0) {
-		PinsConf[idpin].hinter = atoi(token);
-	} else if (strcmp(name, "repeat") == 0) {
-		PinsConf[idpin].repeat = atoi(token);
-	} else if (strcmp(name, "rinter") == 0) {
-		PinsConf[idpin].rinter = atoi(token);
-	} else if (strcmp(name, "dcinter") == 0) {
-		PinsConf[idpin].dcinter = atoi(token);
-	} else if (strcmp(name, "pclick") == 0) {
-		PinsConf[idpin].pclick = atoi(token);
+	} else if (strcmp(name, "sclick") == 0) {
+		PinsConf[idpin].sclick = atoi(token);
+	} else if (strcmp(name, "dclick") == 0) {
+		strcpy(PinsConf[idpin].dclick, token);
+	} else if (strcmp(name, "lpress") == 0) {
+		strcpy(PinsConf[idpin].lpress, token);
 	} else if (strcmp(name, "info") == 0) {
 		strcpy(PinsConf[idpin].info, token);
 	} else if (strcmp(name, "onoff") == 0) {
@@ -1390,18 +1372,12 @@ void setPinButtom(int idpin, char *name, char *token) {
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
 		PinsConf[idpin].ptype = atoi(token);
-	} else if (strcmp(name, "binter") == 0) {
-		PinsConf[idpin].binter = atoi(token);
-	} else if (strcmp(name, "hinter") == 0) {
-		PinsConf[idpin].hinter = atoi(token);
-	} else if (strcmp(name, "repeat") == 0) {
-		PinsConf[idpin].repeat = atoi(token);
-	} else if (strcmp(name, "rinter") == 0) {
-		PinsConf[idpin].rinter = atoi(token);
-	} else if (strcmp(name, "dcinter") == 0) {
-		PinsConf[idpin].dcinter = atoi(token);
-	} else if (strcmp(name, "pclick") == 0) {
-		PinsConf[idpin].pclick = atoi(token);
+	} else if (strcmp(name, "sclick") == 0) {
+		PinsConf[idpin].sclick = atoi(token);
+	} else if (strcmp(name, "dclick") == 0) {
+		strcpy(PinsConf[idpin].dclick, token);
+	} else if (strcmp(name, "lpress") == 0) {
+		strcpy(PinsConf[idpin].lpress, token);
 	} else if (strcmp(name, "info") == 0) {
 		strcpy(PinsConf[idpin].info, token);
 	} else if (strcmp(name, "onoff") == 0) {

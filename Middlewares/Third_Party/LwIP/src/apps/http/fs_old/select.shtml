@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Select</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/jquerymin.js"></script>
+</head>
+<body>
+      <center>
+        <h1>NUCLEO-F767ZI</h1>
+        <!--#menu-->
+        <h2>Select pin(s)</h2>
+      </center>
+
+    <table class="zebra" border="1" align="center" id="tab1">
+      <tr>
+        <th>ID</th>
+        <th>Pin</th>
+        <th>Type(s) of pin(s)</th>
+      </tr>
+        
+    </table>
+
+
+
+  <script>
+      function getSelect(id){          
+          var value = $("input[type=radio][name=topin_" + id + "]:checked" ).val();
+          if(typeof(value) !== "undefined" && value !== null){
+            $.get("selectset.shtml", { ssid:"<!--#ssid-->", id: id, val: value});          
+          }         
+      }
+           
+      
+    $(document).ready(function () {
+      $.getJSON('tabjson.shtml?tab=1&ssid=<!--#ssid-->', function (data) {
+        var employee_data = '';
+        var n = 0;
+        var z = '';
+        var idplus = 0;
+
+        $.each(data, function (key, val) {
+          idplus = val.id + 1;
+          employee_data += '<tr>';
+          employee_data += '<td>' + idplus + '</td>';
+          employee_data += '<td>' + val.pins + '</td>';
+          employee_data += '<td width=\"800\" align=\"center\">';
+
+          
+          if (val.topin == 0) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"0\" onclick=\"getSelect(' + val.id + ');\" checked >';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"0\" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>NONE</span>';
+          employee_data += '&nbsp;&nbsp;';
+
+          
+          if (val.topin == 3) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"3" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"3" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>SWITCH</span>  ';
+          employee_data += '&nbsp;&nbsp;';
+
+          
+          if (val.topin == 1) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"1\" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"1\" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>BUTTON</span> ';
+          employee_data += '&nbsp;&nbsp;';
+         
+          if (val.topin == 2) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"2\" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"2\" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>RELAY</span> ';
+          employee_data += '&nbsp;&nbsp;';
+
+          
+          if (val.topin == 4) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"4\" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"4\" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>1-WIRE</span> ';
+          employee_data += '&nbsp;&nbsp;';
+
+          
+        if(val.pwm == 1){
+          if (val.topin == 5) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"5\" onclick=\"getSelect(' + val.id + ');\" checked>';
+            employee_data += '<span>PWM</span> ';
+          } else {            
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"5\" onclick=\"getSelect(' + val.id + ');\">';
+            employee_data += '<span>PWM</span> ';
+          }
+        }else{
+          employee_data += '<input type=\"radio\" value=\"0\" disabled>';
+          employee_data += '<span style = \"color:#D3D3D3\">PWM</span>';
+        }
+          employee_data += '&nbsp;&nbsp;';
+          
+        if(val.i2cdata == 1){
+          if (val.topin == 6) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"6\" onclick=\"getSelect(' + val.id + ');\" checked>';
+            employee_data += '<span>I2C SDA</span> ';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"6\" onclick=\"getSelect(' + val.id + ');\">';
+            employee_data += '<span>I2C SDA</span> ';
+          } 
+        }else{
+          employee_data += '<input type=\"radio\" value=\"0\" disabled>';
+          employee_data += '<span style = \"color:#D3D3D3\">I2C SDA</span>';
+        }
+        employee_data += '&nbsp;&nbsp;';
+          
+          if(val.i2cclok == 1){
+          if (val.topin == 7) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"7\" onclick=\"getSelect(' + val.id + ');\" checked>';
+            employee_data += '<span>I2C SCL</span> ';
+          } else {
+          
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"7\" onclick=\"getSelect(' + val.id + ');\">';
+            employee_data += '<span>I2C SCL</span> ';
+          } 
+        }else{
+          employee_data += '<input type=\"radio\" value=\"0\" disabled>';
+          employee_data += '<span style = \"color:#D3D3D3\">I2C SCL</span>';
+        }
+          employee_data += '</td>';
+          employee_data += '</tr>';
+          n++;
+        });
+        $('#tab1').append(employee_data);
+      });
+    });
+
+  </script>
+
+</body>
+</html>

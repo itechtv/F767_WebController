@@ -33,12 +33,12 @@ struct dbPinsConf {    // Создали структуру с необходи�
 	int dvalue;		// Dimmer value
 	int ponr;		// Power on restore
 	int ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
-	int binter; 	// Bounce interval
-	int hinter; 	// Hold interval
-	int repeat; 	// Repeat
-	int rinter; 	// Repeat interval
-	int dcinter;	// Double-click interval
-	int pclick; 	// Prevent Click
+	uint8_t sclick; 	// SINGLE CLICK
+	char dclick[255]; 	// DOUBLE CLICK
+	char lpress[255]; 	// LONG PRESS
+//	int rinter; 	// Repeat interval
+//	int dcinter;	// Double-click interval
+//	int pclick; 	// Prevent Click
 	char info[30];	// Info
 	int onoff;		// On | Off
 	short event;     // Event (StateChanged - 0, Pressed -1, Released - 2, Repeat - 3, Hold - 4, LongClick - 5, Click - 6, DoubleClick - 7)

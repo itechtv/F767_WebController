@@ -1,0 +1,626 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Settigns</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/jquerymin.js"></script>
+
+
+</head>
+
+<body>
+
+      <center>
+        <h1>NUCLEO-F767ZI</h1>
+        <!--#menu-->
+        <h2>Settings</h2>
+
+        <script>
+          $(document).ready(function () {
+            var mqtt_hst0, mqtt_hst1, mqtt_hst2, mqtt_hst3;
+            var ip_addr0, ip_addr1, ip_addr2, ip_addr3;
+            var sb_mask0, sb_mask1, sb_mask2, sb_mask3;
+            var gateway0, gateway1, gateway2, gateway3;
+
+            $.getJSON('formjson.shtml?tab=4&ssid=<!--#ssid-->', function (data) {
+              $.each(data, function(key, val) {
+                  if(key == 'lang'){ 
+                    document.getElementById('lang').value = val;
+                  }   
+                  else if(key == 'lon_de'){ $('#lon_de').val(val); }              
+                  else if(key == 'lat_de'){ $('#lat_de').val(val); }
+                  
+                  else if(key == 'check_mqtt'){ 
+                    $('#ttb0').val(val); 
+                    if(val == 1){
+                      $('#ttb4').prop('checked', true);
+                    } else {
+                      $('#ttb4').prop('checked', false);
+                    }                   
+                  }
+                  else if(key == 'mqtt_prt'){ $('#mqtt_prt').val(val); }               
+                  else if(key == 'mqtt_clt'){ $('#mqtt_clt').val(val); }               
+                  else if(key == 'mqtt_usr'){ $('#mqtt_usr').val(val); }             
+                  else if(key == 'mqtt_pswd'){ $('#mqtt_pswd').val(val); }                
+                  else if(key == 'mqtt_tpc'){ $('#mqtt_tpc').val(val); }               
+                  else if(key == 'mqtt_ftpc'){ $('#mqtt_ftpc').val(val); }
+  
+                  else if(key == 'adm_name'){ $('#adm_name').val(val); }             
+                  else if(key == 'adm_pswd'){ $('#adm_pswd').val(val); }  
+                  else if(key == 'token'){ $('#token').val(val); }  
+
+                  else if(key == 'mqtt_hst0'){ mqtt_hst0 = val; }                
+                  else if(key == 'mqtt_hst1'){ mqtt_hst1 = val; }              
+                  else if(key == 'mqtt_hst2'){ mqtt_hst2 = val; }               
+                  else if(key == 'mqtt_hst3'){ mqtt_hst3 = val; }
+
+                  else if(key == 'check_ip'){ 
+                    $('#tb0').val(val); 
+                    if(val == 1){
+                      $('#tb4').prop('checked', true);
+                    } else {
+                      $('#tb4').prop('checked', false);
+                    }
+                    
+                  }
+                  else if(key == 'ip_addr0'){ ip_addr0 = val; }                
+                  else if(key == 'ip_addr1'){ ip_addr1 = val; }             
+                  else if(key == 'ip_addr2'){ ip_addr2 = val; }                
+                  else if(key == 'ip_addr3'){ ip_addr3 = val; }
+                  
+                  else if(key == 'sb_mask0'){ sb_mask0 = val; }
+                  else if(key == 'sb_mask1'){ sb_mask1 = val; }                
+                  else if(key == 'sb_mask2'){ sb_mask2 = val; }                
+                  else if(key == 'sb_mask3'){ sb_mask3 = val; }
+                
+                  else if(key == 'gateway0'){ gateway0 = val; }              
+                  else if(key == 'gateway1'){ gateway1 = val; }              
+                  else if(key == 'gateway2'){ gateway2 = val; }          
+                  else if(key == 'gateway3'){ gateway3 = val; } 
+                
+                  else if(key == 'macaddr'){ 
+                    $('#macaddr').val(val);
+                  }
+                  else if(key == 'timezone'){  
+                    document.getElementById('timezone').value = val;
+                  }
+                  else { }
+                });
+
+                if(typeof mqtt_hst0 !== 'undefined' || typeof mqtt_hst1 !== 'undefined'  || typeof mqtt_hst2 !== 'undefined'  || typeof mqtt_hst3 !== 'undefined' ){
+                   var mqtt_hst = mqtt_hst0 + '.' +  mqtt_hst1 + '.' +  mqtt_hst2 + '.' +  mqtt_hst3;
+                } else {                
+                  var mqtt_hst = '0.0.0.0';
+                }
+                $('#mqtt_hst').val(mqtt_hst);
+
+                if(typeof ip_addr0 !== 'undefined' || typeof ip_addr1 !== 'undefined' ||  typeof ip_addr2 !== 'undefined'  || typeof ip_addr3 !== 'undefined'){
+                   var ip_addr = ip_addr0 + '.' +  ip_addr1 + '.' +  ip_addr2 + '.' +  ip_addr3;
+                } else {                
+                  var ip_addr= '0.0.0.0';
+                }
+                $('#ip_addr').val(ip_addr);
+
+                if(typeof sb_mask0 !== 'undefined' || typeof sb_mask1 !== 'undefined' ||  typeof sb_mask2 !== 'undefined'  || typeof sb_mask3 !== 'undefined'){
+                   var sb_mask = sb_mask0 + '.' +  sb_mask1 + '.' +  sb_mask2 + '.' +  sb_mask3;
+                } else {                
+                  var sb_mask = '0.0.0.0';
+                }
+                $('#sb_mask').val(sb_mask);
+
+                if(typeof gateway0 !== 'undefined' || typeof gateway1 !== 'undefined' ||  typeof gateway2 !== 'undefined'  || typeof gateway3 !== 'undefined'){
+                   var gateway = gateway0 + '.' +  gateway1 + '.' +  gateway2 + '.' +  gateway3;
+                } else {                
+                  var gateway = '0.0.0.0';
+                }
+                $('#gateway').val(gateway);
+
+                ///
+                checkip();
+
+                chmqtt();
+            //getValue('tb4', 'tb0');
+            //getValue('ttb4','ttb0');
+
+            });
+          });
+        </script>     
+
+        <script>
+          function onclickRadio() {
+      
+            var x = document.getElementsByName('tlon_de');
+            var y = document.getElementsByName('tlat_de');
+      
+
+          }
+      
+        </script>
+      
+        <form action="settings.shtml?ssid=<!--#ssid-->" method="post">
+          <a href="reboot.shtml?ssid=<!--#ssid-->"><button type="button"> Reboot</button></a>
+          &nbsp;&nbsp;
+          <button type="submit">Save configuration</button>
+          <br><br>
+          <table class="zebra_2" border="1" align="center" width="580">
+            <tr>
+              <td width="190">Login <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext"> </span>
+                  </a>
+                </div>
+              </td>
+              <td>
+                <input type="text" minlength="1" maxlength="10" id="adm_name" name="adm_name" size="15" value="">
+              </td>
+            </tr>
+            <tr>
+              <td width="190">Password <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext"> </span>
+                  </a>
+                </div>
+              </td>
+              <td>
+                <input type="password" minlength="1" maxlength="15" id="adm_pswd" name="adm_pswd" size="15" value="">
+              </td>
+            </tr>
+            <tr>
+              <td width="190">Язык <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Язык</span>
+                  </a>
+                </div>
+              </td>
+              <td>
+                <select id="lang" name="lang">
+                  <option value="ru">RU</option>
+                  <option value="en">EN</option>
+                 </select>
+              </td>
+            </tr>
+
+            <tr>
+              <td width="190">Часовой пояс UTC<div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Язык</span>
+                  </a>
+                </div>
+              </td>
+              <td>
+              <select name="timezone" id="timezone">
+                <option value="-43200">(GMT -12:00) Eniwetok, Kwajalein</option>
+                <option value="-39600">(GMT -11:00) Midway Island, Samoa</option>
+                <option value="-36000">(GMT -10:00) Hawaii</option>
+                <option value="-32400">(GMT -9:00) Alaska</option>
+                <option value="-28800">(GMT -8:00) Pacific Time (US &amp; Canada)</option>
+                <option value="-25200">(GMT -7:00) Mountain Time (US &amp; Canada)</option>
+                <option value="-21600">(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
+                <option value="-18000">(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
+                <option value="-14400">(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
+                <option value="-12600">(GMT -3:30) Newfoundland</option>
+                <option value="-10800">(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
+                <option value="-7200">(GMT -2:00) Mid-Atlantic</option>
+                <option value="-3600">(GMT -1:00) Azores, Cape Verde Islands</option>
+                <option value="0">(GMT +0:00) Western Europe Time, London, Lisbon, Casablanca</option>
+                <option value="3600">(GMT +1:00) Brussels, Copenhagen, Madrid, Paris</option>
+                <option value="7200">(GMT +2:00) Kaliningrad, South Africa</option>
+                <option value="10800">(GMT +3:00)  Moscow, St. Petersburg, Baghdad, Riyadh</option>
+                <option value="12600">(GMT +3:30) Tehran</option>
+                <option value="14400">(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
+                <option value="16200">(GMT +4:30) Kabul</option>
+                <option value="18000">(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
+                <option value="19800">(GMT +5:30) Bombay, Calcutta, Madras, New Delhi</option>
+                <option value="20700">(GMT +5:45) Kathmandu</option>
+                <option value="21600">(GMT +6:00) Almaty, Dhaka, Colombo</option>
+                <option value="25200">(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
+                <option value="28800">(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
+                <option value="32400">(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
+                <option value="34200">(GMT +9:30) Adelaide, Darwin</option>
+                <option value="36000">(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
+                <option value="39600">(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
+                <option value="43200">(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
+              </select>      
+              </td>
+              </tr>
+            </table>
+
+          <h3 class="center"> Настройки сети </h3>
+      
+          <table class="zebra_2" border="1" align="center" width="580">
+                    
+            <tr>
+              <td colspan="2">
+                <div>
+                  <div style="float: left;"> <label class="switch">
+                      <input name="check_ip" id="tb0" type="hidden" value="0">
+                      <input type="checkbox" id="tb4" onclick="checkip();getValue('tb4','tb0');">
+      
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div id="aa" style="float: left; padding: 10px;">
+                    Get an IP address automaticaly
+                  </div>
+                  <div id="bb" style="display: none; float: left;  padding: 10px;">
+                    Use the following IP address:
+                  </div>
+                </div>
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show1" style="display:none">
+              <td width="190">IP address:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Введите статический ip адрес. После перезагрузки "STM-32" будет доступна по
+                      введенному адресу!</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center">
+      
+                <input type="text" minlength="7" maxlength="15" size="15" id="ip_addr" name="ip_addr"
+                  value=""
+                  pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show2" style="display:none">
+              <td>Subnet mask:</address>
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Введите маску подсети!</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center">
+                <input type="text" minlength="7" maxlength="15" size="15" id="sb_mask" name="sb_mask"
+                  value=""
+                  pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show3" style="display:none">
+              <td>Default gateway:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Введите шлюз по умолчанию!</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="7" maxlength="15" size="15" id="gateway" name="gateway"
+                  value=""
+                  pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+              </td>
+            </tr>
+      
+            <tr>
+              <td>MAC address:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Если у Вас более одного устройства необходимо каждому устройству прописать
+                      уникальный MAC адрес!</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="12" maxlength="17" size="20" id="macaddr" name="macaddr"
+                  value=""
+                  pattern="^([0-9A-Fa-f]{2}[-]){5}([0-9A-Fa-f]{2})|([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})$">
+      
+              </td>
+            </tr>
+      
+          </table>
+      
+          <br>
+          <h3 class="center"> Настройки API </h3>
+          
+          <table class="zebra_2" border="1" align="center" id="tab2" width="580">    
+            <tr class="cls">
+              <td>Token
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Сгенерируйте токен</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="1" maxlength="10" size="15" id="token" name="token"
+                  value=""> <button type="button" onclick="generateToken(10);"> Генерировать </button>
+              </td>
+            </tr>
+          </table>
+
+          <br>
+          <h3 class="center"> Настройки MQTT </h3>
+          <table class="zebra_2" border="1" align="center" id="tab2" width="580">      
+            <tr>
+              <td colspan="2">
+                <div>
+                  <div style="float: left;"> <label class="switch">
+                      <input name="check_mqtt" id="ttb0" type="hidden" value="0">
+                      <input type="checkbox" id="ttb4" onclick="chmqtt();getValue('ttb4','ttb0');">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+      
+                  <div id="cc" style="float: left; padding: 10px;">
+                    I don't use the MQTT!
+                  </div>
+                  <div id="dd" style="display: none; float: left;  padding: 10px;">
+                    I'll use the MQTT:
+                  </div>
+                </div>
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show4" style="display:none">
+              <td width="190">Host:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Введите ip адрес "MQTT" брокера.</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center">
+                <input type="text" minlength="7" maxlength="15" size="15" id="mqtt_hst" name="mqtt_hst"
+                  value=""
+                  pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show5" style="display:none">
+              <td>Port:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Укажите порт "MQTT" брокера.</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center">
+                <input type="text" minlength="1" maxlength="10" size="15" id="mqtt_prt" name="mqtt_prt"
+                  value="">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show6" style="display:none">
+              <td>Client:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Укажите клиент "id".</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="1" maxlength="10" id="mqtt_clt" name="mqtt_clt" size="15"
+                  value="">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show7" style="display:none">
+              <td>User:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Укажите имя пользователя.</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="1" maxlength="10" id="mqtt_usr" name="mqtt_usr" size="15"
+                  value="">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show8" style="display:none">
+              <td>Password:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Укажите пароль.</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="password" minlength="1" maxlength="15" id="mqtt_pswd" name="mqtt_pswd" size="15"
+                  value="">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show9" style="display:none">
+              <td>Topic:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Укажите пояснительное имя.</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqtt_tpc" name="mqtt_tpc" size="15"
+                  value="">
+              </td>
+            </tr>
+      
+            <tr class="cls" id="hide_show10" style="display:none">
+              <td>Full Topic:
+                <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Full Topic.</span>
+                  </a>
+                </div>
+              </td>
+              <td class="center"> <input type="text" minlength="1" maxlength="15" id="mqtt_ftpc" name="mqtt_ftpc" size="15"
+                  value="">
+              </td>
+            </tr>
+      
+          </table>
+      
+          <br>
+      
+          <h3 class="center"> Настройки координат </h3>
+      
+          <table class="zebra_2" border="1" align="center" id="tab1" width="580">
+            <tr>
+            <tr>
+              <td width="190">Longitude <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Долгота́ (Longitude). Округлите до трёх знаков после запятой!</span>
+                  </a>
+                </div>
+              </td>
+              <td><input type="text" size="10" maxlength="9" name="tlon_de" id="lon_de" value=""></td>
+            </tr>
+      
+            <tr>
+              <td>Latitude <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Широта (Latitude). Округлите до трёх знаков после запятой!</span>
+                  </a>
+                </div>
+              </td>
+              <td><input type="text" size="10" maxlength="8" name="tlat_de" id="lat_de" value=""></td>
+            </tr>
+      
+            <tr>
+              <td>Sunrise <div class="tooltip">
+                  <a class="support" href="#">(?)
+                    <span class="tooltiptext">Восход солнца (Sunrise). Значение установится автоматически согласно Вашим
+                      координатам!</span>
+                  </a>
+                </div>
+              </td>
+              <td><span id="Sunrise"> </span> </td>
+            </tr>
+      
+            <td>Sunset <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext">Закат солнца (Sunrise). Значение установится автоматически согласно Вашим
+                    координатам!</span>
+                </a>
+              </div>
+            </td>
+            <td><span id="Sunset"></span></td>
+            </tr>
+      
+          </table>
+      
+          <center>
+            <br>
+            <button> Save configuration </button>
+            </br>
+          </center>
+      
+        </form>
+      
+        <script>
+      
+          function checkip() { // При активации checked скрываем нужные поля.
+            var checkBox = document.getElementById("tb4");
+            //var xor = document.querySelectorAll('.cls')[0];
+            var x1 = document.getElementById("hide_show1");
+            var x2 = document.getElementById("hide_show2");
+            var x3 = document.getElementById("hide_show3");
+            var aa = document.getElementById("aa");
+            var bb = document.getElementById("bb");
+            //console.log("checkBox.checked = ", checkBox.checked);
+            if (checkBox.checked == true) {
+              x1.style.display = 'table-row';
+              x2.style.display = 'table-row';
+              x3.style.display = 'table-row';
+      
+              aa.style.display = 'none';
+              bb.style.display = 'block';
+            } else {
+              x1.style.display = 'none'; //block
+              x2.style.display = 'none'; //block
+              x3.style.display = 'none'; //block
+      
+              aa.style.display = 'block';
+              bb.style.display = 'none';
+            }
+          }
+      
+          function chmqtt() { // При активации checked скрываем нужные поля.
+            let checkBox = document.getElementById("ttb4");
+            //var xor = document.querySelectorAll('.cls')[0];
+            let y1 = document.getElementById("hide_show4");
+            let y2 = document.getElementById("hide_show5");
+            let y3 = document.getElementById("hide_show6");
+            let y4 = document.getElementById("hide_show7");
+            let y5 = document.getElementById("hide_show8");
+            let y6 = document.getElementById("hide_show9");
+            let y7 = document.getElementById("hide_show10");
+            let cc = document.getElementById("cc");
+            let dd = document.getElementById("dd");
+            //console.log("checkBox.checked = ", checkBox.checked);
+            if (checkBox.checked == true) {
+              y1.style.display = 'table-row';
+              y2.style.display = 'table-row';
+              y3.style.display = 'table-row';
+              y4.style.display = 'table-row';
+              y5.style.display = 'table-row';
+              y6.style.display = 'table-row';
+              y7.style.display = 'table-row';
+      
+              cc.style.display = 'none';
+              dd.style.display = 'block';
+            } else {
+              y1.style.display = 'none'; //block
+              y2.style.display = 'none'; //block
+              y3.style.display = 'none'; //block
+              y4.style.display = 'none'; //block
+              y5.style.display = 'none'; //block
+              y6.style.display = 'none'; //block
+              y7.style.display = 'none'; //block
+      
+              cc.style.display = 'block';
+              dd.style.display = 'none';
+            }
+          }
+      
+      
+          function getValue(id1, id2) {
+            var result = "";
+            if (document.getElementById(id1).checked) {
+              //console.log("sunrise is checked");
+              result = "1";
+            } else {
+              //console.log("sunrise didn't check it!");
+              result = "0";
+            }
+            document.getElementById(id2).value = result; // Перезапишем 
+            console.log("value = ", result);
+          }
+      
+          function codeAddress() {
+            onclickRadio();
+          }
+          window.onload = codeAddress;
+      
+      
+          function setFirstSettings() {
+            checkip();
+            getValue('tb4', 'tb0');
+            checkip();
+            //getValue('tb4', 'tb0');
+            getValue('ttb4','ttb0');
+          }
+
+          function generateToken(length) {
+              var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+              var password = "";
+              for (var i = 0; i < length; i++) {
+                  var randomIndex = Math.floor(Math.random() * charset.length);
+                  password += charset[randomIndex];
+              }
+              document.getElementById('token').value = password;
+    
+          }
+        </script>
+      
+      </center>
+
+
+
+
+</body>
+
+</html>
