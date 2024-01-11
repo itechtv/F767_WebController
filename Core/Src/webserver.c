@@ -1368,6 +1368,7 @@ void setPinSwitch(int idpin, char *name, char *token) {
 
 // POST request Buttom
 void setPinButtom(int idpin, char *name, char *token) {
+	char decoded_url[50] = {0};
 
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
@@ -1375,9 +1376,11 @@ void setPinButtom(int idpin, char *name, char *token) {
 	} else if (strcmp(name, "sclick") == 0) {
 		PinsConf[idpin].sclick = atoi(token);
 	} else if (strcmp(name, "dclick") == 0) {
-		strcpy(PinsConf[idpin].dclick, token);
+		url_decode(token, decoded_url);
+		strcpy(PinsConf[idpin].dclick, decoded_url);
 	} else if (strcmp(name, "lpress") == 0) {
-		strcpy(PinsConf[idpin].lpress, token);
+		url_decode(token, decoded_url);
+		strcpy(PinsConf[idpin].lpress, decoded_url);
 	} else if (strcmp(name, "info") == 0) {
 		strcpy(PinsConf[idpin].info, token);
 	} else if (strcmp(name, "onoff") == 0) {

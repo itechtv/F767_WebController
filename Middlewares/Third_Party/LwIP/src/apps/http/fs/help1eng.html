@@ -104,7 +104,7 @@ The Cron pattern consists of seven space-separated fields.
 0 ── OFF
 1 ── ON
 2 ── TOGGLE
-p ── PAUSE
+p ── PAUSE (number from 1 to 99999)
 ; ── Separator
 </pre>
 
@@ -125,6 +125,10 @@ p ── PAUSE
       <tr>
         <td>12:2;p5</td>
         <td>Pin 12 will change its state (TOGGLE) after 5 seconds (p - PAUSE).</td>
+      </tr>
+      <tr>
+        <td>17:2</td>
+        <td>Pin 17 will (TOGGLE) its state each time the cron job triggers.</td>
       </tr>
 
     </tbody>

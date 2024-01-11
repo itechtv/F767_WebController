@@ -124,7 +124,46 @@ void StartConfigTask(void const * argument);
 void StartInputTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
+void my_parse_string(char *str) {
+    char *token;
+    char *saveptr;
+    int k = 0;
+    int pin = 0;
+    char delim[] = ";";
 
+    // Разбиваем строку на элементы, разделенные точкой с запятой
+    token = strtok_r(str, delim, &saveptr);
+    while (token != NULL) {
+        char *end_token;
+            char *token2 = strtok_r(token, ":", &end_token);
+            //printf("pin = %d\n", atoi(token2));
+
+            while (token2 != NULL) {
+                // тут отправляем в очередь
+                if (k == 0) {
+                    pin = atoi(token2);
+                    if (pin != 0) {
+                        data_pin.pin = pin - 1;
+                    }
+                    //printf("pin = %s\n", token2);
+                }
+                if (k == 1) {
+                    data_pin.action = atoi(token2);
+                    //printf("action = %s\n", token2);
+                }
+
+                token2 = strtok_r(NULL, ":", &end_token);
+                k++;
+                // printf("action = %d\n", atoi(token2));
+            }
+
+            if (k == 2) {
+                xQueueSend(myQueueHandle, (void*)&data_pin, 0);
+            }
+            k = 0;
+        token = strtok_r(NULL, delim, &saveptr);
+    }
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -167,11 +206,15 @@ char pacote[50];
              break;
          case LONG_PRESS_START:
              // Начало долгого нажатия
+        	 if(strlen(PinsConf[handle->button_id].lpress) > 0){
+        	 strcpy(str, PinsConf[handle->button_id].lpress);
+        	 my_parse_string(str);
+        	 }
              printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
              break;
          case LONG_PRESS_HOLD:
              // Продолжение долгого нажатия
-             printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
+        	 printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
              break;
          case SINGLE_CLICK:
              // Одиночное нажатие кнопки
@@ -186,6 +229,10 @@ char pacote[50];
              break;
          case DOUBLE_CLICK:
              // Двойное нажатие кнопки
+        	 if(strlen(PinsConf[handle->button_id].dclick) > 0){
+        	 strcpy(str, PinsConf[handle->button_id].dclick);
+        	 my_parse_string(str);
+        	 }
              printf("Button %d: DOUBLE_CLICK!\r\n", handle->button_id);
              break;
          case PRESS_REPEAT:
