@@ -45,7 +45,9 @@
     
           var employee_data_pin = '';
           employee_data_pin += ' ' + val.pins + ' ';
-    
+          
+         const my_regex = /^([1-9]|[1-8][0-9]):[01](?:;([1-9]|[1-8][0-9]):[01])*$/;
+
           employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></td></tr>';
           employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
           employee_data += '<tr><td>Pullup type</td>';
@@ -83,8 +85,8 @@
             }
             employee_data += '</select></td></tr>';
 
-          employee_data += '<tr><td>DOUBLE CLICK</td><td><input type=\"text\" name=\"dclick\" value=\"' + val.dclick + '\"></td></tr>';
-          employee_data += '<tr><td>LONG PRESS</td><td><input type=\"text\" name=\"lpress\" value=\"' + val.lpress + '\"></td></tr>';
+          employee_data += '<tr><td>DOUBLE CLICK</td><td><input type=\"text\" name=\"dclick\" value=\"' + val.dclick + '\" pattern=\"' + my_regex.source + '\" title=\"Please enter a valid input.\"></td></tr>';
+          employee_data += '<tr><td>LONG PRESS</td><td><input type=\"text\" name=\"lpress\" value=\"' + val.lpress + '\" pattern=\"' + my_regex.source + '\" title=\"Please enter a valid input.\"></td></tr>';
           employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info\" value=\"' + val.info + '\"></td></tr>';
           if (val.onoff == 1) {
             employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></td></tr>';

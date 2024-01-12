@@ -24,17 +24,24 @@ langeditbutton[10] = "Relay connection - Here will appear one or more relays of 
 langeditbutton[11] = "INFO - Give a name of this button for quick navigation. Example: \"Kitchen\", \"Children room\", etc. Max. 30 characters!";
 langeditbutton[12] = "On/Off - 'On' or 'Off' this pin/switch.";
 
-var langrelay = new Array();
-langrelay[1] = "ID - is a unique numerical identifier of the pin. Assigned automatically";
-langrelay[2] = "PIN - The unique number of the digital or analog pin.";
-langrelay[3] = "PWM frequency (Hz) - PWM frequency in Hertz. If 0, then PWM is not used.";
-langrelay[4] = "ON - State of pin -1 is 'On', 0 is 'Off'.";
-langrelay[5] = "Invert State - port inversion (Off - logical 1 at the output, on - 0).";
-langrelay[6] = "Dimmer value (0-255) - If you use PWM, it will between (0-255).";
-langrelay[7] = "Power On Restore - What parameters should be saved when changing and restored when the controller is on None - do not save anything, when you turn on the state and value are equal to those set when configuring. State - restore the last set state of parameter On. Value - restore the last set value of dimmer (PWM). State&Value - restore state and value.";
-langrelay[8] = "INFO - Give a name to the selected relay for quick navigation, e.g.\"Kitchen\", \"Kids room\", etc. No more than 30 characters!";
-langrelay[9] = "On/Off - 'On' or 'Off' this relay.";
-langrelay[10] = "Action - Some actions with this pin.";
+var langpwm = new Array();
+langpwm[1] = "ID - is a unique numerical identifier of the pin. Assigned automatically";
+langpwm[2] = "PIN - The unique number of the digital or analog pin.";
+langpwm[3] = "PWM frequency (Hz) - PWM frequency in Hertz. If 0, then PWM is not used.";
+langpwm[4] = "ON - State of pin -1 is 'On', 0 is 'Off'.";
+langpwm[5] = "Invert State - port inversion (Off - logical 1 at the output, on - 0).";
+langpwm[6] = "Dimmer value (0-255) - If you use PWM, it will between (0-255).";
+langpwm[7] = "Power On Restore - What parameters should be saved when changing and restored when the controller is on None - do not save anything, when you turn on the state and value are equal to those set when configuring. State - restore the last set state of parameter On. Value - restore the last set value of dimmer (PWM). State&Value - restore state and value.";
+langpwm[8] = "INFO - Give a name to the selected relay for quick navigation, e.g.\"Kitchen\", \"Kids room\", etc. No more than 30 characters!";
+langpwm[9] = "On/Off - 'On' or 'Off' this relay.";
+langpwm[10] = "Action - Some actions with this pin.";
+
+var langz = new Array();
+langz[1] = "ID - is a unique numerical identifier of the pin. Assigned automatically";
+langz[2] = "PIN - The unique number of the digital or analog pin.";
+langz[3] = "INFO - Give a name to the selected relay for quick navigation, e.g.\"Kitchen\", \"Kids room\", etc. No more than 30 characters!";
+langz[4] = "On/Off - 'On' or 'Off' this relay.";
+langz[5] = "Action - For yourself, write a reminder for what this PIN is for!.";
 
 var langeditrelay = new Array();
 langeditrelay[1] = "ID - is a unique numerical identifier of the pin. Assigned automatically";

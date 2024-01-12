@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Relay</title>
+  <title>PWM</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
@@ -12,7 +12,7 @@
 
 </head>
 
-<body onload="getLang(langz);">
+<body onload="getLang(langpwm);">
 
   <script>
     function getLang(langs){
@@ -53,24 +53,59 @@
               </a>
             </div>
             </th>
-            <th>INFO
+            <th class="firstline">PWM Frequency (Hz)
               <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang3"></span>
                 </a>
               </div>
             </th>
-            <th>On/Off
+            <th class="firstline">ON
               <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang4"></span>
                 </a>
               </div>
             </th>
-            <th>Action
+            <th class="firstline">Invert State
               <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang5"></span>
+                </a>
+              </div>
+            </th>
+            <th class="firstline">Dimmer value (0-255)
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang6"></span>
+                </a>
+              </div>
+            </th>
+            <th>Power On Restore
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang7"></span>
+                </a>
+              </div>
+            </th>
+            <th>INFO
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang8"></span>
+                </a>
+              </div>
+            </th>
+            <th>On/Off
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang9"></span>
+                </a>
+              </div>
+            </th>
+            <th>Action
+              <div class="tooltip">
+                <a class="support" href="#">(?)
+                  <span class="tooltiptext" id="lang10"></span>
                 </a>
               </div>
             </th>
@@ -81,23 +116,28 @@
     
         <script>
           $(document).ready(function () {
-            $.getJSON('tabjson.shtml?tab=3&ssid=<!--#ssid-->', function (data) {
+            $.getJSON('tabjson.shtml?tab=5&ssid=<!--#ssid-->', function (data) {
               var employee_data = '';
               var n = 0;
               var z = '';
     
               $.each(data, function (key, val) {
-                if (val.topin == 2) {
+                if (val.topin == 5) {
                   employee_data += '<tr>';
                   employee_data += '<td>' + val.id + '</td>';
                   employee_data += '<td>' + val.pins + '</td>';
+                  employee_data += '<td align=\"center\">' + val.pwm + '</td>';
+                  employee_data += '<td align=\"center\">' + val.on + '</td>';
+                  employee_data += '<td align=\"center\">' + val.istate + '</td>';
+                  employee_data += '<td align=\"center\">' + val.dvalue + '</td>';
+                  employee_data += '<td align=\"center\">' + val.ponr + '</td>';
                   employee_data += '<td>' + val.info + '</td>';
                   if (val.onoff == 1) {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" checked=\"checked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>'
                   } else {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>'
                   }
-                  employee_data += '<td>  <a href=\"formrelay.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=2\">Edit</a></td>';
+                  employee_data += '<td>  <a href=\"formpwm.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=2\">Edit</a></td>';
     
      
                   employee_data += '</tr>';

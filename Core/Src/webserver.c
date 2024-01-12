@@ -81,9 +81,6 @@ void clearPin(int pinnum){
 	PinsConf[pinnum].sclick = 0;
 	PinsConf[pinnum].dclick[0] = '\0';
 	PinsConf[pinnum].lpress[0] = '\0';
-//	PinsConf[pinnum].rinter = 0;
-//	PinsConf[pinnum].dcinter = 0;
-//	PinsConf[pinnum].pclick = 0;
 	PinsConf[pinnum].info[0] = '\0';
 	PinsConf[pinnum].onoff = 0;
 
@@ -116,6 +113,9 @@ int MultiPartTabCount(int num, int pinnum, int count)
 		if(num == PinsConf[i].topin && num == 3){
 			count++;
 		}
+		if(num == PinsConf[i].topin && num == 5){
+			count++;
+				}
 	}
 	return count;
 }
@@ -198,12 +198,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					idplus = variable + 1;
 
 					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
-							PinsConf[variable].istate, PinsConf[variable].dvalue,
-							PinsConf[variable].ponr, PinsConf[variable].info,
-							PinsConf[variable].onoff);
+							PinsConf[variable].info,PinsConf[variable].onoff);
 					////////////////
 
 					countJson++;
@@ -252,6 +249,33 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				}
 			}
 
+			if(tab == 5){
+				if(PinsConf[variable].topin == 5){
+					// PWM json
+					idplus = variable + 1;
+
+					sprintf(pcInsert,
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
+							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+							PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
+							PinsConf[variable].istate, PinsConf[variable].dvalue,
+							PinsConf[variable].ponr, PinsConf[variable].info,
+							PinsConf[variable].onoff);
+					////////////////
+
+					countJson++;
+
+					if(countJson == numTabLine){
+						printf("DELLL \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
+				} else {
+					pcInsert = "";
+				}
+			}
+
+
 			*next_tag_part = variable;
 			variable++;
 			return strlen(pcInsert);
@@ -291,9 +315,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			return strlen(pcInsert);
 			break;
 
-		// ssi tag <!--#menu-->
+		// ssi tag <!--#menu-->//
 		case 3:
-			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Button pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
+			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Button pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"tabpwm.shtml?ssid=%s\">PWM</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
 			return strlen(pcInsert);
 			break;
 
@@ -487,6 +511,7 @@ const char* FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -510,7 +535,8 @@ static const tCGI URL_TABLES[] = {
 		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler },
 		{"/api.shtml", (tCGIHandler) ApiCGI_Handler },
 		{"/tabswitch.shtml", (tCGIHandler) SwitchCGI_Handler },//??? index = 20
-		{"/formswitch.shtml", (tCGIHandler) FormSwitchCGI_Handler }//??? index = 21
+		{"/formswitch.shtml", (tCGIHandler) FormSwitchCGI_Handler },//??? index = 21
+		{"/tabpwm.shtml", (tCGIHandler) PwmCGI_Handler }//??? index = 22
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -624,7 +650,6 @@ const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		return "/login.shtml";
 	}
 }
-
 // tabbuttom.shtml Handler (Index 4)
 const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
@@ -793,6 +818,10 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				if(tab == 4)
 				{
 					numTabLine = MultiPartTabCount(3,NUMPIN-1, numTabLine);
+				}
+				if(tab == 5)
+				{
+					numTabLine = MultiPartTabCount(5,NUMPIN-1, numTabLine);
 				}
 			}
 		}
@@ -1315,6 +1344,33 @@ const char* FormSwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		return "/login.shtml";
 	}
 }
+
+// tabpwm.shtml Handler (Index 22) ?zerg?
+const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+
+	if (iIndex == 22) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if(1){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/tabpwm.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
 ////////////////////////////// POST START //////////////////////////////////
 
 
@@ -1324,6 +1380,28 @@ static void *current_connection;
 
 // POST request Relay
 void setPinRelay(int idpin, char *name, char *token) {
+
+	idpin = idpin - 1;
+	if (strcmp(name, "pwm") == 0) {
+		PinsConf[idpin].pwm = atoi(token);
+	} else if (strcmp(name, "on") == 0) {
+		PinsConf[idpin].on = atoi(token);
+	} else if (strcmp(name, "istate") == 0) {
+		PinsConf[idpin].istate = atoi(token);
+	} else if (strcmp(name, "dvalue") == 0) {
+		PinsConf[idpin].dvalue = atoi(token);
+	} else if (strcmp(name, "ponr") == 0) {
+		PinsConf[idpin].ponr = atoi(token);
+	} else if (strcmp(name, "info") == 0) {
+		strcpy(PinsConf[idpin].info, token);
+	} else if (strcmp(name, "onoff") == 0) {
+		PinsConf[idpin].onoff = atoi(token);
+	} else {
+
+	}
+}
+// POST request PWM
+void setPinPwm(int idpin, char *name, char *token) {
 
 	idpin = idpin - 1;
 	if (strcmp(name, "pwm") == 0) {
@@ -1650,6 +1728,13 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 					if(token2 != NULL){
 						setCron(id, name, token2);
 						usbdata = 3;
+					}
+				}
+				// POST request PWM
+				if (strcmp(v_PostBufer.uri, "/tabpwm.shtml") == 0 && id != 0){
+					if(token2 != NULL){
+						setPinPwm(id, name, token2);
+						usbdata = 1;
 					}
 				}
 
