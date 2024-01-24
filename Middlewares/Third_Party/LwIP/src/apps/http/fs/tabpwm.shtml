@@ -37,7 +37,7 @@
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Relay pin</h2>
+        <h2>PWM pin</h2>
        <div class="tab">
         <table class="zebra_3" border="1" align="center" id="tab1" class="tab">
           <tr>
@@ -137,7 +137,7 @@
                   } else {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>'
                   }
-                  employee_data += '<td>  <a href=\"formpwm.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=2\">Edit</a></td>';
+                  employee_data += '<td>  <a href=\"formpwm.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=5\">Edit</a></td>';
     
      
                   employee_data += '</tr>';

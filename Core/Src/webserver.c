@@ -275,7 +275,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				}
 			}
 
-
 			*next_tag_part = variable;
 			variable++;
 			return strlen(pcInsert);
@@ -430,7 +429,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				if(tab == 5){
 					root = cJSON_CreateObject();
 
-					cJSON_AddNumberToObject(root, "id", id); // в JS доваляеме +1
+					cJSON_AddNumberToObject(root, "id", id); // в JS добавляет +1
 					cJSON_AddStringToObject(root, "cron", dbCrontxt[id].cron);
 					cJSON_AddStringToObject(root, "activ", dbCrontxt[id].activ);
 					cJSON_AddStringToObject(root, "info", dbCrontxt[id].info);
@@ -494,7 +493,7 @@ const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *p
 const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);//???
+const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* LogoutCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
@@ -502,7 +501,7 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char 
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormSwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);//???
+const char* FormSwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
@@ -512,6 +511,7 @@ const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pc
 const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -534,9 +534,10 @@ static const tCGI URL_TABLES[] = {
 		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },
 		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler },
 		{"/api.shtml", (tCGIHandler) ApiCGI_Handler },
-		{"/tabswitch.shtml", (tCGIHandler) SwitchCGI_Handler },//??? index = 20
-		{"/formswitch.shtml", (tCGIHandler) FormSwitchCGI_Handler },//??? index = 21
-		{"/tabpwm.shtml", (tCGIHandler) PwmCGI_Handler }//??? index = 22
+		{"/tabswitch.shtml", (tCGIHandler) SwitchCGI_Handler },
+		{"/formswitch.shtml", (tCGIHandler) FormSwitchCGI_Handler },
+		{"/tabpwm.shtml", (tCGIHandler) PwmCGI_Handler },
+		{"/formrpwm.shtml", (tCGIHandler) FormPWMCGI_Handler }//index = 23
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -1345,7 +1346,7 @@ const char* FormSwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// tabpwm.shtml Handler (Index 22) ?zerg?
+// tabpwm.shtml Handler (Index 22)
 const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -1361,7 +1362,7 @@ const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if(1){
+	if(1){ // ?zerg?
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabpwm.shtml"; //
@@ -1371,6 +1372,44 @@ const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		return "/login.shtml";
 	}
 }
+
+// formbutton.shtml Handler (Index 23)
+const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+	id = 0;
+	tab = 0;
+
+	if (iIndex == 23) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "id") == 0)
+			{
+				id = atoi(pcValue[i]) - 1;
+			}
+			if (strcmp(pcParam[i], "tab") == 0)
+			{
+				tab = atoi(pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/formpwm.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
+
 ////////////////////////////// POST START //////////////////////////////////
 
 
