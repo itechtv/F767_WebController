@@ -36,7 +36,7 @@ struct dbPinsConf {    // Создали структуру с необходи�
 	uint8_t sclick; 	// SINGLE CLICK
 	char dclick[255]; 	// DOUBLE CLICK
 	char lpress[255]; 	// LONG PRESS
-//	int rinter; 	// Repeat interval
+	int numdevices; 	// Indicate the number of ds18b20 sensors
 //	int dcinter;	// Double-click interval
 //	int pclick; 	// Prevent Click
 	char info[30];	// Info
@@ -58,6 +58,8 @@ struct dbPinsInfo { // Создали структуру с необходимы
 	short pwm; // 0 - Not able; 1 - Able
 	short i2cdata; // 0 - Not able; 1 - Able
 	short i2cclok; // 0 - Not able; 1 - Able
+	TIM_TypeDef* tim;
+	uint32_t TIM_CHANNEL;
 };
 
 

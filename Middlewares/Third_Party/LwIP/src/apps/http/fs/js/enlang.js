@@ -109,7 +109,13 @@ actionhelp[1] = "Pin 18 will turn on (ON) at the specified time (CRON), stay on 
 actionhelp[2] = "Pin 12 will change its state (TOGGLE) every 5 seconds (p - PAUSE).";
 actionhelp[3] = "Pin 12 will change its state (TOGGLE) every CRON's valid time";
 
-
+var lange1Wire = new Array();
+lange1Wire[1] = "ID - is a unique numerical identifier of the pin. Assigned automatically";
+lange1Wire[2] = "PIN - The unique number of the digital or analog pin.";
+lange1Wire[3] = "PWM frequency (Hz) - PWM frequency in Hertz. If 0, then PWM is not used.";
+lange1Wire[4] = "ON - State of pin -1 is 'On', 0 is 'Off'.";
+lange1Wire[5] = "INFO - Give a name to the selected relay for quick navigation, e.g.\"Kitchen\", \"Kids room\", etc. No more than 30 characters!";
+lange1Wire[6] = "On/Off - 'On' or 'Off' this relay.";
 
 
 
