@@ -120,6 +120,9 @@ int MultiPartTabCount(int num, int pinnum, int count)
 		if(num == PinsConf[i].topin && num == 4){
 			count++;
 		}
+		if(num == PinsConf[i].topin && num == 6){
+			count++;
+		}
 	}
 	return count;
 }
@@ -162,7 +165,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			}
 			if(tab == 2){
 				if(PinsConf[variable].topin == 1){
-					// buttoms json
+					// buttoms tabjson
 					idplus = variable + 1;
 
 				    root = cJSON_CreateObject();
@@ -199,7 +202,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			}
 			if(tab == 3){
 				if(PinsConf[variable].topin == 2){
-					// relay json
+					// relay tabjson
 					idplus = variable + 1;
 
 					sprintf(pcInsert,
@@ -256,7 +259,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 			if(tab == 5){
 				if(PinsConf[variable].topin == 5){
-					// PWM json
+					// PWM tabjson
 					idplus = variable + 1;
 
 					sprintf(pcInsert,
@@ -281,7 +284,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			}
 			if(tab == 6){
 				if(PinsConf[variable].topin == 4){
-					// OneWire json
+					// OneWire tabjson
 					idplus = variable + 1;
 
 					sprintf(pcInsert,
@@ -303,6 +306,31 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					pcInsert = "";
 				}
 			}
+			if(tab == 7){
+				if(PinsConf[variable].topin == 4){
+					// I2C tabjson
+					idplus = variable + 1;
+
+					sprintf(pcInsert,
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"numdevices\":%d,\"info\":\"%s\",\"onoff\":%d},",
+							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+							PinsConf[variable].numdevices, PinsConf[variable].info,
+							PinsConf[variable].onoff);
+					////////////////
+
+					countJson++;
+					printf("countJson = %d numTabLine = %d \r\n",countJson, numTabLine);
+					if(countJson == numTabLine){
+//					if(countJson >0){
+						//printf("DELLL ',' \n");
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+					}
+
+				} else {
+					pcInsert = "";
+				}
+			}
+
 			*next_tag_part = variable;
 			variable++;
 			return strlen(pcInsert);
@@ -344,7 +372,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 		// ssi tag <!--#menu-->//
 		case 3:
-			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Button pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"tabpwm.shtml?ssid=%s\">PWM</a> | <a href=\"tab1wire.shtml?ssid=%s\">OneWire</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
+			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Button pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"tabpwm.shtml?ssid=%s\">PWM</a> | <a href=\"tab1wire.shtml?ssid=%s\">OneWire</a> | <a href=\"tabI2C.shtml?ssid=%s\">I2C</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
 			return strlen(pcInsert);
 			break;
 
@@ -545,6 +573,8 @@ const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* Form1WireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* OneWireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* FormI2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* I2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);// index = 27
 
 static const tCGI URL_TABLES[] = {
 		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
@@ -570,9 +600,11 @@ static const tCGI URL_TABLES[] = {
 		{"/tabswitch.shtml", (tCGIHandler) SwitchCGI_Handler },
 		{"/formswitch.shtml", (tCGIHandler) FormSwitchCGI_Handler },
 		{"/tabpwm.shtml", (tCGIHandler) PwmCGI_Handler },
-		{"/formpwm.shtml", (tCGIHandler) FormPWMCGI_Handler },// index = 23
-		{"/form1wire.shtml", (tCGIHandler) Form1WireCGI_Handler },// index = 24
-		{"/tab1wire.shtml", (tCGIHandler) OneWireCGI_Handler }// index = 25
+		{"/formpwm.shtml", (tCGIHandler) FormPWMCGI_Handler },
+		{"/form1wire.shtml", (tCGIHandler) Form1WireCGI_Handler },
+		{"/tab1wire.shtml", (tCGIHandler) OneWireCGI_Handler },// index = 25
+		{"/formI2C.shtml", (tCGIHandler) Form1WireCGI_Handler },// index = 26
+		{"/tabI2C.shtml", (tCGIHandler) OneWireCGI_Handler }// index = 27
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -1412,7 +1444,7 @@ const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// formbutton.shtml Handler (Index 23)
+// formPWM.shtml Handler (Index 23)
 const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -1449,7 +1481,7 @@ const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// formbutton.shtml Handler (Index 24)
+// form1Wire.shtml Handler (Index 24)
 const char* Form1WireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -1486,7 +1518,7 @@ const char* Form1WireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// formbutton.shtml Handler (Index 25)
+// tab1Wire.shtml Handler (Index 25)
 const char* OneWireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
@@ -1516,6 +1548,80 @@ const char* OneWireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tab1wire.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
+
+// form1Wire.shtml Handler (Index 26)
+const char* FormI2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+	id = 0;
+	tab = 0;
+
+	if (iIndex == 26) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "id") == 0)
+			{
+				id = atoi(pcValue[i]) - 1;
+			}
+			if (strcmp(pcParam[i], "tab") == 0)
+			{
+				tab = atoi(pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/formI2C.shtml"; //
+	} else {
+		printf("SSID Failed \n");
+		memset(randomSSID, '\0', sizeof(randomSSID));
+		return "/login.shtml";
+	}
+}
+
+// tabI2C.shtml Handler (Index 27)
+const char* I2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+		char *pcValue[]) {
+
+	id = 0;
+	tab = 0;
+
+	if (iIndex == 27) {
+		for (int i = 0; i < iNumParams; i++) {
+			if (strcmp(pcParam[i], "ssid") == 0)
+			{
+				memset(ssid, '\0', sizeof(ssid));
+				strcpy(ssid, pcValue[i]);
+			}
+			if (strcmp(pcParam[i], "id") == 0)
+			{
+				id = atoi(pcValue[i]) - 1;
+			}
+			if (strcmp(pcParam[i], "tab") == 0)
+			{
+				tab = atoi(pcValue[i]);
+			}
+		}
+	}
+
+	/* login succeeded */
+	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+		//printf("SSID OK \n");
+		restartSSID();
+		return "/tabI2C.shtml"; //
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -1652,6 +1758,21 @@ void setPin1Wire(int idpin, char *name, char *token) {
 
 	}
 }
+// POST request I2C
+void setPinI2C(int idpin, char *name, char *token) {
+
+	idpin = idpin - 1;
+	if (strcmp(name, "numdevices") == 0) {
+		PinsConf[idpin].numdevices = atoi(token);
+	} else if (strcmp(name, "info") == 0) {
+		strcpy(PinsConf[idpin].info, token);
+	} else if (strcmp(name, "onoff") == 0) {
+		PinsConf[idpin].onoff = atoi(token);
+	} else {
+
+	}
+}
+
 
 // Функция декодирования URL
 void url_decode(char* url, char* decoded)
@@ -1911,7 +2032,13 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 						usbdata = 1;
 					}
 				}
-
+				// POST request I2C
+				if (strcmp(v_PostBufer.uri, "/tabI2C.shtml") == 0 && id != 0){
+					if(token2 != NULL){
+						setPin1Wire(id, name, token2);
+						usbdata = 1;
+					}
+				}
         	}
             token2 = strtok_r(NULL, "=", &end_token);
         }

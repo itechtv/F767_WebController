@@ -59,7 +59,7 @@ struct dbPinsInfo { // Создали структуру с необходимы
 	short i2cdata; // 0 - Not able; 1 - Able
 	short i2cclok; // 0 - Not able; 1 - Able
 	TIM_TypeDef* tim;
-	uint32_t TIM_CHANNEL;
+	uint32_t tim_channel;
 };
 
 
