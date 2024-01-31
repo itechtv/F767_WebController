@@ -868,7 +868,7 @@ void StartOutputTask(void const * argument)
 
 
 	/******************* tmp PWM  ***************************/
-	uint16_t pwmData[11] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+//	uint16_t pwmData[11] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
   /* Infinite loop */
   for(;;)
   {
@@ -891,15 +891,15 @@ void StartOutputTask(void const * argument)
 		}
 
 		/******************* tmp PWM  ***************************/
-		for (uint8_t i = 0; i < NUMPIN; i++) {
-		if (PinsConf[i].topin == 5){
-			for (int d = 0; d <= 11; ++d) {
-				__HAL_TIM_SET_COMPARE(&htim[i], TIM_CHANNEL_1, pwmData[d]);
-
-				osDelay(100);
-			}
-		}
-		}
+//		for (uint8_t i = 0; i < NUMPIN; i++) {
+//		if (PinsConf[i].topin == 5){
+//			for (int d = 0; d <= 11; ++d) {
+//				__HAL_TIM_SET_COMPARE(&htim[i], TIM_CHANNEL_1, pwmData[d]);
+//
+//				osDelay(100);
+//			}
+//		}
+//		}
 		/**********************************************/
     osDelay(1);
   }

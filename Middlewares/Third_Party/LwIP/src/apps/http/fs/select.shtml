@@ -84,13 +84,18 @@
           employee_data += '<span>RELAY</span> ';
           employee_data += '&nbsp;&nbsp;';
 
-          
+          if(val.onewire == 1){
           if (val.topin == 4) {
-            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"4\" onclick=\"getSelect(' + val.id + ');\" checked>';
-          } else {
-            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"4\" onclick=\"getSelect(' + val.id + ');\">';
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"5\" onclick=\"getSelect(' + val.id + ');\" checked>';
+            employee_data += '<span>1-WIRE</span> ';
+          } else {            
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"5\" onclick=\"getSelect(' + val.id + ');\">';
+            employee_data += '<span>1-WIRE</span> ';
           }
-          employee_data += '<span>1-WIRE</span> ';
+        }else{
+          employee_data += '<input type=\"radio\" value=\"0\" disabled>';
+          employee_data += '<span style = \"color:#D3D3D3\">1-WIRE</span>';
+        }
           employee_data += '&nbsp;&nbsp;';
 
           
