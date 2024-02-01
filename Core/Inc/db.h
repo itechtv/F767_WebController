@@ -33,6 +33,11 @@ struct dbPinsConf {    // Создали структуру с необходи�
 	int dvalue;		// Dimmer value
 	int ponr;		// Power on restore
 	int ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
+	/////
+	uint8_t sclick; 	// SINGLE CLICK
+	char dclick[255]; 	// DOUBLE CLICK
+	char lpress[255]; 	// LONG PRESS
+	////
 	int binter; 	// Bounce interval
 	int hinter; 	// Hold interval
 	int repeat; 	// Repeat
@@ -58,6 +63,9 @@ struct dbPinsInfo { // Создали структуру с необходимы
 	short pwm; // 0 - Not able; 1 - Able
 	short i2cdata; // 0 - Not able; 1 - Able
 	short i2cclok; // 0 - Not able; 1 - Able
+	TIM_TypeDef * tim;
+    uint16_t tim_channel; // Use uint32_t to store the TIM_CHANNEL_x values
+    uint16_t af; // Alternate function
 };
 
 

@@ -68,8 +68,11 @@ char str[40] = { 0 };
 /* Private variables ---------------------------------------------------------*/
 
 RTC_HandleTypeDef hrtc;
-
 UART_HandleTypeDef huart3;
+TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim[NUMPIN];
+
+
 
 osThreadId WebServerTaskHandle;
 uint32_t WebServerTaskBuffer[ 2048 ];
@@ -95,6 +98,9 @@ osStaticMessageQDef_t myQueueControlBlock;
 osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
+osThreadId PWMTaskHandle;
+uint32_t PWMTaskBuffer[ 256 ];
+osStaticThreadDef_t PWMTaskControlBlock;
 /* USER CODE BEGIN PV */
 
 extern struct dbSettings SetSettings;
@@ -121,6 +127,7 @@ void StartCronTask(void const * argument);
 void StartOutputTask(void const * argument);
 void StartConfigTask(void const * argument);
 void StartInputTask(void const * argument);
+void StartPWMTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -145,6 +152,185 @@ unsigned long Ti;
 mqtt_client_t *client;
 char pacote[50];
 
+
+// Функция обратного вызова для обработки событий кнопки
+ void button_event_handler(Button* handle)
+ {
+     // Обработчик событий кнопки
+     PressEvent event = get_button_event(handle);
+
+     switch (event) {
+         case NONE_PRESS:
+             // Нет нажатия
+             break;
+         case PRESS_DOWN:
+             // Кнопка нажата
+             printf("Button %d: PRESS_DOWN!\r\n", handle->button_id);
+             break;
+         case PRESS_UP:
+             // Кнопка отпущена
+             printf("Button %d: PRESS_UP!\r\n", handle->button_id);
+             break;
+         case LONG_PRESS_START:
+             // Начало долгого нажатия
+             printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
+             break;
+         case LONG_PRESS_HOLD:
+             // Продолжение долгого нажатия
+             printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
+             break;
+         case SINGLE_CLICK:
+             // Одиночное нажатие кнопки
+				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+					if (PinsLinks[a].idin == handle->button_id) {
+						data_pin.pin = PinsLinks[a].idout;
+						data_pin.action = 2;
+						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+					}
+				}
+             printf("Button %d: SINGLE_CLICK!\r\n", handle->button_id);
+             break;
+         case DOUBLE_CLICK:
+             // Двойное нажатие кнопки
+             printf("Button %d: DOUBLE_CLICK!\r\n", handle->button_id);
+             break;
+         case PRESS_REPEAT:
+             // Повторное нажатие кнопки
+             printf("Button %d: PRESS_REPEAT!\r\n", handle->button_id);
+             break;
+         default:
+             // Обработка неизвестного значения event
+             break;
+     }
+ }
+
+
+
+ void pwm_event_handler(Button* handle)
+  {
+      // Обработчик событий кнопки
+      PressEvent event = get_button_event(handle);
+      static uint8_t pwmflag[NUMPIN] = {0,};
+      int pwmValue = 0;
+
+      switch (event) {
+          case NONE_PRESS:
+              // Нет нажатия
+              break;
+          case PRESS_DOWN:
+              // Кнопка нажата
+              printf("Button %d: PRESS_DOWN!\r\n", handle->button_id);
+              break;
+          case PRESS_UP:
+              // Кнопка отпущена
+              printf("Button %d: PRESS_UP!\r\n", handle->button_id);
+              break;
+          case LONG_PRESS_START:
+              // Начало долгого нажатия
+              printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
+              break;
+          case LONG_PRESS_HOLD:
+				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+					if (PinsLinks[a].idin == handle->button_id) {
+						//PinsInfo[i].tim->CCR1 = 50;
+							for (uint8_t i = 0; i < NUMPIN; i++) {
+								// PWM
+								if (PinsConf[i].topin == 5){
+									  //for (int d = 0; d <= 11; ++d) {
+									pwmValue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+									printf("PWM pwmValue %d \r\n", pwmValue);
+									if(pwmflag[handle->button_id] == 1) {
+										pwmValue += 1;
+										if(pwmValue > 100){
+											pwmValue = 100;
+											//pwmflag[handle->button_id] = 0;
+										}
+									}
+									if(pwmflag[handle->button_id] == 0) {
+										pwmValue -= 1;
+										if(pwmValue < 0){
+											pwmValue = 0;
+											//pwmflag[handle->button_id] = 1;
+										}
+									}
+									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, pwmValue);
+								}
+							}
+
+// 						data_pin.pin = PinsLinks[a].idout;
+// 						data_pin.action = 2;
+// 						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						printf("Button %d: LONG_PRESS_HOLD PWM pwmValue %d flag %d!\r\n", handle->button_id, pwmValue, pwmflag[handle->button_id]);
+					}
+				}
+              printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
+              break;
+          case SINGLE_CLICK:
+              // Одиночное нажатие кнопки
+ 				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+ 					if (PinsLinks[a].idin == handle->button_id) {
+
+ 						//PinsInfo[i].tim->CCR1 = 50;
+
+ 							for (uint8_t i = 0; i < NUMPIN; i++) {
+
+ 								// PWM
+ 								if (PinsConf[i].topin == 5){
+ 									  //for (int d = 0; d <= 11; ++d) {
+ 									pwmValue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+ 									printf("PWM pwmValue %d \r\n", pwmValue);
+ 									if(pwmflag[handle->button_id] == 1) {
+ 										pwmValue += 1;
+										if(pwmValue > 100){
+											pwmValue = 100;
+											pwmflag[handle->button_id] = 0;
+										}
+ 									}
+ 									if(pwmflag[handle->button_id] == 0) {
+ 										pwmValue -= 1;
+										if(pwmValue < 0){
+											pwmValue = 0;
+											pwmflag[handle->button_id] = 1;
+										}
+ 									}
+
+									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, pwmValue);
+ 								}
+ 							}
+
+// 						data_pin.pin = PinsLinks[a].idout;
+// 						data_pin.action = 2;
+// 						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+ 						printf("Button %d: SINGLE_CLICK PWM pwmValue %d flag %d!\r\n", handle->button_id, pwmValue, pwmflag[handle->button_id]);
+ 					}
+ 				}
+              //printf("Button %d: SINGLE_CLICK PWM!\r\n", handle->button_id);
+              break;
+          case DOUBLE_CLICK:
+              // Двойное нажатие кнопки
+
+        	  pwmflag[handle->button_id] ^= 1;
+
+              printf("Button %d: DOUBLE_CLICK PWM %d!\r\n", handle->button_id, pwmflag[handle->button_id]);
+              break;
+          case PRESS_REPEAT:
+              // Повторное нажатие кнопки
+              printf("Button %d: PRESS_REPEAT PWM!\r\n", handle->button_id);
+              break;
+          default:
+              // Обработка неизвестного значения event
+              break;
+      }
+  }
+
+ // Функция для получения состояния GPIO кнопки
+  uint8_t read_button_level(uint8_t button_id)
+  {
+      // Вернуть состояние GPIO пина, к которому подключена кнопка
+ 	 return  HAL_GPIO_ReadPin(PinsInfo[button_id].gpio_name, PinsInfo[button_id].hal_pin);
+
+      //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
+  }
 
 /* USER CODE END 0 */
 
@@ -233,6 +419,9 @@ int main(void)
   osThreadStaticDef(InputTask, StartInputTask, osPriorityNormal, 0, 512, InputTaskBuffer, &InputTaskControlBlock);
   InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
 
+  /* definition and creation of InputTask */
+  osThreadStaticDef(PWMTask, StartPWMTask, osPriorityNormal, 0, 256, PWMTaskBuffer, &PWMTaskControlBlock);
+  PWMTaskHandle = osThreadCreate(osThread(PWMTask), NULL);
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -823,14 +1012,17 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
+					xTaskNotifyGive(PWMTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
 
 				} else {
 					StartSetingsConfig();
+
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
+					xTaskNotifyGive(PWMTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
 				}
 				usbflag = 0;
 			}
@@ -884,19 +1076,21 @@ void StartInputTask(void const *argument) {
 	uint32_t millis;
 	uint8_t pinLevel[NUMPIN] = { 0 };
 
+	osDelay(1000);
+	InitMultibutton();
 	/* Infinite loop */
 	for (;;) {
 		millis = HAL_GetTick();
 		for (uint8_t i = 0; i < NUMPIN; i++) {
+
 			// INPUT Button
 			if (PinsConf[i].topin == 1 && PinsConf[i].act == 1){
-				if (pinStates[i] == 1 && (millis - pinTimes[i]) >= 200) {
+				if ((millis - pinTimes[i]) >= 5) {
 					pinTimes[i] = millis;
-
+					button_ticks(&button[i]);
 				}
 
 			}
-
 
 			/*
 			// INPUT Button GPIO_PULLDOWN
@@ -932,7 +1126,6 @@ void StartInputTask(void const *argument) {
 				}
 			}
 
-			// PinsConf[i].act
 			*/
 
 			// INPUT Switch
@@ -966,9 +1159,34 @@ void StartInputTask(void const *argument) {
 				}
 			}
 		}
-		osDelay(5);
+		//osDelay(5);
 	}
 	/* USER CODE END StartInputTask */
+}
+
+
+
+/* USER CODE BEGIN Header_StartPWMTask */
+/**
+ * @brief  Function implementing the PWMTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_StartWebServerTask */
+void StartPWMTask(void const * argument)
+{
+  /* init code for LWIP */
+    ulTaskNotifyTake(0, portMAX_DELAY);
+
+
+
+	/* Infinite loop */
+	for (;;) {
+
+
+		osDelay(1);
+	}
+  /* USER CODE END 5 */
 }
 /**
   * @brief  Period elapsed callback in non blocking mode

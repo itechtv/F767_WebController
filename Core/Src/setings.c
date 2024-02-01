@@ -26,6 +26,7 @@ extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct Button button[NUMPIN];
 
+extern TIM_HandleTypeDef htim[NUMPIN];
 /**************************************************************************/
 // Функция включает тактирование на указанном порту.
 int enablePort(char *portName) {
@@ -430,6 +431,11 @@ void GetPinConfig() {
 				PinsConf[i].repeat = cJSON_GetObjectItem(pins_item, "repeat")->valueint;
 				PinsConf[i].rinter = cJSON_GetObjectItem(pins_item, "rinter")->valueint;
 				PinsConf[i].dcinter = cJSON_GetObjectItem(pins_item, "dcinter")->valueint;
+
+				PinsConf[i].sclick = cJSON_GetObjectItem(pins_item, "sclick")->valueint;
+				strcpy(PinsConf[i].dclick,cJSON_GetObjectItem(pins_item, "dclick")->valuestring);
+				strcpy(PinsConf[i].lpress,cJSON_GetObjectItem(pins_item, "lpress")->valuestring);
+
 				PinsConf[i].pclick = cJSON_GetObjectItem(pins_item, "pclick")->valueint;
 				strcpy(PinsConf[i].info, cJSON_GetObjectItem(pins_item, "info")->valuestring);
 				PinsConf[i].onoff = cJSON_GetObjectItem(pins_item, "onoff")->valueint;
@@ -480,6 +486,11 @@ void SetPinConfig() {
 			cJSON_AddNumberToObject(fld, "rinter", PinsConf[i].rinter);
 			cJSON_AddNumberToObject(fld, "dcinter", PinsConf[i].dcinter);
 			cJSON_AddNumberToObject(fld, "pclick", PinsConf[i].pclick);
+
+			cJSON_AddNumberToObject(fld, "sclick", PinsConf[i].sclick);
+			cJSON_AddStringToObject(fld, "dclick", PinsConf[i].dclick);
+			cJSON_AddStringToObject(fld, "lpress", PinsConf[i].lpress);
+
 			cJSON_AddStringToObject(fld, "info", PinsConf[i].info);
 			cJSON_AddNumberToObject(fld, "onoff", PinsConf[i].onoff);
 			cJSON_AddNumberToObject(fld, "event", PinsConf[i].event);
@@ -628,6 +639,81 @@ void InitPin() {
     	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
     	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
     	}
+    	// initialization INPUT
+    	if(PinsConf[i].topin == 5){
+
+    		     __HAL_RCC_TIM1_CLK_ENABLE();
+    		   //RCC->APB2ENR |= (1 << 0);
+    		//
+    		//
+    		      TIM_MasterConfigTypeDef sMasterConfig = {0};
+    		      TIM_OC_InitTypeDef sConfigOC = {0};
+    		      TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+
+    		      /* USER CODE BEGIN TIM1_Init 1 */
+
+    		      /* USER CODE END TIM1_Init 1 */
+    		      htim[i].Instance = PinsInfo[i].tim;
+    		      htim[i].Init.Prescaler = 216-1;
+    		      htim[i].Init.CounterMode = TIM_COUNTERMODE_UP;
+    		      htim[i].Init.Period = 100-1;
+    		      htim[i].Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    		      htim[i].Init.RepetitionCounter = 0;
+    		      htim[i].Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    		      if (HAL_TIM_PWM_Init(&htim[i]) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    		      sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+    		      sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    		      if (HAL_TIMEx_MasterConfigSynchronization(&htim[i], &sMasterConfig) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    		      sConfigOC.Pulse = 0;
+    		      sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    		      sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+    		      sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    		      sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    		      sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+    		      if (HAL_TIM_PWM_ConfigChannel(&htim[i], &sConfigOC, PinsInfo[i].tim_channel) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+    		      sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+    		      sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+    		      sBreakDeadTimeConfig.DeadTime = 0;
+    		      sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+    		      sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+    		      sBreakDeadTimeConfig.BreakFilter = 0;
+    		      sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
+    		      sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
+    		      sBreakDeadTimeConfig.Break2Filter = 0;
+    		      sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+    		      if (HAL_TIMEx_ConfigBreakDeadTime(&htim[i], &sBreakDeadTimeConfig) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      /* USER CODE BEGIN TIM1_Init 2 */
+
+    		      /* USER CODE END TIM1_Init 2 */
+    		      GPIO_InitStruct.Pin = PinsInfo[i].hal_pin;
+    		      //GPIO_InitStruct.Pin = GPIO_PIN_9;
+    		      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    		      GPIO_InitStruct.Pull = GPIO_NOPULL;
+    		      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    		      GPIO_InitStruct.Alternate = PinsInfo[i].af;
+    		      //HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    		      HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+
+    		      //HAL_TIM_MspPostInit(&htim[i]);
+
+    		      HAL_TIM_PWM_Start(&htim[i], PinsInfo[i].tim_channel);
+
+    	}
     }
 }
 
@@ -641,13 +727,25 @@ void InitMultibutton(void) {
 
 			button_init(&button[i], read_button_level, 1, i);
 
-			button_attach(&button[i], PRESS_DOWN, button_event_handler);
-			button_attach(&button[i], PRESS_UP, button_event_handler);
-			button_attach(&button[i], LONG_PRESS_START, button_event_handler);
-			button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
-			button_attach(&button[i], SINGLE_CLICK, button_event_handler);
-			button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
-			button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+			if(PinsConf[i].sclick == 2){
+				// PWM кнопка
+				button_attach(&button[i], PRESS_DOWN, pwm_event_handler);
+				button_attach(&button[i], PRESS_UP, pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, pwm_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, pwm_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, pwm_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, pwm_event_handler);
+			} else {
+				// просто кнопка
+				button_attach(&button[i], PRESS_DOWN, button_event_handler);
+				button_attach(&button[i], PRESS_UP, button_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, button_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, button_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+			}
 
 			button_start(&button[i]);
 
@@ -659,14 +757,25 @@ void InitMultibutton(void) {
 		// Инциализация кнопки PULLUP
 		if (PinsConf[i].ptype == 1) {
 			button_init(&button[i], read_button_level, 0, i);
-
-			button_attach(&button[i], PRESS_DOWN, button_event_handler);
-			button_attach(&button[i], PRESS_UP, button_event_handler);
-			button_attach(&button[i], LONG_PRESS_START, button_event_handler);
-			button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
-			button_attach(&button[i], SINGLE_CLICK, button_event_handler);
-			button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
-			button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+			// PWM кнопка
+			if(PinsConf[i].sclick == 2){
+				button_attach(&button[i], PRESS_DOWN, pwm_event_handler);
+				button_attach(&button[i], PRESS_UP, pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, pwm_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, pwm_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, pwm_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, pwm_event_handler);
+			} else {
+				// просто кнопка
+				button_attach(&button[i], PRESS_DOWN, button_event_handler);
+				button_attach(&button[i], PRESS_UP, button_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, button_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, button_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+			}
 
 			button_start(&button[i]);
 

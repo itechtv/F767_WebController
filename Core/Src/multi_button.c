@@ -218,58 +218,8 @@ void button_ticks(struct Button *buttons) {
 
 ///////////////////////
 
-// Функция для получения состояния GPIO кнопки
- uint8_t read_button_level(uint8_t button_id)
- {
-     // Вернуть состояние GPIO пина, к которому подключена кнопка
-	 return  HAL_GPIO_ReadPin(PinsInfo[button_id].gpio_name, PinsInfo[button_id].hal_pin);
 
-     //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
- }
 
-// Функция обратного вызова для обработки событий кнопки
- void button_event_handler(Button* handle)
- {
-     // Обработчик событий кнопки
-     PressEvent event = get_button_event(handle);
-
-     switch (event) {
-         case NONE_PRESS:
-             // Нет нажатия
-             break;
-         case PRESS_DOWN:
-             // Кнопка нажата
-             printf("Button %d: PRESS_DOWN!\r\n", handle->button_id);
-             break;
-         case PRESS_UP:
-             // Кнопка отпущена
-             printf("Button %d: PRESS_UP!\r\n", handle->button_id);
-             break;
-         case LONG_PRESS_START:
-             // Начало долгого нажатия
-             printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
-             break;
-         case LONG_PRESS_HOLD:
-             // Продолжение долгого нажатия
-             printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
-             break;
-         case SINGLE_CLICK:
-             // Одиночное нажатие кнопки
-             printf("Button %d: SINGLE_CLICK!\r\n", handle->button_id);
-             break;
-         case DOUBLE_CLICK:
-             // Двойное нажатие кнопки
-             printf("Button %d: DOUBLE_CLICK!\r\n", handle->button_id);
-             break;
-         case PRESS_REPEAT:
-             // Повторное нажатие кнопки
-             printf("Button %d: PRESS_REPEAT!\r\n", handle->button_id);
-             break;
-         default:
-             // Обработка неизвестного значения event
-             break;
-     }
- }
 
 
 

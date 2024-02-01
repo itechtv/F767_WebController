@@ -35,12 +35,11 @@
           }   
       }
   </script>    
-  
-
+ 
       <center>
         <h1>NUCLEO-F767ZI</h1>
         <!--#menu-->
-        <h2>Buttom pin</h2>
+        <h2>Button pin</h2>
 
       <div class="tab">
         <table class="zebra_2" border="1" align="center" id="tab1" >
@@ -64,63 +63,46 @@
                 </a>
               </div>
             </th>
-            <th class="firstline">Bounce interval (ms)<div class="tooltip">
+            <th class="firstline">SINGLE CLICK<div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang4"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Hold interval (ms) <div class="tooltip">
+            <th class="firstline">DOUBLE CLICK<div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang5"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Repeat <div class="tooltip">
+            <th class="firstline">LONG PRESS<div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang6"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Repeat interval (ms) <div class="tooltip">
+          
+            <th class="firstline">Relay connection <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang7"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Double-click interval (ms) <div class="tooltip">
+            <th>INFO <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang8"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Prevent Click <div class="tooltip">
+            <th>On/Off <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang9"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Relay connection <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang10"></span>
-                </a>
-              </div>
-            </th>
-            <th>INFO <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang11"></span>
-                </a>
-              </div>
-            </th>
-            <th>On/Off <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang12"></span>
-                </a>
-              </div>
-            </th>
             <th>Action <div class="tooltip">
                 <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang13"></span>
+                  <span class="tooltiptext" id="lang10"></span>
                 </a>
               </div>
             </th>
@@ -141,7 +123,7 @@
               var employee_data = '';
               var n = 0;
               var z = '';
-                    
+
               $.each(data, function (key, val) {
                 if (val.topin == 1) {
                   employee_data += '<tr>';
@@ -156,16 +138,22 @@
                     employee_data += '<td align=\"center\">NONE</td>'; 
                   }
                  
-                  employee_data += '<td align=\"center\">' + val.binter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.hinter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.repeat + '</td>';
-                  employee_data += '<td align=\"center\">' + val.rinter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.dcinter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.pclick + '</td>';
+                  if (val.sclick == 1) {
+                    employee_data += '<td align=\"center\">ON</td>';
+                  } else if (val.sclick == 0){ 
+                    employee_data += '<td align=\"center\">OFF</td>';                  
+                  } else if (val.sclick == 2){ 
+                    employee_data += '<td align=\"center\">PWM</td>';                  
+                  } else {
+                    employee_data += '<td align=\"center\"> </td>';  
+                  }
+
+                  employee_data += '<td align=\"center\">' + val.dclick + '</td>';
+                  employee_data += '<td align=\"center\">' + val.lpress + '</td>';
                   employee_data += '<td align=\"center\">';
       
                   for (var key in val.pinact) {
-                    employee_data += '<span>' + key + '[<a href="tabbuttom.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
+                    employee_data += '<span>' + key + '[<a href="tabbutton.shtml?del=' + val.pinact[key] + '">X</a>] </span> ';
                   }
       
                   employee_data += '</td>'
@@ -175,7 +163,7 @@
                   } else {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
                   }
-                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbuttom.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
+                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbutton.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
                   employee_data += '</tr>';
                 }
                 n++;
@@ -186,8 +174,5 @@
           });
 
         </script> 
-
-
 </body>
-
 </html>

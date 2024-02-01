@@ -14,6 +14,10 @@
         <!--#menu-->
         <h2>Select pin(s)</h2>
       </center>
+      <center>
+        <button> Save Select pin(s)</button>
+        <br><br>
+      </center>
 
     <table class="zebra" border="1" align="center" id="tab1">
       <tr>
@@ -23,7 +27,10 @@
       </tr>
         
     </table>
-
+    <br>
+    <center>
+      <button> Save Select pin(s)</button>
+    </center>
 
 
   <script>
