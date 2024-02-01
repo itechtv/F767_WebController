@@ -41,15 +41,9 @@ struct dbPinsConf {    // Создали структуру с необходи�
 //	int pclick; 	// Prevent Click
 	char info[30];	// Info
 	uint8_t onoff;		// On | Off
-<<<<<<< HEAD
 	uint8_t event;     // Event (StateChanged - 0, Pressed -1, Released - 2, Repeat - 3, Hold - 4, LongClick - 5, Click - 6, DoubleClick - 7)
 	uint8_t act;       // Action (No action - 0, On - 1,  Off - 2, Toggle - 3, Value - 4, IncValue - 5)
 	uint8_t parametr;  // Parameter value for dimmer (0-255), value for IncValue (-255 to 255).
-=======
-	short event;     // Event (StateChanged - 0, Pressed -1, Released - 2, Repeat - 3, Hold - 4, LongClick - 5, Click - 6, DoubleClick - 7)
-	short act;       // Action (No action - 0, On - 1,  Off - 2, Toggle - 3, Value - 4, IncValue - 5)
-	short parametr;  // Parameter value for dimmer (0-255), value for IncValue (-255 to 255).
->>>>>>> branch 'Test' of https://github.com/itechtv/F767_WebController.git
 	int timeout;     // Timeout (ms)
 	char condit[30]; // Condition
 
