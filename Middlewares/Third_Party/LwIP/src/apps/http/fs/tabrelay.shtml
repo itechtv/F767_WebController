@@ -87,7 +87,7 @@
               var z = '';
     
               $.each(data, function (key, val) {
-                if (val.topin == 2) {
+                if (val.topin == 2 || val.topin == 5) {
                   employee_data += '<tr>';
                   employee_data += '<td>' + val.id + '</td>';
                   employee_data += '<td>' + val.pins + '</td>';

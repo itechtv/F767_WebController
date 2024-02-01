@@ -142,6 +142,10 @@
                     employee_data += '<td align=\"center\">ON</td>';
                   } else if (val.sclick == 0){ 
                     employee_data += '<td align=\"center\">OFF</td>';                  
+                  } else if (val.sclick == 2){ 
+                    employee_data += '<td align=\"center\">PWM</td>';                  
+                  } else {
+                    employee_data += '<td align=\"center\"> </td>';  
                   }
 
                   employee_data += '<td align=\"center\">' + val.dclick + '</td>';

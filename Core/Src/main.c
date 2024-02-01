@@ -245,6 +245,131 @@ char pacote[50];
      }
  }
 
+ void pwm_event_handler(Button* handle)
+  {
+      // Обработчик событий кнопки
+      PressEvent event = get_button_event(handle);
+      static uint8_t pwmflag[NUMPIN] = {0,};
+      int pwmValue = 0;
+
+      switch (event) {
+          case NONE_PRESS:
+              // Нет нажатия
+              break;
+          case PRESS_DOWN:
+              // Кнопка нажата
+              printf("Button %d: PRESS_DOWN!\r\n", handle->button_id);
+              break;
+          case PRESS_UP:
+              // Кнопка отпущена
+              printf("Button %d: PRESS_UP!\r\n", handle->button_id);
+              break;
+          case LONG_PRESS_START:
+              // Начало долгого нажатия
+              printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
+              break;
+          case LONG_PRESS_HOLD:
+				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+					if (PinsLinks[a].idin == handle->button_id) {
+
+						//PinsInfo[i].tim->CCR1 = 50;
+
+							for (uint8_t i = 0; i < NUMPIN; i++) {
+
+								// PWM
+								if (PinsConf[i].topin == 5){
+									  //for (int d = 0; d <= 11; ++d) {
+									pwmValue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+									printf("PWM pwmValue %d \r\n", pwmValue);
+									if(pwmflag[handle->button_id] == 1) {
+										pwmValue += 1;
+										if(pwmValue > 100){
+											pwmValue = 100;
+											//pwmflag[handle->button_id] = 0;
+										}
+									}
+									if(pwmflag[handle->button_id] == 0) {
+										pwmValue -= 1;
+										if(pwmValue < 0){
+											pwmValue = 0;
+											//pwmflag[handle->button_id] = 1;
+										}
+									}
+
+									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, pwmValue);
+									      //osDelay(1000);
+									    //}
+								}
+							}
+
+// 						data_pin.pin = PinsLinks[a].idout;
+// 						data_pin.action = 2;
+// 						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+						printf("Button %d: LONG_PRESS_HOLD PWM pwmValue %d flag %d!\r\n", handle->button_id, pwmValue, pwmflag[handle->button_id]);
+					}
+				}
+              printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
+              break;
+          case SINGLE_CLICK:
+              // Одиночное нажатие кнопки
+ 				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+ 					if (PinsLinks[a].idin == handle->button_id) {
+
+ 						//PinsInfo[i].tim->CCR1 = 50;
+
+ 							for (uint8_t i = 0; i < NUMPIN; i++) {
+
+ 								// PWM
+ 								if (PinsConf[i].topin == 5){
+ 									  //for (int d = 0; d <= 11; ++d) {
+ 									pwmValue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+ 									printf("PWM pwmValue %d \r\n", pwmValue);
+ 									if(pwmflag[handle->button_id] == 1) {
+ 										pwmValue += 1;
+										if(pwmValue > 100){
+											pwmValue = 100;
+											pwmflag[handle->button_id] = 0;
+										}
+ 									}
+ 									if(pwmflag[handle->button_id] == 0) {
+ 										pwmValue -= 1;
+										if(pwmValue < 0){
+											pwmValue = 0;
+											pwmflag[handle->button_id] = 1;
+										}
+ 									}
+
+									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, pwmValue);
+ 									      //osDelay(1000);
+ 									    //}
+ 								}
+ 							}
+
+// 						data_pin.pin = PinsLinks[a].idout;
+// 						data_pin.action = 2;
+// 						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+ 						printf("Button %d: SINGLE_CLICK PWM pwmValue %d flag %d!\r\n", handle->button_id, pwmValue, pwmflag[handle->button_id]);
+ 					}
+ 				}
+              //printf("Button %d: SINGLE_CLICK PWM!\r\n", handle->button_id);
+              break;
+          case DOUBLE_CLICK:
+              // Двойное нажатие кнопки
+
+        	  pwmflag[handle->button_id] ^= 1;
+
+              printf("Button %d: DOUBLE_CLICK PWM %d!\r\n", handle->button_id, pwmflag[handle->button_id]);
+              break;
+          case PRESS_REPEAT:
+              // Повторное нажатие кнопки
+              printf("Button %d: PRESS_REPEAT PWM!\r\n", handle->button_id);
+              break;
+          default:
+              // Обработка неизвестного значения event
+              break;
+      }
+  }
+
  // Функция для получения состояния GPIO кнопки
   uint8_t read_button_level(uint8_t button_id)
   {

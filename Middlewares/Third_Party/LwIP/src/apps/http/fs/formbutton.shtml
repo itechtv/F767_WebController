@@ -83,6 +83,11 @@
             } else {
               employee_data += '<option value=\"1\">ON</option>';
             }
+            if (val.sclick == '2') {
+              employee_data += '<option value=\"2\" selected>PWM</option>';
+            } else {
+              employee_data += '<option value=\"2\">PWM</option>';
+            }            
             employee_data += '</select></td></tr>';
 
           employee_data += '<tr><td>DOUBLE CLICK</td><td><input type=\"text\" name=\"dclick\" value=\"' + val.dclick + '\" pattern=\"' + my_regex.source + '\" title=\"Please enter a valid input.\"></td></tr>';

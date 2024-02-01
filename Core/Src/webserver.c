@@ -108,7 +108,7 @@ int MultiPartTabCount(int num, int pinnum, int count)
 		if(num == PinsConf[i].topin && num == 1){
 			count++;
 		}
-		if(num == PinsConf[i].topin && num == 2){
+		if((2 == PinsConf[i].topin || 5 == PinsConf[i].topin) && num == 2){
 			count++;
 		}
 		if(num == PinsConf[i].topin && num == 3){
@@ -201,7 +201,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				}
 			}
 			if(tab == 3){
-				if(PinsConf[variable].topin == 2){
+				if(PinsConf[variable].topin == 2 || PinsConf[variable].topin == 5){
 					// relay tabjson
 					idplus = variable + 1;
 
@@ -431,7 +431,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					fld = cJSON_CreateObject();
 
 					while (variable <=  NUMPIN - 1) {
-						if (PinsConf[variable].topin == 2) {
+						if (PinsConf[variable].topin == 2 || PinsConf[variable].topin == 5) {
 							cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable + 1);
 						}
 						variable++;
