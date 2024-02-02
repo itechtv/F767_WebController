@@ -60,12 +60,13 @@ struct dbPinsInfo { // Создали структуру с необходимы
 	int number;
 	uint16_t hal_pin;
 	GPIO_TypeDef* gpio_name;
+	short onewire; // 0 - Not able; 1 - Able
 	short pwm; // 0 - Not able; 1 - Able
 	short i2cdata; // 0 - Not able; 1 - Able
 	short i2cclok; // 0 - Not able; 1 - Able
-	TIM_TypeDef * tim;
-    uint16_t tim_channel; // Use uint32_t to store the TIM_CHANNEL_x values
-    uint16_t af; // Alternate function
+	TIM_TypeDef* tim;
+	uint32_t tim_channel;
+	uint16_t af; // Alternate function
 };
 
 
