@@ -30,9 +30,9 @@ struct dbPinsConf {    // Создали структуру с необходи�
 	int pwm;		// PWM frequency
 	uint8_t on;			// ON
 	uint8_t istate;		// Invert state
-	uint8_t dvalue;		// Dimmer value
+	int dvalue;		// Dimmer value
 	uint8_t ponr;		// Power on restore
-	uint8_t ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
+	int ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
 	uint8_t sclick; 	// SINGLE CLICK
 	char dclick[255]; 	// DOUBLE CLICK
 	char lpress[255]; 	// LONG PRESS

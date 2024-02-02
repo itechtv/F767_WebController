@@ -245,12 +245,13 @@ char pacote[50];
      }
  }
 
+
  void pwm_event_handler(Button* handle)
   {
       // Обработчик событий кнопки
       PressEvent event = get_button_event(handle);
-      static uint8_t pwmflag[NUMPIN] = {0,};
-      int pwmValue = 0;
+
+      int i = 0;
 
       switch (event) {
           case NONE_PRESS:
@@ -269,96 +270,97 @@ char pacote[50];
               printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
               break;
           case LONG_PRESS_HOLD:
+        	  if(PinsConf[handle->button_id].sclick == 2){
 				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
 					if (PinsLinks[a].idin == handle->button_id) {
-
 						//PinsInfo[i].tim->CCR1 = 50;
 
-							for (uint8_t i = 0; i < NUMPIN; i++) {
-
 								// PWM
-								if (PinsConf[i].topin == 5){
+								i = PinsLinks[a].idout;
+								if (PinsConf[i].topin == 5 ){
 									  //for (int d = 0; d <= 11; ++d) {
-									pwmValue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
-									printf("PWM pwmValue %d \r\n", pwmValue);
-									if(pwmflag[handle->button_id] == 1) {
-										pwmValue += 1;
-										if(pwmValue > 100){
-											pwmValue = 100;
+									PinsConf[i].dvalue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+
+									if(PinsConf[handle->button_id].on == 1) {
+										PinsConf[i].dvalue += 1;
+										if(PinsConf[i].dvalue > 100){
+											PinsConf[i].dvalue = 100;
 											//pwmflag[handle->button_id] = 0;
 										}
 									}
-									if(pwmflag[handle->button_id] == 0) {
-										pwmValue -= 1;
-										if(pwmValue < 0){
-											pwmValue = 0;
+									if(PinsConf[handle->button_id].on == 0) {
+										PinsConf[i].dvalue -= 1;
+										if(PinsConf[i].dvalue < 0){
+											PinsConf[i].dvalue = 0;
 											//pwmflag[handle->button_id] = 1;
 										}
 									}
 
-									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, pwmValue);
-									      //osDelay(1000);
-									    //}
+									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, PinsConf[i].dvalue);
+									printf("PWM pwmValue %d %s \r\n", PinsConf[i].dvalue, PinsInfo[i].pins);
 								}
-							}
+
 
 // 						data_pin.pin = PinsLinks[a].idout;
 // 						data_pin.action = 2;
 // 						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
-						printf("Button %d: LONG_PRESS_HOLD PWM pwmValue %d flag %d!\r\n", handle->button_id, pwmValue, pwmflag[handle->button_id]);
+								printf("Button %d: SINGLE_CLICK PWM pwmValue %d flag %d!\r\n", handle->button_id, PinsConf[i].dvalue, PinsConf[handle->button_id].on);
 					}
 				}
+        	  }
               printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
               break;
           case SINGLE_CLICK:
               // Одиночное нажатие кнопки
+        	  if(PinsConf[handle->button_id].sclick == 2){
  				for (uint8_t a = 0; a < NUMPINLINKS; a++) {
  					if (PinsLinks[a].idin == handle->button_id) {
 
  						//PinsInfo[i].tim->CCR1 = 50;
 
- 							for (uint8_t i = 0; i < NUMPIN; i++) {
+ 							//for (uint8_t i = 0; i < NUMPIN; i++) {
 
  								// PWM
+ 								i = PinsLinks[a].idout;
  								if (PinsConf[i].topin == 5){
  									  //for (int d = 0; d <= 11; ++d) {
- 									pwmValue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
- 									printf("PWM pwmValue %d \r\n", pwmValue);
- 									if(pwmflag[handle->button_id] == 1) {
- 										pwmValue += 1;
-										if(pwmValue > 100){
-											pwmValue = 100;
-											pwmflag[handle->button_id] = 0;
+ 									PinsConf[i].dvalue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+ 									//printf("PWM pwmValue %d \r\n", PinsConf[i].dvalue);
+ 									if(PinsConf[handle->button_id].on == 1) {
+ 										PinsConf[i].dvalue += 1;
+										if(PinsConf[i].dvalue > 100){
+											PinsConf[i].dvalue = 100;
+											PinsConf[handle->button_id].on = 0;
 										}
  									}
- 									if(pwmflag[handle->button_id] == 0) {
- 										pwmValue -= 1;
-										if(pwmValue < 0){
-											pwmValue = 0;
-											pwmflag[handle->button_id] = 1;
+ 									if(PinsConf[handle->button_id].on == 0) {
+ 										PinsConf[i].dvalue -= 1;
+										if(PinsConf[i].dvalue < 0){
+											PinsConf[i].dvalue = 0;
+											PinsConf[handle->button_id].on = 1;
 										}
  									}
 
-									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, pwmValue);
- 									      //osDelay(1000);
- 									    //}
- 								}
+									__HAL_TIM_SET_COMPARE(&htim[i], PinsInfo[i].tim_channel, PinsConf[i].dvalue);
+									printf("PWM pwmValue %d %s \r\n", PinsConf[i].dvalue, PinsInfo[i].pins);
+ 								//}
  							}
 
 // 						data_pin.pin = PinsLinks[a].idout;
 // 						data_pin.action = 2;
 // 						xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
- 						printf("Button %d: SINGLE_CLICK PWM pwmValue %d flag %d!\r\n", handle->button_id, pwmValue, pwmflag[handle->button_id]);
+ 						printf("Button %d: SINGLE_CLICK PWM pwmValue %d flag %d!\r\n", handle->button_id, PinsConf[i].dvalue, PinsConf[handle->button_id].on);
  					}
  				}
+        	  }
               //printf("Button %d: SINGLE_CLICK PWM!\r\n", handle->button_id);
               break;
           case DOUBLE_CLICK:
               // Двойное нажатие кнопки
 
-        	  pwmflag[handle->button_id] ^= 1;
+        	  PinsConf[handle->button_id].on ^= 1;
 
-              printf("Button %d: DOUBLE_CLICK PWM %d!\r\n", handle->button_id, pwmflag[handle->button_id]);
+              printf("Button %d: DOUBLE_CLICK PWM %d!\r\n", handle->button_id, PinsConf[handle->button_id].on);
               break;
           case PRESS_REPEAT:
               // Повторное нажатие кнопки
@@ -369,6 +371,7 @@ char pacote[50];
               break;
       }
   }
+
 
  // Функция для получения состояния GPIO кнопки
   uint8_t read_button_level(uint8_t button_id)
