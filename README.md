@@ -1,6 +1,6 @@
 # STM32WebController
 
-**Based on:**
+**Based on 'Test' branch:**
 
 * STM32CubeIDE Version: 1.12.1
 * FREERTOS Version: 10.2.1 CMSIS_V1
