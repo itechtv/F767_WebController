@@ -8,8 +8,8 @@
 #ifndef INC_DB_H_
 #define INC_DB_H_
 
-#define NUMPIN 89 // колличество пинов
-#define NUMPINLINKS 100 // колличество pin to pin
+#define NUMPIN 89 // количество пинов
+#define NUMPINLINKS 100 // количество pin to pin
 #define NUMTASK 30 // кол-во CRON task
 
 #include "stdio.h"
@@ -26,28 +26,28 @@ struct dbCron {
 };
 
 struct dbPinsConf {    // Создали структуру с необходимым набором типов элиментов.
-	int topin;		// Type of pins: 0 - NONE; 1 - BUTTON; 2 - RELAY; 3 - SWITCH;  4 - 1-WIRE; 5 - PWM; 6 - I2C;
+	uint8_t topin;		// Type of pins: 0 - NONE; 1 - BUTTON; 2 - RELAY; 3 - SWITCH;  4 - 1-WIRE; 5 - PWM; 6 - I2C;
 	int pwm;		// PWM frequency
-	int on;			// ON
-	int istate;		// Invert state
+	uint8_t on;			// ON
+	uint8_t istate;		// Invert state
 	int dvalue;		// Dimmer value
-	int ponr;		// Power on restore
-	int ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
+	uint8_t ponr;		// Power on restore
+	uint8_t ptype; 		// Pullup type 0 - NONE; 1 - GPIO_PULLUP; 2 - GPIO_PULLDOWN
 	/////
 	uint8_t sclick; 	// SINGLE CLICK
 	char dclick[255]; 	// DOUBLE CLICK
 	char lpress[255]; 	// LONG PRESS
 	////
-	int binter; 	// Bounce interval
-	int hinter; 	// Hold interval
-	int repeat; 	// Repeat
-	int rinter; 	// Repeat interval
-	int dcinter;	// Double-click interval
-	int pclick; 	// Prevent Click
+	uint8_t binter; 	// Bounce interval
+	uint8_t hinter; 	// Hold interval
+	uint8_t repeat; 	// Repeat
+	uint8_t rinter; 	// Repeat interval
+	uint8_t dcinter;	// Double-click interval
+	uint8_t pclick; 	// Prevent Click
 	char info[30];	// Info
-	int onoff;		// On | Off
-	short event;     // Event (StateChanged - 0, Pressed -1, Released - 2, Repeat - 3, Hold - 4, LongClick - 5, Click - 6, DoubleClick - 7)
-	short act;       // Action (No action - 0, On - 1,  Off - 2, Toggle - 3, Value - 4, IncValue - 5)
+	uint8_t onoff;		// On | Off
+	uint8_t event;     // Event (StateChanged - 0, Pressed -1, Released - 2, Repeat - 3, Hold - 4, LongClick - 5, Click - 6, DoubleClick - 7)
+	uint8_t act;       // Action (No action - 0, On - 1,  Off - 2, Toggle - 3, Value - 4, IncValue - 5)
 	short parametr;  // Parameter value for dimmer (0-255), value for IncValue (-255 to 255).
 	int timeout;     // Timeout (ms)
 	char condit[30]; // Condition
