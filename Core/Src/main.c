@@ -994,9 +994,6 @@ void StartOutputTask(void const * argument)
   /* USER CODE BEGIN StartOutputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
 
-
-	/******************* tmp PWM  ***************************/
-//	uint16_t pwmData[11] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
   /* Infinite loop */
   for(;;)
   {
@@ -1017,18 +1014,6 @@ void StartOutputTask(void const * argument)
 				//printf("%d-%d  \r\n", (int) data_pin.pin, (int) data_pin.action);
 			}
 		}
-
-		/******************* tmp PWM  ***************************/
-//		for (uint8_t i = 0; i < NUMPIN; i++) {
-//		if (PinsConf[i].topin == 5){
-//			for (int d = 0; d <= 11; ++d) {
-//				__HAL_TIM_SET_COMPARE(&htim[i], TIM_CHANNEL_1, pwmData[d]);
-//
-//				osDelay(100);
-//			}
-//		}
-//		}
-		/**********************************************/
     osDelay(1);
   }
   /* USER CODE END StartOutputTask */

@@ -42,7 +42,7 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
-
+extern TIM_HandleTypeDef htim[NUMPIN];
 ///////////////////////////
 
 extern osMessageQId usbQueueHandle;
@@ -180,15 +180,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_Delete(root);
 
 					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"sclick\":%d,\"dclick\":\"%s\",\"lpress\":\"%s\",\"ptype\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"sclick\":%d,\"dclick\":\"%s\",\"lpress\":\"%s\",\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
 							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
 							PinsConf[variable].ptype, PinsConf[variable].sclick,
 							PinsConf[variable].dclick, PinsConf[variable].lpress,
-							PinsConf[variable].numdevices,
 							str, PinsConf[variable].info, PinsConf[variable].onoff);
-
-					free(str);
-
 					////////////////
 					countJson++;
 
@@ -916,8 +912,10 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	int varid;
-	int val;
+	int varid = 0;
+	int val = 0;
+	int set = 0;
+	uint16_t usbdata = 0;
 
 	if (iIndex == 9) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -925,22 +923,28 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			{
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
+			} else if (strcmp(pcParam[i], "id") == 0) {
 				varid = atoi(pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "val") == 0)
-			{
+			} else if (strcmp(pcParam[i], "val") == 0) {
 				val = atoi(pcValue[i]);
+			} else if (strcmp(pcParam[i], "set") == 0) {
+				set = atoi(pcValue[i]);
 			}
 		}
-		PinsConf[varid].topin = val;
-		if (val == 1 || val == 2 || val == 3){
-			PinsConf[varid].onoff = 1;
-		}else{
-			PinsConf[varid].onoff = 0;
-			clearPin(varid);
+
+		if(set != 1) {
+			PinsConf[varid].topin = val;
+			if (val == 1 || val == 2 || val == 3){
+				PinsConf[varid].onoff = 1;
+			}else{
+				PinsConf[varid].onoff = 0;
+				clearPin(varid);
+			}
+		} else {
+			if(set == 1){
+				usbdata = 1;
+				xQueueSend(usbQueueHandle, &usbdata, 0);
+			}
 		}
 	}
 
@@ -955,6 +959,8 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 }
+
+
 
 
 // formbutton.shtml Handler (Index 10)
@@ -1270,11 +1276,10 @@ const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *
 
 // api.shtml Handler (Index 19)
 const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]) {
-	int pinid = 0;
-	int action = 0;
+	int pinid = 0; 	// id pin
+	int action = 0;	// pin action
+	int pulse = 0; 	// PWM value
 	char token[11] = {0};
-
-
 
 	if (iIndex == 19) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -1283,34 +1288,36 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 				memset(token, '\0', sizeof(token));
 				strcpy(token, pcValue[i]);
 
-			}
-			if (strcmp(pcParam[i], "pinid") == 0)
-			{
+			} else if (strcmp(pcParam[i], "pinid") == 0) {
 				pinid = atoi(pcValue[i]);
 
-			}
-			if (strcmp(pcParam[i], "action") == 0)
-			{
+			} else if (strcmp(pcParam[i], "action") == 0) {
 				action = atoi(pcValue[i]);
 
+			} else if (strcmp(pcParam[i], "pulse") == 0){
+				pulse = atoi(pcValue[i]);
+				if(pulse > 100){
+					pulse = 100;
+				} else if (pulse < 0) {
+					pulse = 0;
+				}
+				PinsConf[pinid-1].dvalue = pulse;
 			}
 		}
 	}
 	if(strcmp(token, SetSettings.token) == 0 && pinid != 0){
 		printf("token OK \n");
-		if(PinsConf[pinid-1].topin == 2){
+		if(PinsConf[pinid-1].topin == 2){ // Для реле/led
 			printf("relay OK \n");
 			data_pin.pin = pinid-1;
 			data_pin.action = action;
 			xQueueSend(myQueueHandle, (void* ) &data_pin, 0);
+		} else if (PinsConf[pinid-1].topin == 5) {
+			__HAL_TIM_SET_COMPARE(&htim[pinid-1], PinsInfo[pinid-1].tim_channel, PinsConf[pinid-1].dvalue);
 		}
 	}
-
-
 	return "/api.shtml";
-
 }
-
 // /tabswitch.shtml Handler (Index 20)
 const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {

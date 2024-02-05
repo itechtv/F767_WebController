@@ -15,6 +15,12 @@
         <h2>Select pin(s)</h2>
       </center>
 
+
+   
+      <center>
+        <button onclick="getSet();"> Save Select pin(s)</button>
+        <br><br>
+      </center>
     <table class="zebra" border="1" align="center" id="tab1">
       <tr>
         <th>ID</th>
@@ -22,7 +28,13 @@
         <th>Type(s) of pin(s)</th>
       </tr>
         
-    </table>
+    </table>   
+     <br>
+    <center>
+      <button onclick="getSet();"> Save Select pin(s)</button>
+    </center>
+ 
+
 
 
 
@@ -33,7 +45,10 @@
             $.get("selectset.shtml", { ssid:"<!--#ssid-->", id: id, val: value});          
           }         
       }
-           
+  
+      function getSet(){          
+            $.get("selectset.shtml", { ssid:"<!--#ssid-->", set: 1});                   
+      }
       
     $(document).ready(function () {
       $.getJSON('tabjson.shtml?tab=1&ssid=<!--#ssid-->', function (data) {
@@ -84,18 +99,13 @@
           employee_data += '<span>RELAY</span> ';
           employee_data += '&nbsp;&nbsp;';
 
-          if(val.onewire == 1){
+          
           if (val.topin == 4) {
-            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"5\" onclick=\"getSelect(' + val.id + ');\" checked>';
-            employee_data += '<span>1-WIRE</span> ';
-          } else {            
-            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"5\" onclick=\"getSelect(' + val.id + ');\">';
-            employee_data += '<span>1-WIRE</span> ';
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"4\" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"4\" onclick=\"getSelect(' + val.id + ');\">';
           }
-        }else{
-          employee_data += '<input type=\"radio\" value=\"0\" disabled>';
-          employee_data += '<span style = \"color:#D3D3D3\">1-WIRE</span>';
-        }
+          employee_data += '<span>1-WIRE</span> ';
           employee_data += '&nbsp;&nbsp;';
 
           
