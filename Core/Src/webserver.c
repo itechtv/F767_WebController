@@ -572,9 +572,7 @@ const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 
 // select.shtml Handler (Index 2)
-const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
+const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	if (iIndex == 2) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -819,8 +817,10 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
 
-	int varid;
-	int val;
+	int varid = 0;
+	int val = 0;
+	int set = 0;
+	uint16_t usbdata = 0;
 
 	if (iIndex == 9) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -828,22 +828,28 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 			{
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
+			} else if (strcmp(pcParam[i], "id") == 0) {
 				varid = atoi(pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "val") == 0)
-			{
+			} else if (strcmp(pcParam[i], "val") == 0) {
 				val = atoi(pcValue[i]);
+			} else if (strcmp(pcParam[i], "set") == 0) {
+				set = atoi(pcValue[i]);
 			}
 		}
-		PinsConf[varid].topin = val;
-		if (val == 1 || val == 2 || val == 3){
-			PinsConf[varid].onoff = 1;
-		}else{
-			PinsConf[varid].onoff = 0;
-			clearPin(varid);
+
+		if(set != 1) {
+			PinsConf[varid].topin = val;
+			if (val == 1 || val == 2 || val == 3){
+				PinsConf[varid].onoff = 1;
+			}else{
+				PinsConf[varid].onoff = 0;
+				clearPin(varid);
+			}
+		} else {
+			if(set == 1){
+				usbdata = 1;
+				xQueueSend(usbQueueHandle, &usbdata, 0);
+			}
 		}
 	}
 
