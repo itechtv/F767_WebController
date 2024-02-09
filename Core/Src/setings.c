@@ -426,7 +426,7 @@ void GetPinConfig() {
 				PinsConf[i].dvalue = cJSON_GetObjectItem(pins_item, "dvalue")->valueint;
 				PinsConf[i].ponr = cJSON_GetObjectItem(pins_item, "ponr")->valueint;
 				PinsConf[i].ptype = cJSON_GetObjectItem(pins_item, "ptype")->valueint;
-				PinsConf[i].binter = cJSON_GetObjectItem(pins_item, "binter")->valueint;
+				PinsConf[i].encoderb = cJSON_GetObjectItem(pins_item, "encoderb")->valueint;
 				PinsConf[i].hinter = cJSON_GetObjectItem(pins_item, "hinter")->valueint;
 				PinsConf[i].repeat = cJSON_GetObjectItem(pins_item, "repeat")->valueint;
 				PinsConf[i].rinter = cJSON_GetObjectItem(pins_item, "rinter")->valueint;
@@ -480,7 +480,7 @@ void SetPinConfig() {
 			cJSON_AddNumberToObject(fld, "dvalue", PinsConf[i].dvalue);
 			cJSON_AddNumberToObject(fld, "ponr", PinsConf[i].ponr);
 			cJSON_AddNumberToObject(fld, "ptype", PinsConf[i].ptype);
-			cJSON_AddNumberToObject(fld, "binter", PinsConf[i].binter);
+			cJSON_AddNumberToObject(fld, "encoderb", PinsConf[i].encoderb);
 			cJSON_AddNumberToObject(fld, "hinter", PinsConf[i].hinter);
 			cJSON_AddNumberToObject(fld, "repeat", PinsConf[i].repeat);
 			cJSON_AddNumberToObject(fld, "rinter", PinsConf[i].rinter);
@@ -610,7 +610,7 @@ void InitPin() {
     	}
 
     	// initialization INPUT
-    	if(PinsConf[i].topin == 1 || PinsConf[i].topin == 3){
+    	else if(PinsConf[i].topin == 1 || PinsConf[i].topin == 3){
 
     		// проверяем тактирование порта
 			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
@@ -640,7 +640,7 @@ void InitPin() {
     	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
     	}
     	// initialization INPUT
-    	if(PinsConf[i].topin == 5){
+    	else if(PinsConf[i].topin == 5){
 
     		     //__HAL_RCC_TIM1_CLK_ENABLE();
 

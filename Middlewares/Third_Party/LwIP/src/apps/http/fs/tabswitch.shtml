@@ -62,63 +62,28 @@
                 </a>
               </div>
             </th>
-            <th class="firstline">Bounce interval (ms)<div class="tooltip">
+            
+            <th class="firstline">Relay connection <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang4"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Hold interval (ms) <div class="tooltip">
+            <th>INFO <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang5"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Repeat <div class="tooltip">
+            <th>On/Off <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang6"></span>
                 </a>
               </div>
             </th>
-            <th class="firstline">Repeat interval (ms) <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang7"></span>
-                </a>
-              </div>
-            </th>
-            <th class="firstline">Double-click interval (ms) <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang8"></span>
-                </a>
-              </div>
-            </th>
-            <th class="firstline">Prevent Click <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang9"></span>
-                </a>
-              </div>
-            </th>
-            <th class="firstline">Relay connection <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang10"></span>
-                </a>
-              </div>
-            </th>
-            <th>INFO <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang11"></span>
-                </a>
-              </div>
-            </th>
-            <th>On/Off <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang12"></span>
-                </a>
-              </div>
-            </th>
             <th>Action <div class="tooltip">
                 <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang13"></span>
+                  <span class="tooltiptext" id="lang7"></span>
                 </a>
               </div>
             </th>
@@ -154,12 +119,6 @@
                     employee_data += '<td align=\"center\">NONE</td>'; 
                   }
                   
-                  employee_data += '<td align=\"center\">' + val.binter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.hinter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.repeat + '</td>';
-                  employee_data += '<td align=\"center\">' + val.rinter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.dcinter + '</td>';
-                  employee_data += '<td align=\"center\">' + val.pclick + '</td>';
                   employee_data += '<td align=\"center\">';
       
                   for (var key in val.pinact) {

@@ -69,7 +69,6 @@ char str[40] = { 0 };
 
 RTC_HandleTypeDef hrtc;
 UART_HandleTypeDef huart3;
-TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim[NUMPIN];
 
 
@@ -98,9 +97,9 @@ osStaticMessageQDef_t myQueueControlBlock;
 osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
-osThreadId PWMTaskHandle;
-uint32_t PWMTaskBuffer[ 256 ];
-osStaticThreadDef_t PWMTaskControlBlock;
+osThreadId EncoderTaskHandle;
+uint32_t EncoderTaskBuffer[ 256 ];
+osStaticThreadDef_t EncoderTaskControlBlock;
 /* USER CODE BEGIN PV */
 
 extern struct dbSettings SetSettings;
@@ -127,7 +126,7 @@ void StartCronTask(void const * argument);
 void StartOutputTask(void const * argument);
 void StartConfigTask(void const * argument);
 void StartInputTask(void const * argument);
-void StartPWMTask(void const * argument);
+void StartEncoderTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -429,8 +428,8 @@ int main(void)
   InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
 
   /* definition and creation of InputTask */
-  osThreadStaticDef(PWMTask, StartPWMTask, osPriorityNormal, 0, 256, PWMTaskBuffer, &PWMTaskControlBlock);
-  PWMTaskHandle = osThreadCreate(osThread(PWMTask), NULL);
+  osThreadStaticDef(EncoderTask, StartEncoderTask, osPriorityNormal, 0, 256, EncoderTaskBuffer, &EncoderTaskControlBlock);
+  EncoderTaskHandle = osThreadCreate(osThread(EncoderTask), NULL);
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -1021,7 +1020,7 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
-					xTaskNotifyGive(PWMTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
+					xTaskNotifyGive(EncoderTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
 
 				} else {
 					StartSetingsConfig();
@@ -1031,7 +1030,7 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
-					xTaskNotifyGive(PWMTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
+					xTaskNotifyGive(EncoderTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
 				}
 				usbflag = 0;
 			}
@@ -1182,7 +1181,7 @@ void StartInputTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartWebServerTask */
-void StartPWMTask(void const * argument)
+void StartEncoderTask(void const * argument)
 {
   /* init code for LWIP */
     ulTaskNotifyTake(0, portMAX_DELAY);
@@ -1191,8 +1190,9 @@ void StartPWMTask(void const * argument)
 
 	/* Infinite loop */
 	for (;;) {
+		for (uint8_t i = 0; i < NUMPIN; i++) {
 
-
+		}
 		osDelay(1);
 	}
   /* USER CODE END 5 */

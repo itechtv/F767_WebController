@@ -26,7 +26,7 @@ struct dbCron {
 };
 
 struct dbPinsConf {    // Создали структуру с необходимым набором типов элиментов.
-	uint8_t topin;		// Type of pins: 0 - NONE; 1 - BUTTON; 2 - RELAY; 3 - SWITCH;  4 - 1-WIRE; 5 - PWM; 6 - I2C;
+	uint8_t topin;		// Type of pins: 0 - NONE; 1 - BUTTON; 2 - RELAY; 3 - SWITCH;  4 - 1-WIRE; 5 - PWM; 6,7 - I2C;   8,9 - Encoder;
 	int pwm;		// PWM frequency
 	uint8_t on;			// ON
 	uint8_t istate;		// Invert state
@@ -38,7 +38,7 @@ struct dbPinsConf {    // Создали структуру с необходи�
 	char dclick[255]; 	// DOUBLE CLICK
 	char lpress[255]; 	// LONG PRESS
 	////
-	uint8_t binter; 	// Bounce interval
+	uint8_t encoderb; 	// Encoder pin B
 	uint8_t hinter; 	// Hold interval
 	uint8_t repeat; 	// Repeat
 	uint8_t rinter; 	// Repeat interval

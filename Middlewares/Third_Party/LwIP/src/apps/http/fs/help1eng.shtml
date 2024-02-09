@@ -1,4 +1,5 @@
 <div class="mytext">
+  <div>
   <pre>
 The Cron pattern consists of seven space-separated fields.
 1 2 3 4 5 6 7
@@ -11,7 +12,7 @@ The Cron pattern consists of seven space-separated fields.
 │ └──────────── minute (0 - 59)
 └────────────── second (0-59)
   </pre>
-
+</div>
   <h2>Examples of CRON</h2>
   <table>
     <thead>
@@ -100,6 +101,7 @@ The Cron pattern consists of seven space-separated fields.
       </tr>
     </tbody>
   </table>
+  <Div>
   <pre>
 0 ── OFF
 1 ── ON
@@ -107,7 +109,7 @@ The Cron pattern consists of seven space-separated fields.
 p ── PAUSE
 ; ── Separator
 </pre>
-
+</Div>
   <h2>Examples of ACTION</h2>
   <table>
     <thead>

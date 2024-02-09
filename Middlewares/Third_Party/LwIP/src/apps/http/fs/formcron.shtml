@@ -43,10 +43,12 @@
       </center>
     </form>
 
-  </center>
-
   <div id="help1">
   </div>
+  
+  </center>
+
+
 
   <script>
     var response = '<!--#formjson-->';

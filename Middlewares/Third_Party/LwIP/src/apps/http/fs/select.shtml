@@ -18,9 +18,10 @@
 
    
       <center>
-        <button onclick="getSet();"> Save Select pin(s)</button>
+        <button onclick="getSet();"> Save selected pin(s)</button>
         <br><br>
       </center>
+      <center>
     <table class="zebra" border="1" align="center" id="tab1">
       <tr>
         <th>ID</th>
@@ -29,9 +30,10 @@
       </tr>
         
     </table>   
+  </center>
      <br>
     <center>
-      <button onclick="getSet();"> Save Select pin(s)</button>
+      <button onclick="getSet();"> Save selected pin(s)</button>
     </center>
  
 
@@ -150,6 +152,23 @@
           employee_data += '<input type=\"radio\" value=\"0\" disabled>';
           employee_data += '<span style = \"color:#D3D3D3\">I2C SCL</span>';
         }
+
+        if (val.topin == 8) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"8\" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"8\" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>EncoderA</span> ';
+          employee_data += '&nbsp;&nbsp;';
+
+          if (val.topin == 9) {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"9\" onclick=\"getSelect(' + val.id + ');\" checked>';
+          } else {
+            employee_data += '<input id=\"' + val.id + '\" type=\"radio\" name=\"topin_' + val.id + '\" value=\"9\" onclick=\"getSelect(' + val.id + ');\">';
+          }
+          employee_data += '<span>EncoderB</span> ';
+          employee_data += '&nbsp;&nbsp;';
+
           employee_data += '</td>';
           employee_data += '</tr>';
           n++;
