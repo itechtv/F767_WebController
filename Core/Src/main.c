@@ -146,6 +146,7 @@ extern struct netif gnetif;
 extern char randomSSID[27];
 
 unsigned long Ti;
+unsigned long Te;
 
 //////////////////////////////////////????????
 mqtt_client_t *client;
@@ -1185,13 +1186,124 @@ void StartEncoderTask(void const * argument)
 {
   /* init code for LWIP */
     ulTaskNotifyTake(0, portMAX_DELAY);
-
+    uint8_t pinb = 0;
+    int z = 0;
 
 
 	/* Infinite loop */
 	for (;;) {
 		for (uint8_t i = 0; i < NUMPIN; i++) {
+		///
+			// INPUT Encoder A
+			if (PinsConf[i].topin == 8) {
+				pinb = PinsConf[i].encoderb;
+				if(pinb != 0){
+					// PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin
+				if (HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin) == GPIO_PIN_RESET) { // If the OUTA is RESET
+					if (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_RESET) { // If OUTB is also reset... CCK
+						while (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTB to go high
+/////////////////////
+						for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+		 					if (PinsLinks[a].idin == i) {
 
+		 						//PinsInfo[i].tim->CCR1 = 50;
+
+		 							//for (uint8_t i = 0; i < NUMPIN; i++) {
+
+		 								// PWM
+		 								z = PinsLinks[a].idout;
+		 								if (PinsConf[z].topin == 5){
+
+		 									PinsConf[z].dvalue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+
+		 									if(PinsConf[i].on == 1) {
+		 										PinsConf[z].dvalue += 1;
+												if(PinsConf[z].dvalue > 100){
+													PinsConf[z].dvalue = 100;
+													PinsConf[i].on = 0;
+												}
+		 									}
+//		 									if(PinsConf[i].on == 0) {
+//		 										PinsConf[z].dvalue -= 1;
+//												if(PinsConf[z].dvalue < 0){
+//													PinsConf[z].dvalue = 0;
+//													PinsConf[handle->button_id].on = 1;
+//												}
+//		 									}
+
+											__HAL_TIM_SET_COMPARE(&htim[z], PinsInfo[z].tim_channel, PinsConf[z].dvalue);
+
+
+		 							}
+
+
+		 					}
+		 				}
+/////////////////////
+							//counter--;
+
+						while (HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTA to go high
+						osDelay(5);  // Защита от дребезга
+					}
+
+					else if (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_SET) // If OUTB is also set
+							{
+						while (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_SET) {};  // wait for the OUTB to go LOW.. CK
+
+						/////////////////////
+												for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+								 					if (PinsLinks[a].idin == i) {
+
+								 						//PinsInfo[i].tim->CCR1 = 50;
+
+								 							//for (uint8_t i = 0; i < NUMPIN; i++) {
+
+								 								// PWM
+								 								z = PinsLinks[a].idout;
+								 								if (PinsConf[z].topin == 5){
+
+								 									PinsConf[z].dvalue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
+
+//								 									if(PinsConf[i].on == 1) {
+//								 										PinsConf[z].dvalue += 1;
+//																		if(PinsConf[z].dvalue > 100){
+//																			PinsConf[z].dvalue = 100;
+//																			PinsConf[i].on = 0;
+//																		}
+//								 									}
+								 									if(PinsConf[i].on == 0) {
+								 										PinsConf[z].dvalue -= 1;
+																		if(PinsConf[z].dvalue < 0){
+																			PinsConf[z].dvalue = 0;
+																			PinsConf[i].on = 1;
+																		}
+								 									}
+
+																	__HAL_TIM_SET_COMPARE(&htim[z], PinsInfo[z].tim_channel, PinsConf[z].dvalue);
+
+
+								 							}
+
+
+								 					}
+								 				}
+						/////////////////////
+							//counter++;
+
+
+						while (HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTA to go high
+						while (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTB to go high
+						osDelay(5);  // Защита от дребезга
+					}
+
+//					if (counter < 0)
+//						counter = 0;
+//					if (counter > 100)
+//						counter = 100;
+				}
+				}
+			}
+		///
 		}
 		osDelay(1);
 	}

@@ -527,9 +527,9 @@ const char* IndexCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *p
 const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 //const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 //const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-//const char* EncoderCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);	//???
+//const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+//const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* InputCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);	//???
 const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);		//???
 const char* LogoutCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
@@ -549,15 +549,15 @@ static const tCGI URL_TABLES[] = {
 		{"/logon.shtml", (tCGIHandler) LoginCGI_Handler },			// index = 1
 		{"/select.shtml", (tCGIHandler) TabCGI_Handler },			// index = 2
 		{"/tabrelay.shtml", (tCGIHandler) TabCGI_Handler },			// index = 3
-		{"/tabbutton.shtml", (tCGIHandler) ButtonCGI_Handler },		// index = 4
-		{"/tabencoder.shtml", (tCGIHandler) TabCGI_Handler },		// index = 5
+		{"/tabbutton.shtml", (tCGIHandler) InputCGI_Handler },		// index = 4
+		{"/tabencoder.shtml", (tCGIHandler) InputCGI_Handler },		// index = 5
 		{"/formencoder.shtml", (tCGIHandler) FormCGI_Handler},	    // index = 6
 		{"/logout.shtml", (tCGIHandler) LogoutCGI_Handler },		// index = 7
 		{"/tabjson.shtml", (tCGIHandler) TabjsonCGI_Handler },		// index = 8
 		{"/selectset.shtml", (tCGIHandler) SelectSetCGI_Handler },	// index = 9
 		{"/formrelay.shtml", (tCGIHandler) FormCGI_Handler },		// index = 10
 		{"/formbutton.shtml", (tCGIHandler) FormCGI_Handler },		// index = 11
-		{"/formtopin.shtml", (tCGIHandler) FormCGI_Handler },		// index = 12
+		{"/formtopin1.shtml", (tCGIHandler) FormCGI_Handler },		// index = 12
 		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler },	// index = 13
 		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },	// index = 14
 		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },	// index = 15
@@ -565,10 +565,12 @@ static const tCGI URL_TABLES[] = {
 		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },			// index = 17
 		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler },		// index = 18
 		{"/api.shtml", (tCGIHandler) ApiCGI_Handler },				// index = 19
-		{"/tabswitch.shtml", (tCGIHandler) SwitchCGI_Handler },		// index = 20
+		{"/tabswitch.shtml", (tCGIHandler) InputCGI_Handler },		// index = 20
 		{"/formswitch.shtml", (tCGIHandler) FormCGI_Handler },		// index = 21
 		{"/tabpwm.shtml", (tCGIHandler) TabCGI_Handler },			// index = 22
-		{"/formpwm.shtml", (tCGIHandler) FormCGI_Handler }			// index = 23
+		{"/formpwm.shtml", (tCGIHandler) FormCGI_Handler },			// index = 23
+		{"/formtopin2.shtml", (tCGIHandler) FormCGI_Handler },		// index = 24
+		{"/formtopin3.shtml", (tCGIHandler) FormCGI_Handler }		// index = 25
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -683,7 +685,9 @@ const char* TabCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pc
 //}
 
 // tabbuttom.shtml Handler (Index 4)
-const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
+// tabencoder.shtml Handler (Index 5)
+// tabswitch.shtml Handler (Index 20)
+const char* InputCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	int idin = 0;
 	int idout = 0;
@@ -691,7 +695,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char 
 	int del = 0;
 	uint16_t usbdata = 0;
 
-	if (iIndex == 4) {
+	if (iIndex == 4 || iIndex == 20 || iIndex == 5) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
@@ -748,7 +752,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char 
 	if(strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		//printf("SSID OK \n");
 		restartSSID();
-		return "/tabbutton.shtml"; //
+		return URL_TABLES[iIndex].pcCGIName;
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -896,7 +900,7 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 }
 
 
-// formbutton.shtml formtopin.shtml formrelay.shtml formcron.shtml formswitch.shtml formencoder.shtml formepwm.shtml
+// formbutton.shtml formtopin1.shtml formrelay.shtml formcron.shtml formswitch.shtml formencoder.shtml formepwm.shtml
 // Handler (Index  6, Index  10,  Index  11,  Index 12, Index 16,  Index  21, ,  Index  23)
 const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		char *pcValue[]) {
@@ -904,7 +908,7 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	id = 0;
 	tab = 0;
 
-	if (iIndex == 6 || iIndex == 10 || iIndex == 11 || iIndex == 12 || iIndex == 16 || iIndex == 21 || iIndex == 23) {
+	if (iIndex == 6 || iIndex == 10 || iIndex == 11 || iIndex == 12 || iIndex == 16 || iIndex == 21 || iIndex == 23 || iIndex == 24 || iIndex == 25) {
 		for (int i = 0; i < iNumParams; i++) {
 			// GET ssid
 			if (strcmp(pcParam[i], "ssid") == 0) {
@@ -1152,73 +1156,73 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 }
 
 // /tabswitch.shtml Handler (Index 20)
-const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	int idin = 0;
-	int idout = 0;
-	int i = 0;
-	int del = 0;
-	uint16_t usbdata = 0;
-
-	if (iIndex == 20) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "idin") == 0)
-			{
-				idin = atoi(pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "idout") == 0)
-			{
-				idout = atoi(pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "del") == 0)
-			{
-				del = atoi(pcValue[i]);
-			}
-		}
-		if(idin != 0 && idout != 0){
-			// @todo проверка перед записью превязан ли этот пин уже или нет
-			while (i <= NUMPINLINKS - 1) {
-				if (PinsLinks[i].flag == 0) {
-					//printf("flag %d \n", i);
-					PinsLinks[i].idin = idin - 1;
-					PinsLinks[i].idout = idout - 1;
-					PinsLinks[i].flag = 1;
-					usbdata = 4;
-					break;
-				}
-				i++;
-			}
-			if(usbdata != 0){
-				xQueueSend(usbQueueHandle, &usbdata, 0);
-				printf("usbdata = 4 \n");
-			}
-			usbdata = 0;
-
-		}
-		if(del != 0){
-			PinsLinks[del-1].idin = 0;
-			PinsLinks[del-1].idout = 0;
-			PinsLinks[del-1].flag = 0;
-		}
-	}
-
-	/* login succeeded */
-	if(1){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/tabswitch.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
+//const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+//		char *pcValue[]) {
+//
+//	int idin = 0;
+//	int idout = 0;
+//	int i = 0;
+//	int del = 0;
+//	uint16_t usbdata = 0;
+//
+//	if (iIndex == 20) {
+//		for (int i = 0; i < iNumParams; i++) {
+//			if (strcmp(pcParam[i], "ssid") == 0)
+//			{
+//				memset(ssid, '\0', sizeof(ssid));
+//				strcpy(ssid, pcValue[i]);
+//			}
+//			if (strcmp(pcParam[i], "idin") == 0)
+//			{
+//				idin = atoi(pcValue[i]);
+//			}
+//			if (strcmp(pcParam[i], "idout") == 0)
+//			{
+//				idout = atoi(pcValue[i]);
+//			}
+//			if (strcmp(pcParam[i], "del") == 0)
+//			{
+//				del = atoi(pcValue[i]);
+//			}
+//		}
+//		if(idin != 0 && idout != 0){
+//			// @todo проверка перед записью превязан ли этот пин уже или нет
+//			while (i <= NUMPINLINKS - 1) {
+//				if (PinsLinks[i].flag == 0) {
+//					//printf("flag %d \n", i);
+//					PinsLinks[i].idin = idin - 1;
+//					PinsLinks[i].idout = idout - 1;
+//					PinsLinks[i].flag = 1;
+//					usbdata = 4;
+//					break;
+//				}
+//				i++;
+//			}
+//			if(usbdata != 0){
+//				xQueueSend(usbQueueHandle, &usbdata, 0);
+//				printf("usbdata = 4 \n");
+//			}
+//			usbdata = 0;
+//
+//		}
+//		if(del != 0){
+//			PinsLinks[del-1].idin = 0;
+//			PinsLinks[del-1].idout = 0;
+//			PinsLinks[del-1].flag = 0;
+//		}
+//	}
+//
+//	/* login succeeded */
+//	if(1){
+//		//printf("SSID OK \n");
+//		restartSSID();
+//		return "/tabswitch.shtml"; //
+//	} else {
+//		printf("SSID Failed \n");
+//		memset(randomSSID, '\0', sizeof(randomSSID));
+//		return "/login.shtml";
+//	}
+//}
 
 
 ////////////////////////////// POST START //////////////////////////////////
