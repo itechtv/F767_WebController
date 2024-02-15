@@ -608,7 +608,16 @@ void InitPin() {
     		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
     		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
     	}
+        // initialization Encoder
+        else if(PinsConf[i].topin == 8 || PinsConf[i].topin == 9){
+            //сбрасываем биты для данного пина
+            HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
 
+            GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
+            GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
+            GPIO_InitStruct.Pull = GPIO_NOPULL;
+            HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем
+        }
     	// initialization INPUT
     	else if(PinsConf[i].topin == 1 || PinsConf[i].topin == 3){
 

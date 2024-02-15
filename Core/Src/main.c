@@ -48,7 +48,7 @@ data_pin_t data_pin;
 
 uint16_t usbnum = 0;
 /* USER CODE END PTD */
-
+const uint8_t freeRTOSMemoryScheme = 4;
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 /* USER CODE END PD */
@@ -63,13 +63,15 @@ time_t cronetime_old;
 /////////////////////////////////
 int i = 0;
 char str[40] = { 0 };
+
+TIM_HandleTypeDef htim[NUMPIN];
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 RTC_HandleTypeDef hrtc;
 UART_HandleTypeDef huart3;
-TIM_HandleTypeDef htim[NUMPIN];
+
 
 
 
@@ -86,7 +88,7 @@ osThreadId OutputTaskHandle;
 uint32_t OutputTaskBuffer[ 512 ];
 osStaticThreadDef_t OutputTaskControlBlock;
 osThreadId ConfigTaskHandle;
-uint32_t ConfigTaskBuffer[ 512 ];
+uint32_t ConfigTaskBuffer[ 1024 ];
 osStaticThreadDef_t ConfigTaskControlBlock;
 osThreadId InputTaskHandle;
 uint32_t InputTaskBuffer[ 512 ];
@@ -98,7 +100,7 @@ osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
 osThreadId EncoderTaskHandle;
-uint32_t EncoderTaskBuffer[ 256 ];
+uint32_t EncoderTaskBuffer[ 512 ];
 osStaticThreadDef_t EncoderTaskControlBlock;
 /* USER CODE BEGIN PV */
 
@@ -148,6 +150,7 @@ extern char randomSSID[27];
 unsigned long Ti;
 unsigned long Te;
 
+#define DEBOUNCE_DELAY 45
 //////////////////////////////////////????????
 mqtt_client_t *client;
 char pacote[50];
@@ -421,7 +424,7 @@ int main(void)
   OutputTaskHandle = osThreadCreate(osThread(OutputTask), NULL);
 
   /* definition and creation of ConfigTask */
-  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityNormal, 0, 512, ConfigTaskBuffer, &ConfigTaskControlBlock);
+  osThreadStaticDef(ConfigTask, StartConfigTask, osPriorityNormal, 0, 1024, ConfigTaskBuffer, &ConfigTaskControlBlock);
   ConfigTaskHandle = osThreadCreate(osThread(ConfigTask), NULL);
 
   /* definition and creation of InputTask */
@@ -429,7 +432,7 @@ int main(void)
   InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
 
   /* definition and creation of InputTask */
-  osThreadStaticDef(EncoderTask, StartEncoderTask, osPriorityNormal, 0, 256, EncoderTaskBuffer, &EncoderTaskControlBlock);
+  osThreadStaticDef(EncoderTask, StartEncoderTask, osPriorityNormal, 0, 512, EncoderTaskBuffer, &EncoderTaskControlBlock);
   EncoderTaskHandle = osThreadCreate(osThread(EncoderTask), NULL);
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -859,7 +862,8 @@ void StartSSIDTask(void const * argument)
 				memset(&randomSSID, '\0', sizeof(randomSSID));
 			}
 		}
-		osDelay(1);
+		//printf("xPortGetFreeHeapSize()=%d\n",xPortGetFreeHeapSize());
+		osDelay(1000);
 	}
   /* USER CODE END StartSSIDTask */
 }
@@ -1182,132 +1186,81 @@ void StartInputTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartWebServerTask */
-void StartEncoderTask(void const * argument)
-{
-  /* init code for LWIP */
-    ulTaskNotifyTake(0, portMAX_DELAY);
-    uint8_t pinb = 0;
-    int z = 0;
+void StartEncoderTask(void const *argument) {
+	/* USER CODE BEGIN StartEncoderTask */
+	ulTaskNotifyTake(0, portMAX_DELAY);
+	uint8_t pinb = 0;
+//	int counter = 0;
+	uint32_t millis;
+	uint32_t pinTimes[NUMPIN] = { 0 };
+	uint8_t prev_A[NUMPIN] = {0,};
+	uint8_t prev_B[NUMPIN] =  {0,};
 
-
+	uint8_t i = 0;
+	uint8_t a = 0;
+	uint8_t pwm = 0;
 	/* Infinite loop */
 	for (;;) {
-		for (uint8_t i = 0; i < NUMPIN; i++) {
-		///
+		millis = HAL_GetTick();
+		for (i = 0; i < NUMPIN; i++) {
 			// INPUT Encoder A
-			if (PinsConf[i].topin == 8) {
-				pinb = PinsConf[i].encoderb;
-				if(pinb != 0){
-					// PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin
-				if (HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin) == GPIO_PIN_RESET) { // If the OUTA is RESET
-					if (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_RESET) { // If OUTB is also reset... CCK
-						while (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTB to go high
-/////////////////////
-						for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-		 					if (PinsLinks[a].idin == i) {
+			if (PinsConf[i].topin == 8) {       // EncodrerA
+				pinb = PinsConf[i].encoderb;	// EncodrerB
+				if (pinb != 0) {
+					pinb = pinb - 1;
+					if (millis - pinTimes[i] >= DEBOUNCE_DELAY) { // игнорируем дребезг
+						PinsConf[i].on = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
+						//printf("A = %d\r\n",A);
+						osDelay(3);
+						PinsConf[pinb].on = HAL_GPIO_ReadPin(PinsInfo[pinb].gpio_name,PinsInfo[pinb].hal_pin);
+						if (PinsConf[i].on != prev_A[i] || PinsConf[pinb].on != prev_B[pinb]) { //Если состояние изменилось
+							pinTimes[i] = millis; // Сбрасываем дребезг
+							if (PinsConf[i].on == 1 && PinsConf[pinb].on == 0) {// A && B
+//								counter--;
+								printf("ID:%d  A = %d & B = %d\r\n",i, PinsConf[i].on, PinsConf[pinb].on);
+								for (a = 0; a < NUMPINLINKS; a++) {
+									if (PinsLinks[a].idin == i) {// A
+										pwm = PinsLinks[a].idout;// B
+										if (PinsConf[pwm].topin == 5) {// PWM
+											PinsConf[pwm].dvalue = (int) HAL_TIM_ReadCapturedValue(&htim[pwm],PinsInfo[pwm].tim_channel);
+											PinsConf[pwm].dvalue -= 1;
+											if(PinsConf[pwm].dvalue <= 0){
+												PinsConf[pwm].dvalue = 0;
+											}
+											__HAL_TIM_SET_COMPARE(&htim[pwm],PinsInfo[pwm].tim_channel,PinsConf[pwm].dvalue);
+											printf("PWM = %d\r\n", PinsConf[pwm].dvalue);
+										}
+									}
+								}
+							} else if (PinsConf[i].on == 0 && PinsConf[pinb].on == 1) {// A && B
+//								counter++;
+								printf("ID:%d  A = %d & B = %d\r\n",i, PinsConf[i].on, PinsConf[pinb].on);
+								for (a = 0; a < NUMPINLINKS; a++) {
+									if (PinsLinks[a].idin == i) {// A
+										pwm = PinsLinks[a].idout;// B
+										if (PinsConf[pwm].topin == 5) {// PWM
+											PinsConf[pwm].dvalue = (int) HAL_TIM_ReadCapturedValue(&htim[pwm],PinsInfo[pwm].tim_channel);
+											PinsConf[pwm].dvalue += 1;
+											if(PinsConf[pwm].dvalue >= 100){
+												PinsConf[pwm].dvalue = 100;
+											}
+											__HAL_TIM_SET_COMPARE(&htim[pwm],PinsInfo[pwm].tim_channel,PinsConf[pwm].dvalue);
+											printf("PWM = %d\r\n", PinsConf[pwm].dvalue);
+										}
+									}
+								}
+							}
 
-		 						//PinsInfo[i].tim->CCR1 = 50;
+							prev_A[i] = PinsConf[i].on; //A
+							prev_B[pinb] = PinsConf[pinb].on; //B;
 
-		 							//for (uint8_t i = 0; i < NUMPIN; i++) {
-
-		 								// PWM
-		 								z = PinsLinks[a].idout;
-		 								if (PinsConf[z].topin == 5){
-
-		 									PinsConf[z].dvalue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
-
-		 									if(PinsConf[i].on == 1) {
-		 										PinsConf[z].dvalue += 1;
-												if(PinsConf[z].dvalue > 100){
-													PinsConf[z].dvalue = 100;
-													PinsConf[i].on = 0;
-												}
-		 									}
-//		 									if(PinsConf[i].on == 0) {
-//		 										PinsConf[z].dvalue -= 1;
-//												if(PinsConf[z].dvalue < 0){
-//													PinsConf[z].dvalue = 0;
-//													PinsConf[handle->button_id].on = 1;
-//												}
-//		 									}
-
-											__HAL_TIM_SET_COMPARE(&htim[z], PinsInfo[z].tim_channel, PinsConf[z].dvalue);
-
-
-		 							}
-
-
-		 					}
-		 				}
-/////////////////////
-							//counter--;
-
-						while (HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTA to go high
-						osDelay(5);  // Защита от дребезга
+						}
 					}
-
-					else if (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_SET) // If OUTB is also set
-							{
-						while (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_SET) {};  // wait for the OUTB to go LOW.. CK
-
-						/////////////////////
-												for (uint8_t a = 0; a < NUMPINLINKS; a++) {
-								 					if (PinsLinks[a].idin == i) {
-
-								 						//PinsInfo[i].tim->CCR1 = 50;
-
-								 							//for (uint8_t i = 0; i < NUMPIN; i++) {
-
-								 								// PWM
-								 								z = PinsLinks[a].idout;
-								 								if (PinsConf[z].topin == 5){
-
-								 									PinsConf[z].dvalue  = (int) HAL_TIM_ReadCapturedValue(&htim[i], PinsInfo[i].tim_channel);
-
-//								 									if(PinsConf[i].on == 1) {
-//								 										PinsConf[z].dvalue += 1;
-//																		if(PinsConf[z].dvalue > 100){
-//																			PinsConf[z].dvalue = 100;
-//																			PinsConf[i].on = 0;
-//																		}
-//								 									}
-								 									if(PinsConf[i].on == 0) {
-								 										PinsConf[z].dvalue -= 1;
-																		if(PinsConf[z].dvalue < 0){
-																			PinsConf[z].dvalue = 0;
-																			PinsConf[i].on = 1;
-																		}
-								 									}
-
-																	__HAL_TIM_SET_COMPARE(&htim[z], PinsInfo[z].tim_channel, PinsConf[z].dvalue);
-
-
-								 							}
-
-
-								 					}
-								 				}
-						/////////////////////
-							//counter++;
-
-
-						while (HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTA to go high
-						while (HAL_GPIO_ReadPin(PinsInfo[pinb-1].gpio_name,PinsInfo[pinb-1].hal_pin) == GPIO_PIN_RESET) {};  // wait for the OUTB to go high
-						osDelay(5);  // Защита от дребезга
-					}
-
-//					if (counter < 0)
-//						counter = 0;
-//					if (counter > 100)
-//						counter = 100;
-				}
 				}
 			}
-		///
 		}
-		osDelay(1);
 	}
-  /* USER CODE END 5 */
+	/* USER CODE END StartEncoderTask */
 }
 /**
   * @brief  Period elapsed callback in non blocking mode
