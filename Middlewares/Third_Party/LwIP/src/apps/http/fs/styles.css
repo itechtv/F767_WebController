@@ -1,4 +1,64 @@
 
+/* Reset and base styles  */
+* {
+	padding: 0px;
+	margin: 0px;
+	border: none;
+}
+
+body {
+	font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
+}
+
+input,
+select,
+textarea {
+  padding: 5px 5px;
+  border: 1px solid #555;  
+  box-sizing: border-box;
+}
+
+h1 { 
+  display: block;
+  font-size: 2em;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+  margin-left: 0;
+  margin-right: 0;
+  font-weight: bold;
+}
+
+h2 {
+  display: block;
+  font-size: 1.5em;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+  margin-left: 0;
+  margin-right: 0;
+  font-weight: bold;
+}
+h3, h4, h5, h6{ 
+  display: block;
+  font-size: 1.17em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  font-weight: bold;
+}
+
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 5px;
+  background: #4676D7;
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 16px;
+}
+
 
 table,
 th,
@@ -21,7 +81,7 @@ td {
 }
 
 .tab {
-    max-width: 1100px;
+    max-width: 1200px;
 }
 
 /*********************SLIDER************************/

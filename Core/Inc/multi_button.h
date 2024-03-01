@@ -55,8 +55,8 @@ int  button_start(struct Button* handle);
 void button_stop(struct Button* handle);
 void button_ticks(struct Button *buttons);
 void button_event_handler(Button* handle);
-uint8_t read_button_level(uint8_t button_id);
 void pwm_event_handler(Button* handle);
+uint8_t read_button_level(uint8_t button_id);
 
 #ifdef __cplusplus
 }

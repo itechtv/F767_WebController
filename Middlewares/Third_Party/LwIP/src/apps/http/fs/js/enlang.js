@@ -112,10 +112,15 @@ actionhelp[3] = "Pin 12 will change its state (TOGGLE) every CRON's valid time";
 var lange1Wire = new Array();
 lange1Wire[1] = "ID - is a unique numerical identifier of the pin. Assigned automatically";
 lange1Wire[2] = "PIN - The unique number of the digital or analog pin.";
-lange1Wire[3] = "PWM frequency (Hz) - PWM frequency in Hertz. If 0, then PWM is not used.";
-lange1Wire[4] = "ON - State of pin -1 is 'On', 0 is 'Off'.";
-lange1Wire[5] = "INFO - Give a name to the selected relay for quick navigation, e.g.\"Kitchen\", \"Kids room\", etc. No more than 30 characters!";
-lange1Wire[6] = "On/Off - 'On' or 'Off' this relay.";
+lange1Wire[3] = "Sensor - Here is indicated which sensor is connected to this pin..";
+lange1Wire[4] = "Indicate the number of connected devices of ds18b20.";
+lange1Wire[5] = "Set the upper temperature limit C°.";
+lange1Wire[6] = "Please specify the action that needs to be taken when the upper temperature limit is reached.";
+lange1Wire[7] = "Set the lower temperature limit C°.";
+lange1Wire[8] = "Please specify the action that needs to be taken when the lower temperature limit is reached.";
+lange1Wire[9] = "INFO - Give a name to the selected relay for quick navigation, e.g.\"Kitchen\", \"Kids room\", etc. No more than 30 characters!";
+lange1Wire[10] = "ON - State of pin -1 is 'On', 0 is 'Off'.";
+lange1Wire[11] = "Action - Some actions with this cron.";
 
 
 

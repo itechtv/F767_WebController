@@ -53,13 +53,7 @@
               </a>
             </div>
             </th>
-            <th class="firstline">PWM Frequency (Hz)
-              <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang3"></span>
-                </a>
-              </div>
-            </th>
+
             <th class="firstline">ON
               <div class="tooltip">
                 <a class="support" href="#">(?)
@@ -67,14 +61,8 @@
                 </a>
               </div>
             </th>
-            <th class="firstline">Invert State
-              <div class="tooltip">
-                <a class="support" href="#">(?)
-                  <span class="tooltiptext" id="lang5"></span>
-                </a>
-              </div>
-            </th>
-            <th class="firstline">Dimmer value (0-255)
+
+            <th class="firstline">Dimmer value (0-100)
               <div class="tooltip">
                 <a class="support" href="#">(?)
                   <span class="tooltiptext" id="lang6"></span>
@@ -116,7 +104,7 @@
     
         <script>
           $(document).ready(function () {
-            $.getJSON('tabjson.shtml?tab=5&ssid=<!--#ssid-->', function (data) {
+            $.getJSON('tabjson.shtml?tab=3&ssid=<!--#ssid-->', function (data) {
               var employee_data = '';
               var n = 0;
               var z = '';
@@ -126,9 +114,7 @@
                   employee_data += '<tr>';
                   employee_data += '<td>' + val.id + '</td>';
                   employee_data += '<td>' + val.pins + '</td>';
-                  employee_data += '<td align=\"center\">' + val.pwm + '</td>';
                   employee_data += '<td align=\"center\">' + val.on + '</td>';
-                  employee_data += '<td align=\"center\">' + val.istate + '</td>';
                   employee_data += '<td align=\"center\">' + val.dvalue + '</td>';
                   employee_data += '<td align=\"center\">' + val.ponr + '</td>';
                   employee_data += '<td>' + val.info + '</td>';

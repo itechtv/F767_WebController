@@ -41,9 +41,9 @@
                     type: "GET",
                     data: {"username" : username,"password" : password},
                     success: function(response){
-                        console.log(response); 
+    
                         const obj = JSON.parse(response);
-                        console.log(obj[0].login, obj[0].ssid);
+
                         if(obj[0].login == 1){
                             window.location = "index.shtml?ssid=" + obj[0].ssid;
                         } else {

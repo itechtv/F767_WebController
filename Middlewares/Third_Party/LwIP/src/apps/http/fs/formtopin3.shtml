@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Home</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="js/jquerymin.js"></script>
+
+</head>
+
+<body>
+
+<center>
+    <h1>NUCLEO-F767ZI</h1>        
+
+    <!--#menu-->
+
+    <h2  id="title1">Edit Connection</h2>
+    
+  
+    <form action="tabencoder.shtml?ssid=<!--#ssid-->" method="get">
+      <input type="hidden" name="ssid" value="<!--#ssid-->">
+      <table class="zebra_2" border="1" align="center" id="tab1">
+  
+      </table>
+      <br>
+      <center>
+        <button> Save pin </button>
+      </center>
+    </form>
+</center>
+        
+<script>
+
+
+    var response = '<!--#formjson-->';
+
+    $(document).ready(function () {
+
+      var val = JSON.parse(response);
+      var employee_data = '';
+
+      var employee_data_pin = '';
+      employee_data_pin += ' ' + val.pins + ' ';
+
+      employee_data += '<tr><td>ID Button</td><td>' + val.id + '<input type=\"hidden\" name=\"idin\" value=\"' + val.id + '\"></td></tr>';
+      employee_data += '<tr><td>Buttom Pin</td><td>' + val.pins + '</td></tr>';
+
+      employee_data += '<tr><td>Relay pin</td><td>';
+      employee_data += '<select name=\"idout\">';
+      for (var key in val.rpins) {
+        employee_data += ' <option value=\"' + val.rpins[key] + '\">' + key + '</option>';
+      }
+      employee_data += '</select></td></tr>';
+
+      $('#tab1').append(employee_data);
+      $('#title1').append(employee_data_pin);
+
+    });
+
+  </script>
+    
+
+</body>
+</html>

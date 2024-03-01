@@ -16,7 +16,7 @@
 #include "multi_button.h"
 
 
-extern TIM_HandleTypeDef htim[NUMPIN];
+
 char fsbuffer[25500] = { 0 };//2000
 
 extern struct dbSettings SetSettings;
@@ -25,6 +25,7 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct Button button[NUMPIN];
+
 extern TIM_HandleTypeDef htim[NUMPIN];
 /**************************************************************************/
 // Функция включает тактирование на указанном порту.
@@ -425,9 +426,17 @@ void GetPinConfig() {
 				PinsConf[i].dvalue = cJSON_GetObjectItem(pins_item, "dvalue")->valueint;
 				PinsConf[i].ponr = cJSON_GetObjectItem(pins_item, "ponr")->valueint;
 				PinsConf[i].ptype = cJSON_GetObjectItem(pins_item, "ptype")->valueint;
+				PinsConf[i].encoderb = cJSON_GetObjectItem(pins_item, "encoderb")->valueint;
+				PinsConf[i].hinter = cJSON_GetObjectItem(pins_item, "hinter")->valueint;
+				PinsConf[i].repeat = cJSON_GetObjectItem(pins_item, "repeat")->valueint;
+				PinsConf[i].rinter = cJSON_GetObjectItem(pins_item, "rinter")->valueint;
+				PinsConf[i].dcinter = cJSON_GetObjectItem(pins_item, "dcinter")->valueint;
+
 				PinsConf[i].sclick = cJSON_GetObjectItem(pins_item, "sclick")->valueint;
 				strcpy(PinsConf[i].dclick,cJSON_GetObjectItem(pins_item, "dclick")->valuestring);
 				strcpy(PinsConf[i].lpress,cJSON_GetObjectItem(pins_item, "lpress")->valuestring);
+
+				PinsConf[i].pclick = cJSON_GetObjectItem(pins_item, "pclick")->valueint;
 				strcpy(PinsConf[i].info, cJSON_GetObjectItem(pins_item, "info")->valuestring);
 				PinsConf[i].onoff = cJSON_GetObjectItem(pins_item, "onoff")->valueint;
 				PinsConf[i].event = cJSON_GetObjectItem(pins_item, "event")->valueint;
@@ -435,6 +444,9 @@ void GetPinConfig() {
 				PinsConf[i].parametr = cJSON_GetObjectItem(pins_item, "parametr")->valueint;
 				PinsConf[i].timeout = cJSON_GetObjectItem(pins_item, "timeout")->valueint;
 				strcpy(PinsConf[i].condit, cJSON_GetObjectItem(pins_item, "condit")->valuestring);
+
+				strcpy(PinsConf[i].textupt, cJSON_GetObjectItem(pins_item, "textupt")->valuestring);
+				strcpy(PinsConf[i].textlowt, cJSON_GetObjectItem(pins_item, "textlowt")->valuestring);
 			}
 
 			cJSON_Delete(root_obj);
@@ -471,9 +483,17 @@ void SetPinConfig() {
 			cJSON_AddNumberToObject(fld, "dvalue", PinsConf[i].dvalue);
 			cJSON_AddNumberToObject(fld, "ponr", PinsConf[i].ponr);
 			cJSON_AddNumberToObject(fld, "ptype", PinsConf[i].ptype);
+			cJSON_AddNumberToObject(fld, "encoderb", PinsConf[i].encoderb);
+			cJSON_AddNumberToObject(fld, "hinter", PinsConf[i].hinter);
+			cJSON_AddNumberToObject(fld, "repeat", PinsConf[i].repeat);
+			cJSON_AddNumberToObject(fld, "rinter", PinsConf[i].rinter);
+			cJSON_AddNumberToObject(fld, "dcinter", PinsConf[i].dcinter);
+			cJSON_AddNumberToObject(fld, "pclick", PinsConf[i].pclick);
+
 			cJSON_AddNumberToObject(fld, "sclick", PinsConf[i].sclick);
 			cJSON_AddStringToObject(fld, "dclick", PinsConf[i].dclick);
 			cJSON_AddStringToObject(fld, "lpress", PinsConf[i].lpress);
+
 			cJSON_AddStringToObject(fld, "info", PinsConf[i].info);
 			cJSON_AddNumberToObject(fld, "onoff", PinsConf[i].onoff);
 			cJSON_AddNumberToObject(fld, "event", PinsConf[i].event);
@@ -481,6 +501,9 @@ void SetPinConfig() {
 			cJSON_AddNumberToObject(fld, "parametr", PinsConf[i].parametr);
 			cJSON_AddNumberToObject(fld, "timeout", PinsConf[i].timeout);
 			cJSON_AddStringToObject(fld, "condit", PinsConf[i].condit);
+
+			cJSON_AddStringToObject(fld, "textupt", PinsConf[i].textupt);
+			cJSON_AddStringToObject(fld, "textlowt", PinsConf[i].textlowt);
 		}
 		out_str = cJSON_PrintUnformatted(root_obj);
 		fresult = f_write(&USBHFile, (const void*) out_str, strlen(out_str), &Byteswritten);
@@ -565,154 +588,189 @@ void SetPinToPin() {
 
 }
 
+
+
+
 void InitPin() {
 	int i = 0;
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	for (i = 0; i < NUMPIN; i++) {
-		// для Multi button
-		PinsConf[i].act = 0;
+    for (i = 0; i < NUMPIN; i++){
+    	// для Multi button
+    	PinsConf[i].act = 0;
 
-		// initialization OUTPUT
-		if (PinsConf[i].topin == 2) {
+    	// initialization OUTPUT
+    	if(PinsConf[i].topin == 2){
 
-			// проверяем тактирование порта
+    		// проверяем тактирование порта
 			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
 
+    		//сбрасываем биты для данного пина
+    		HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+
+			// инициализация пина OUTPUT
+    		GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
+    		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
+    		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW ; //
+    		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+
+    	}
+    	// initialization Encoder
+		else if(PinsConf[i].topin == 8 || PinsConf[i].topin == 9){
 			//сбрасываем биты для данного пина
 			HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
 
-			// инициализация пина OUTPUT
-			GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вывод
-			GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // режим – выход
-			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW; //
-			HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+    	    GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
+    	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
+    	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+
+//    	    else if (PinsConf[i].ptype == 2) {
+//    	    	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+//    	    }
+//    	    else if (PinsConf[i].ptype == 0) {
+//    	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//    	    } else {
+//    	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//    	    }
+    	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем
 		}
 
-		// initialization INPUT
-		if (PinsConf[i].topin == 1 || PinsConf[i].topin == 3) {
+    	// initialization INPUT
+    	else if(PinsConf[i].topin == 1 || PinsConf[i].topin == 3){
 
-			// проверяем тактирование порта
+    		// проверяем тактирование порта
 			//checkPortClockStatus(PinsInfo[i].port, __HAL_RCC_GPIOA_IS_CLK_ENABLED());
 
-			// сбрасываем биты для данного пина
-			HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+            // сбрасываем биты для данного пина
+            HAL_GPIO_DeInit(PinsInfo[i].gpio_name, PinsInfo[i].hal_pin);
+
 
 			// инициализация пина  INPUT
-			GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
-			GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
+    	    GPIO_InitStruct.Pin = PinsInfo[i].hal_pin; // вход
+    	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // устанавливаем режим работы порта на вход
 
-			if (PinsConf[i].ptype == 1) {
-				GPIO_InitStruct.Pull = GPIO_PULLUP;
-			} else if (PinsConf[i].ptype == 2) {
-				GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-			} else if (PinsConf[i].ptype == 0) {
-				GPIO_InitStruct.Pull = GPIO_NOPULL;
-			} else {
-				GPIO_InitStruct.Pull = GPIO_NOPULL;
-			}
+    	    if (PinsConf[i].ptype == 1) {
+    	    	GPIO_InitStruct.Pull = GPIO_PULLUP;
+    	    }
+    	    else if (PinsConf[i].ptype == 2) {
+    	    	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    	    }
+    	    else if (PinsConf[i].ptype == 0) {
+    	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+    	    } else {
+    	    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+    	    }
 
-			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
-			HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
-		}
-		// initialization INPUT
-		if (PinsConf[i].topin == 5) {
 
-			if (PinsInfo[i].tim == TIM1) {
-				__HAL_RCC_TIM1_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM2) {
-				__HAL_RCC_TIM2_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM3) {
-				__HAL_RCC_TIM3_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM4) {
-				__HAL_RCC_TIM4_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM5) {
-				__HAL_RCC_TIM5_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM7) {
-				__HAL_RCC_TIM7_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM8) {
-				__HAL_RCC_TIM8_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM9) {
-				__HAL_RCC_TIM9_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM10) {
-				__HAL_RCC_TIM10_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM11) {
-				__HAL_RCC_TIM11_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM12) {
-				__HAL_RCC_TIM12_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM13) {
-				__HAL_RCC_TIM13_CLK_ENABLE();
-			} else if (PinsInfo[i].tim == TIM14) {
-				__HAL_RCC_TIM14_CLK_ENABLE();
-			}
-			TIM_MasterConfigTypeDef sMasterConfig = { 0 };
-			TIM_OC_InitTypeDef sConfigOC = { 0 };
-			TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = { 0 };
+    	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // устанавливаем максимальную скорость порта
+    	    HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct); // инициализируем порт B
+    	}
+    	// initialization INPUT
+    	else if(PinsConf[i].topin == 5){
 
-			/* USER CODE BEGIN TIM1_Init 1 */
+    		     //__HAL_RCC_TIM1_CLK_ENABLE();
 
-			/* USER CODE END TIM1_Init 1 */
-			htim[i].Instance = PinsInfo[i].tim;
-			htim[i].Init.Prescaler = 216 - 1;
-			htim[i].Init.CounterMode = TIM_COUNTERMODE_UP;
-			htim[i].Init.Period = 100 - 1;
-			htim[i].Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-			htim[i].Init.RepetitionCounter = 0;
-			htim[i].Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-			if (HAL_TIM_PWM_Init(&htim[i]) != HAL_OK) {
-				Error_Handler();
-			}
-			sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-			sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
-			sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-			if (HAL_TIMEx_MasterConfigSynchronization(&htim[i], &sMasterConfig)
-					!= HAL_OK) {
-				Error_Handler();
-			}
-			sConfigOC.OCMode = TIM_OCMODE_PWM1;
-			sConfigOC.Pulse = 0;
-			sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-			sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-			sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-			sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-			sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-			if (HAL_TIM_PWM_ConfigChannel(&htim[i], &sConfigOC,
-					PinsInfo[i].tim_channel) != HAL_OK) {
-				Error_Handler();
-			}
-			sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
-			sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
-			sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-			sBreakDeadTimeConfig.DeadTime = 0;
-			sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
-			sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
-			sBreakDeadTimeConfig.BreakFilter = 0;
-			sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
-			sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
-			sBreakDeadTimeConfig.Break2Filter = 0;
-			sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-			if (HAL_TIMEx_ConfigBreakDeadTime(&htim[i], &sBreakDeadTimeConfig)
-					!= HAL_OK) {
-				Error_Handler();
-			}
-			/* USER CODE BEGIN TIM1_Init 2 */
+    		     if(PinsInfo[i].tim == TIM1){
+    		    	__HAL_RCC_TIM1_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM2){
+    		    	 __HAL_RCC_TIM2_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM3){
+    		    	 __HAL_RCC_TIM3_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM4){
+    		    	 __HAL_RCC_TIM4_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM5){
+    		    	 __HAL_RCC_TIM5_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM7){
+    		    	 __HAL_RCC_TIM7_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM8){
+    		    	 __HAL_RCC_TIM8_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM9){
+    		    	 __HAL_RCC_TIM9_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM10){
+    		    	 __HAL_RCC_TIM10_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM11){
+    		    	 __HAL_RCC_TIM11_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM12){
+    		    	 __HAL_RCC_TIM12_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM13){
+    		    	 __HAL_RCC_TIM13_CLK_ENABLE();
+    		     } else if(PinsInfo[i].tim == TIM14){
+    		    	 __HAL_RCC_TIM14_CLK_ENABLE();
+    		     }
+    		   //RCC->APB2ENR |= (1 << 0);
+    		//
+    		//
+    		      TIM_MasterConfigTypeDef sMasterConfig = {0};
+    		      TIM_OC_InitTypeDef sConfigOC = {0};
+    		      TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-			/* USER CODE END TIM1_Init 2 */
-			GPIO_InitStruct.Pin = PinsInfo[i].hal_pin;
-			//GPIO_InitStruct.Pin = GPIO_PIN_9;
-			GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-			GPIO_InitStruct.Pull = GPIO_NOPULL;
-			GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-			GPIO_InitStruct.Alternate = PinsInfo[i].af;
-			//HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-			HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
+    		      /* USER CODE BEGIN TIM1_Init 1 */
 
-			//HAL_TIM_MspPostInit(&htim[i]);
+    		      /* USER CODE END TIM1_Init 1 */
+    		      htim[i].Instance = PinsInfo[i].tim;
+    		      htim[i].Init.Prescaler = 216-1;
+    		      htim[i].Init.CounterMode = TIM_COUNTERMODE_UP;
+    		      htim[i].Init.Period = 100-1;
+    		      htim[i].Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    		      htim[i].Init.RepetitionCounter = 0;
+    		      htim[i].Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    		      if (HAL_TIM_PWM_Init(&htim[i]) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    		      sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+    		      sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    		      if (HAL_TIMEx_MasterConfigSynchronization(&htim[i], &sMasterConfig) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    		      sConfigOC.Pulse = 0;
+    		      sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    		      sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+    		      sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    		      sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    		      sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+    		      if (HAL_TIM_PWM_ConfigChannel(&htim[i], &sConfigOC, PinsInfo[i].tim_channel) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+    		      sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+    		      sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+    		      sBreakDeadTimeConfig.DeadTime = 0;
+    		      sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+    		      sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+    		      sBreakDeadTimeConfig.BreakFilter = 0;
+    		      sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
+    		      sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
+    		      sBreakDeadTimeConfig.Break2Filter = 0;
+    		      sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+    		      if (HAL_TIMEx_ConfigBreakDeadTime(&htim[i], &sBreakDeadTimeConfig) != HAL_OK)
+    		      {
+    		        Error_Handler();
+    		      }
+    		      /* USER CODE BEGIN TIM1_Init 2 */
 
-			HAL_TIM_PWM_Start(&htim[i], PinsInfo[i].tim_channel);
+    		      /* USER CODE END TIM1_Init 2 */
+    		      GPIO_InitStruct.Pin = PinsInfo[i].hal_pin;
+    		      //GPIO_InitStruct.Pin = GPIO_PIN_9;
+    		      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    		      GPIO_InitStruct.Pull = GPIO_NOPULL;
+    		      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    		      GPIO_InitStruct.Alternate = PinsInfo[i].af;
+    		      //HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    		      HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
 
-		}
-	}
+    		      //HAL_TIM_MspPostInit(&htim[i]);
+
+    		      HAL_TIM_PWM_Start(&htim[i], PinsInfo[i].tim_channel);
+
+    	}
+
+
+    }
 }
 
 
@@ -784,4 +842,3 @@ void InitMultibutton(void) {
 
 	}
 }
-

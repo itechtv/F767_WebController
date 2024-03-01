@@ -163,7 +163,7 @@
                   } else {
                     employee_data += '<td><label class=\"switch\"> <input id=\"s' + val.id + '\" type=\"checkbox\" name=\"onoff_' + val.id + '\" value=\"1\" unchecked=\"unchecked\"  onclick=\"getSelect(' + val.id + ');\"><span class=\"slider round\"></span></label></td>';
                   }
-                  employee_data += '<td> | <a href=\"formtopin.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbutton.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
+                  employee_data += '<td> | <a href=\"formtopin2.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=3\">Connection</a> | <a href=\"formbutton.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=1\">Edit bn.</a> |</td>';
                   employee_data += '</tr>';
                 }
                 n++;

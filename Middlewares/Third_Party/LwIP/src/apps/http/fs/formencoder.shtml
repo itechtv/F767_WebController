@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Home</title>
+  <title>Form Encoder</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css">
@@ -19,12 +19,10 @@
 
         <!--#menu-->
 
-        <h2  id="title1">Edit Relay pin</h2>
-
+        <h2 id="title1">Edit Encoder pin</h2>
 
         
-
-        <form action="tabrelay.shtml?ssid=<!--#ssid-->" method="post">
+        <form action="tabencoder.shtml?ssid=<!--#ssid-->" method="post">
             <table class="zebra_2" border="1" align="center" id="tab1">
         
             </table>
@@ -32,9 +30,11 @@
             <center>
               <button> Save pin </button>
             </center>
-        </form>  
+        </form>       
 
       </center>
+
+
       <script>
         var response = '<!--#formjson-->';
     
@@ -45,17 +45,27 @@
     
           var employee_data_pin = '';
           employee_data_pin += ' ' + val.pins + ' ';
+          
+     
 
           employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></td></tr>';
           employee_data += '<tr><td>Pin</td><td>' + val.pins + '</td></tr>';
+          employee_data += '<tr><td>Encoder B pin</td><td>' + val.encoderb + '</td></tr>';
+ 
+          employee_data += '<tr><td>Encoder B pin</td><td>';
+          employee_data += '<select name=\"encoderb\">';
+          employee_data += ' <option  value="0">None</option>';
     
-          employee_data += '<tr><td>PWM Frequency (Hz)</td><td><input type=\"number\" min=\"0\" max=\"9999\" name=\"pwm" value=\"' + val.pwm + '\"  size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>ON)</td><td><input type=\"number\" min=\"0\" max=\"1\" name=\"on" value=\"' + val.on + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Invert State</td><td><input type=\"number\"min=\"0\" max=\"1\" name=\"istate\" value=\"' + val.istate + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Dimmer value (0-255)</td><td><input type=\"number\" min=\"0\" max=\"255\" name=\"dvalue" value=\"' + val.dvalue + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
-          employee_data += '<tr><td>Power On Restore)</td><td><input type=\"number\" min=\"0\" max=\"4\" name=\"ponr\" value=\"' + val.ponr + '\" size=\"5\" style=\"width:45px;\"></td></tr>';
+            for (var key in val.bpins) {
+                if(val.bpins[key] == val.encoderb){
+                    employee_data += ' <option selected value=\"' + val.bpins[key] + '\">' + key + '</option>';
+                } else {
+                    employee_data += ' <option  value=\"' + val.bpins[key] + '\">' + key + '</option>';
+                }            
+            }
+          employee_data += '</select></td></tr>';
     
-          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info" value=\"' + val.info + '\"></td></tr>';
+          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info\" value=\"' + val.info + '\"></td></tr>';
           if (val.onoff == 1) {
             employee_data += '<tr><td>On/Off</td><td><label class=\"switch\"> <input name=\"onoff" type=\"hidden\" value=\"0\"> <input type=\"checkbox\" name=\"onoff" value=\"1\" checked=\"checked\"><span class=\"slider round\"></span></label></td></tr>';
           } else {
@@ -68,6 +78,5 @@
         });
     
       </script>
-
 </body>
 </html>

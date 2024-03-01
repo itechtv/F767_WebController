@@ -110,7 +110,7 @@
 /*----- Default Value for LWIP_SNTP: 0 ---*/
 #define LWIP_SNTP 1
 /*----- Default Value for SNTP_MAX_SERVERS: 1 ---*/
-#define SNTP_MAX_SERVERS 11 //11
+#define SNTP_MAX_SERVERS 11
 /*----- Default Value for SNTP_UPDATE_DELAY: 3600000 ---*/
 #define SNTP_UPDATE_DELAY 20000
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/

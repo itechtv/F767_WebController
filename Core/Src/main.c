@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//////////////////////////////////////////
+///////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
 #include <stdio.h>
@@ -36,16 +36,14 @@
 #include "cJSON.h"
 #include "setings.h"
 #include "multi_button.h"
-
-
+#include "ds18b20.h"
+#define DEBOUNCE_DELAY 45 //Encoder (ms)
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 data_pin_t data_pin;
 TIM_HandleTypeDef htim[NUMPIN];
-
 uint16_t usbnum = 0;
 /* USER CODE END PTD */
 
@@ -89,6 +87,15 @@ osStaticThreadDef_t ConfigTaskControlBlock;
 osThreadId InputTaskHandle;
 uint32_t InputTaskBuffer[ 512 ];
 osStaticThreadDef_t InputTaskControlBlock;
+osThreadId EncoderTaskHandle;
+uint32_t EncoderTaskBuffer[ 512 ];
+osStaticThreadDef_t EncoderTaskControlBlock;
+osThreadId OneWireTaskHandle;
+uint32_t OneWireTaskBuffer[ 256 ];
+osStaticThreadDef_t OneWireTaskControlBlock;
+osThreadId I2CTaskHandle;
+uint32_t I2CTaskBuffer[ 256 ];
+osStaticThreadDef_t I2CTaskControlBlock;
 osMessageQId myQueueHandle;
 uint8_t myQueueBuffer[ 16 * sizeof( struct data_pin_t ) ];
 osStaticMessageQDef_t myQueueControlBlock;
@@ -122,48 +129,12 @@ void StartCronTask(void const * argument);
 void StartOutputTask(void const * argument);
 void StartConfigTask(void const * argument);
 void StartInputTask(void const * argument);
+void StartEncoderTask(void const * argument);
+void StartOneWireTask(void const * argument);
+void StartI2CTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void my_parse_string(char *str) {
-    char *token;
-    char *saveptr;
-    int k = 0;
-    int pin = 0;
-    char delim[] = ";";
 
-    // Разбиваем строку на элементы, разделенные точкой с запятой
-    token = strtok_r(str, delim, &saveptr);
-    while (token != NULL) {
-        char *end_token;
-            char *token2 = strtok_r(token, ":", &end_token);
-            //printf("pin = %d\n", atoi(token2));
-
-            while (token2 != NULL) {
-                // тут отправляем в очередь
-                if (k == 0) {
-                    pin = atoi(token2);
-                    if (pin != 0) {
-                        data_pin.pin = pin - 1;
-                    }
-                    //printf("pin = %s\n", token2);
-                }
-                if (k == 1) {
-                    data_pin.action = atoi(token2);
-                    //printf("action = %s\n", token2);
-                }
-
-                token2 = strtok_r(NULL, ":", &end_token);
-                k++;
-                // printf("action = %d\n", atoi(token2));
-            }
-
-            if (k == 2) {
-                xQueueSend(myQueueHandle, (void*)&data_pin, 0);
-            }
-            k = 0;
-        token = strtok_r(NULL, delim, &saveptr);
-    }
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -180,6 +151,7 @@ extern struct netif gnetif;
 extern char randomSSID[27];
 
 unsigned long Ti;
+unsigned long Te;
 
 //////////////////////////////////////????????
 mqtt_client_t *client;
@@ -206,15 +178,11 @@ char pacote[50];
              break;
          case LONG_PRESS_START:
              // Начало долгого нажатия
-        	 if(strlen(PinsConf[handle->button_id].lpress) > 0){
-        	 strcpy(str, PinsConf[handle->button_id].lpress);
-        	 my_parse_string(str);
-        	 }
              printf("Button %d: LONG_PRESS_START!\r\n", handle->button_id);
              break;
          case LONG_PRESS_HOLD:
              // Продолжение долгого нажатия
-        	 printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
+             printf("Button %d: LONG_PRESS_HOLD!\r\n", handle->button_id);
              break;
          case SINGLE_CLICK:
              // Одиночное нажатие кнопки
@@ -229,10 +197,6 @@ char pacote[50];
              break;
          case DOUBLE_CLICK:
              // Двойное нажатие кнопки
-        	 if(strlen(PinsConf[handle->button_id].dclick) > 0){
-        	 strcpy(str, PinsConf[handle->button_id].dclick);
-        	 my_parse_string(str);
-        	 }
              printf("Button %d: DOUBLE_CLICK!\r\n", handle->button_id);
              break;
          case PRESS_REPEAT:
@@ -244,6 +208,7 @@ char pacote[50];
              break;
      }
  }
+
 
 
  void pwm_event_handler(Button* handle)
@@ -372,7 +337,6 @@ char pacote[50];
       }
   }
 
-
  // Функция для получения состояния GPIO кнопки
   uint8_t read_button_level(uint8_t button_id)
   {
@@ -414,7 +378,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-
+//  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -468,6 +432,18 @@ int main(void)
   /* definition and creation of InputTask */
   osThreadStaticDef(InputTask, StartInputTask, osPriorityNormal, 0, 512, InputTaskBuffer, &InputTaskControlBlock);
   InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
+
+  /* definition and creation of EncoderTask */
+  osThreadStaticDef(EncoderTask, StartEncoderTask, osPriorityNormal, 0, 512, EncoderTaskBuffer, &EncoderTaskControlBlock);
+  EncoderTaskHandle = osThreadCreate(osThread(EncoderTask), NULL);
+
+  /* definition and creation of OneWireTask */
+  osThreadStaticDef(OneWireTask, StartOneWireTask, osPriorityNormal, 0, 256, OneWireTaskBuffer, &OneWireTaskControlBlock);
+  OneWireTaskHandle = osThreadCreate(osThread(OneWireTask), NULL);
+
+  /* definition and creation of I2CTask */
+  osThreadStaticDef(I2CTask, StartI2CTask, osPriorityNormal, 0, 256, I2CTaskBuffer, &I2CTaskControlBlock);
+  I2CTaskHandle = osThreadCreate(osThread(I2CTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -853,19 +829,17 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-  ulTaskNotifyTake(0, portMAX_DELAY);
+  ulTaskNotifyTake(0, portMAX_DELAY);  //
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
-
+//  MX_USB_HOST_Init();
   /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
-
 	printf("My IP adress is - %d.%d.%d.%d \r\n",IP_ADDRESS[0],IP_ADDRESS[1],IP_ADDRESS[2],IP_ADDRESS[3]);
-
 	client = mqtt_client_new();
-	example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
+	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
 	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
 	//example_publish(client, pacote); // Публикуем сообщение.
 
@@ -899,6 +873,31 @@ void StartSSIDTask(void const * argument)
 				memset(&randomSSID, '\0', sizeof(randomSSID));
 			}
 		}
+
+//		UBaseType_t WebServer = 0;
+//		WebServer = uxTaskGetStackHighWaterMark(WebServerTaskHandle); //SSIDTaskHandle
+//		printf("WebServer = %ld\r\n", WebServer);
+//
+//		UBaseType_t Cron = 0;
+//		Cron = uxTaskGetStackHighWaterMark(CronTaskHandle); //SSIDTaskHandle
+//		printf("Cron = %ld\r\n", Cron);
+//
+//		UBaseType_t Output = 0;
+//		Output = uxTaskGetStackHighWaterMark(OutputTaskHandle); //SSIDTaskHandle
+//		printf("Output = %ld\r\n", Output);
+//
+//		UBaseType_t Config = 0;
+//		Config = uxTaskGetStackHighWaterMark(ConfigTaskHandle); //SSIDTaskHandle
+//		printf("Config = %ld\r\n", Config);
+//
+//		UBaseType_t Input = 0;
+//		Input = uxTaskGetStackHighWaterMark(InputTaskHandle); //SSIDTaskHandle
+//		printf("Input = %ld\r\n", Input);
+//
+//		UBaseType_t Encoder = 0;
+//		Encoder = uxTaskGetStackHighWaterMark(EncoderTaskHandle); //SSIDTaskHandle
+//		printf("Encoder = %ld\r\n", Encoder);
+
 		osDelay(1);
 	}
   /* USER CODE END StartSSIDTask */
@@ -993,7 +992,6 @@ void StartOutputTask(void const * argument)
 {
   /* USER CODE BEGIN StartOutputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-
   /* Infinite loop */
   for(;;)
   {
@@ -1062,14 +1060,17 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
+					xTaskNotifyGive(EncoderTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
 
 				} else {
 					StartSetingsConfig();
+
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
 					xTaskNotifyGive(CronTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ CronTask
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
+					xTaskNotifyGive(EncoderTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
 				}
 				usbflag = 0;
 			}
@@ -1093,7 +1094,7 @@ void StartConfigTask(void const * argument)
 					//printf("Wrong data! \r\n");
 					break;
 				}
-				printf("+++ Received number: %u\n", usbnum);
+				printf("xQueueReceive number: %u\n", usbnum);
 			}
 			/******************************************************************************************/
 
@@ -1114,8 +1115,9 @@ void StartConfigTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartInputTask */
-void StartInputTask(void const *argument) {
-	/* USER CODE BEGIN StartInputTask */
+void StartInputTask(void const * argument)
+{
+  /* USER CODE BEGIN StartInputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
 
 	uint8_t pinStates[NUMPIN] = { 0 };
@@ -1208,8 +1210,153 @@ void StartInputTask(void const *argument) {
 		}
 		//osDelay(5);
 	}
-	/* USER CODE END StartInputTask */
+  /* USER CODE END StartInputTask */
 }
+
+/* USER CODE BEGIN Header_StartEncoderTask */
+/**
+* @brief Function implementing the EncoderTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartEncoderTask */
+void StartEncoderTask(void const * argument)
+{
+  /* USER CODE BEGIN StartEncoderTask */
+	ulTaskNotifyTake(0, portMAX_DELAY);
+	uint8_t pinb = 0;
+//	int counter = 0;
+	uint32_t millis;
+	uint32_t pinTimes[NUMPIN] = { 0 };
+	uint8_t prev_A[NUMPIN] = {0,};
+	uint8_t prev_B[NUMPIN] =  {0,};
+//	uint32_t last_change = 0;
+//	uint8_t newcounter = 0;
+	uint8_t i = 0;
+	uint8_t a = 0;
+	uint8_t pwm = 0;
+	/* Infinite loop */
+	for (;;) {
+		millis = HAL_GetTick();
+		for (i = 0; i < NUMPIN; i++) {
+			// INPUT Encoder A
+			if (PinsConf[i].topin == 8) {   // EncodrerA
+				pinb = PinsConf[i].encoderb;// EncodrerB
+				if (pinb != 0) {
+					pinb = pinb - 1;
+					if (millis - pinTimes[i] >= DEBOUNCE_DELAY) { // игнорируем дребезг
+						PinsConf[i].on = HAL_GPIO_ReadPin(PinsInfo[i].gpio_name,PinsInfo[i].hal_pin);
+						//printf("A = %d\r\n",A);
+						osDelay(3);
+						PinsConf[pinb].on = HAL_GPIO_ReadPin(PinsInfo[pinb].gpio_name,PinsInfo[pinb].hal_pin);
+						if (PinsConf[i].on != prev_A[i] || PinsConf[pinb].on != prev_B[pinb]) { //Если состояние изменилось
+							pinTimes[i] = millis; // Сбрасываем дребезг
+							if (PinsConf[i].on == 1 && PinsConf[pinb].on == 0) {// A && B
+//								counter--;
+								printf("ID:%d  A = %d & B = %d\r\n",i, PinsConf[i].on, PinsConf[pinb].on);
+								for (a = 0; a < NUMPINLINKS; a++) {
+									if (PinsLinks[a].idin == i) {// A
+										pwm = PinsLinks[a].idout;// B
+										if (PinsConf[pwm].topin == 5) {// PWM
+											PinsConf[pwm].dvalue = (int) HAL_TIM_ReadCapturedValue(&htim[pwm],PinsInfo[pwm].tim_channel);
+											PinsConf[pwm].dvalue -= 1;
+											if(PinsConf[pwm].dvalue <= 0){
+												PinsConf[pwm].dvalue = 0;
+											}
+											__HAL_TIM_SET_COMPARE(&htim[pwm],PinsInfo[pwm].tim_channel,PinsConf[pwm].dvalue);
+											printf("PWM = %d\r\n", PinsConf[pwm].dvalue);
+										}
+									}
+								}
+							} else if (PinsConf[i].on == 0 && PinsConf[pinb].on == 1) {// A && B
+//								counter++;
+								printf("ID:%d  A = %d & B = %d\r\n",i, PinsConf[i].on, PinsConf[pinb].on);
+								for (a = 0; a < NUMPINLINKS; a++) {
+									if (PinsLinks[a].idin == i) {// A
+										pwm = PinsLinks[a].idout;// B
+										if (PinsConf[pwm].topin == 5) {// PWM
+											PinsConf[pwm].dvalue = (int) HAL_TIM_ReadCapturedValue(&htim[pwm],PinsInfo[pwm].tim_channel);
+											PinsConf[pwm].dvalue += 1;
+											if(PinsConf[pwm].dvalue >= 100){
+												PinsConf[pwm].dvalue = 100;
+											}
+											__HAL_TIM_SET_COMPARE(&htim[pwm],PinsInfo[pwm].tim_channel,PinsConf[pwm].dvalue);
+											printf("PWM = %d\r\n", PinsConf[pwm].dvalue);
+										}
+									}
+								}
+							}
+
+							prev_A[i] = PinsConf[i].on; //A
+							prev_B[pinb] = PinsConf[pinb].on; //B;
+//							if (counter >= 100) {
+//								counter = 100;
+//							}
+//							if (counter <= 0) {
+//								counter = 0;
+//							}
+//							if (counter != newcounter) {
+//								printf("Counter = %d\r\n", counter);
+//								newcounter = counter;
+///////////////// PWM ///////////////////
+//								for (uint8_t a = 0; a < NUMPINLINKS; a++) {
+//									if (PinsLinks[a].idin == i) {	// input
+//										z = PinsLinks[a].idout;
+//										if (PinsConf[z].topin == 5) {// PWM
+//											PinsConf[z].dvalue = (int) HAL_TIM_ReadCapturedValue(&htim[z],PinsInfo[z].tim_channel);
+//											//printf("dvalue-1 = %d\r\n",PinsConf[z].dvalue );
+//											PinsConf[z].dvalue = counter;
+//											__HAL_TIM_SET_COMPARE(&htim[z],PinsInfo[z].tim_channel,PinsConf[z].dvalue);
+//										}
+//									}
+//								}
+///////////////// END PWM ///////////////////
+//							}
+						}
+					}
+				}
+			}
+		}
+	}
+  /* USER CODE END StartEncoderTask */
+}
+
+/* USER CODE BEGIN Header_StartOneWireTask */
+/**
+* @brief Function implementing the OneWireTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartOneWireTask */
+void StartOneWireTask(void const * argument)
+{
+  /* USER CODE BEGIN StartOneWireTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartOneWireTask */
+}
+
+/* USER CODE BEGIN Header_StartI2CTask */
+/**
+* @brief Function implementing the I2CTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartI2CTask */
+void StartI2CTask(void const * argument)
+{
+  /* USER CODE BEGIN StartI2CTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartI2CTask */
+}
+
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM6 interrupt took place, inside

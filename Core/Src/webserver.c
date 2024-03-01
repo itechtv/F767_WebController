@@ -20,7 +20,7 @@
 #include "cmsis_os.h"
 
 //#include "data_pin_t"
-
+#define MAX_BUFFER_SIZE 1000 // zerg Замените на необходимый размер буфера
 static void *current_connection;
 static int variable = 0;
 
@@ -42,12 +42,13 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
-extern TIM_HandleTypeDef htim[NUMPIN];
+
 ///////////////////////////
 
 extern osMessageQId usbQueueHandle;
 extern osMessageQId myQueueHandle;
 extern data_pin_t data_pin;
+extern TIM_HandleTypeDef htim[NUMPIN];
 
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
@@ -78,10 +79,18 @@ void clearPin(int pinnum){
 	int i = 0;
 
 	PinsConf[pinnum].ptype = 0;
-	PinsConf[pinnum].sclick = 0;
-	PinsConf[pinnum].dclick[0] = '\0';
-	PinsConf[pinnum].lpress[0] = '\0';
+	PinsConf[pinnum].encoderb = 0;
+	PinsConf[pinnum].hinter = 0;
+	PinsConf[pinnum].repeat = 0;
+	PinsConf[pinnum].rinter = 0;
+	PinsConf[pinnum].dcinter = 0;
+	PinsConf[pinnum].pclick = 0;
 	PinsConf[pinnum].numdevices = 0;
+	PinsConf[pinnum].uppert = 0;
+	PinsConf[pinnum].textupt[0] = '\0';
+	PinsConf[pinnum].lowert = 0;
+	PinsConf[pinnum].textlowt[0] = '\0';
+	PinsConf[pinnum].sensor = 0;
 	PinsConf[pinnum].info[0] = '\0';
 	PinsConf[pinnum].onoff = 0;
 
@@ -107,20 +116,12 @@ int MultiPartTabCount(int num, int pinnum, int count)
 	for (int i = 0; i <= pinnum; i++){
 		if(num == PinsConf[i].topin && num == 1){
 			count++;
-		}
-		if((2 == PinsConf[i].topin || 5 == PinsConf[i].topin) && num == 2){
+		//} else if ((2 == PinsConf[i].topin || 5 == PinsConf[i].topin) && num == 2){
+		} else if ((2 == PinsConf[i].topin || 5 == PinsConf[i].topin || 4 == PinsConf[i].topin) && num == 2){
 			count++;
-		}
-		if(num == PinsConf[i].topin && num == 3){
+		} else if (num == PinsConf[i].topin && num == 3){
 			count++;
-		}
-		if(num == PinsConf[i].topin && num == 5){
-			count++;
-		}
-		if(num == PinsConf[i].topin && num == 4){
-			count++;
-		}
-		if(num == PinsConf[i].topin && num == 6){
+		} else if (num == PinsConf[i].topin && num == 8){
 			count++;
 		}
 	}
@@ -153,179 +154,145 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			countJson = 0;
 			break;
 		} else {
-			///////
-			if(tab == 1){
 
-				sprintf(pcInsert,"{\"id\":%d,\"pins\":\"%s\",\"topin\":%d,\"onewire\":%d,\"pwm\":%d,\"i2cdata\":%d,\"i2cclok\":%d},",
-						variable, PinsInfo[variable].pins, PinsConf[variable].topin, PinsInfo[variable].onewire, PinsInfo[variable].pwm, PinsInfo[variable].i2cdata, PinsInfo[variable].i2cclok);
-
-				if(variable == (NUMPIN-1)){
-					pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
-				}
-			}
-			if(tab == 2){
-				if(PinsConf[variable].topin == 1){
-					// buttoms tabjson
-					idplus = variable + 1;
-
-				    root = cJSON_CreateObject();
-				    while (i <= NUMPINLINKS - 1) {
-				    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
-				    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
-				    	}
-				    	i++;
-				    }
-
-					str = cJSON_Print(root);
-					cJSON_Delete(root);
-
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"sclick\":%d,\"dclick\":\"%s\",\"lpress\":\"%s\",\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, PinsConf[variable].sclick,
-							PinsConf[variable].dclick, PinsConf[variable].lpress,
-							str, PinsConf[variable].info, PinsConf[variable].onoff);
-					////////////////
-					countJson++;
-
-					if(countJson == numTabLine){
-						//printf("DELLL ',' \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+			// Start JSON generation for tables ///////
+			switch (tab) {
+				// Select table json
+				case 1:
+					sprintf(pcInsert,"{\"id\":%d,\"pins\":\"%s\",\"topin\":%d,\"pwm\":%d,\"i2cdata\":%d,\"i2cclok\":%d},",
+							variable, PinsInfo[variable].pins, PinsConf[variable].topin, PinsInfo[variable].pwm, PinsInfo[variable].i2cdata, PinsInfo[variable].i2cclok);
+					//
+					if(variable == (NUMPIN-1)){
+						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON
 					}
-				} else {
-					pcInsert = "";
-				}
-			}
-			if(tab == 3){
-				if(PinsConf[variable].topin == 2 || PinsConf[variable].topin == 5){
-					// relay tabjson
-					idplus = variable + 1;
+					break;
+				// Button table json
+				case 2:
+					if(PinsConf[variable].topin == 1){
+						idplus = variable + 1;
 
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].info,PinsConf[variable].onoff);
-					////////////////
+					    root = cJSON_CreateObject();
+					    while (i <= NUMPINLINKS - 1) {
+					    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
+					    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
+					    	}
+					    	i++;
+					    }
+						str = cJSON_Print(root);
+						cJSON_Delete(root);
 
-					countJson++;
+						sprintf(pcInsert,
+								"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"sclick\":%d,\"dclick\":\"%s\",\"lpress\":\"%s\",\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+								PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+								PinsConf[variable].ptype, PinsConf[variable].sclick,
+								PinsConf[variable].dclick, PinsConf[variable].lpress,
+								str, PinsConf[variable].info, PinsConf[variable].onoff);
 
-					if(countJson == numTabLine){
-						//printf("DELLL ',' \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+						free(str);
+						////////////////
+						countJson++;
+
+						if(countJson == numTabLine){
+							pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+						}
+					} else {
+						pcInsert = "";
 					}
+					break;
+				// Relay, PWM, OneWire table json  zerg
+				case 3:
+					if(PinsConf[variable].topin == 2 || PinsConf[variable].topin == 4 || PinsConf[variable].topin == 5){
+						idplus = variable + 1;
 
-				} else {
-					pcInsert = "";
-				}
-			}
-			if(tab == 4){// tabswitch json
-				if(PinsConf[variable].topin == 3){
-					idplus = variable + 1;
+						sprintf(pcInsert,
+								"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"numdevices\":%d,\"uppert\":%d,\"textupt\":\"%s\",\"lowert\":%d,\"textlowt\":\"%s\",\"sensor\":%d,\"info\":\"%s\",\"onoff\":%d},",
+								PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+								PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
+								PinsConf[variable].istate, PinsConf[variable].dvalue,
+								PinsConf[variable].ponr,PinsConf[variable].numdevices,
+								PinsConf[variable].uppert,PinsConf[variable].textupt,
+								PinsConf[variable].lowert,PinsConf[variable].textlowt,
+								PinsConf[variable].sensor, PinsConf[variable].info,
+								PinsConf[variable].onoff);
+						////////////////
+						countJson++;
 
-				    root = cJSON_CreateObject();
-				    while (i <= NUMPINLINKS - 1) {
-				    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
-				    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
-				    	}
-				    	i++;
-				    }
+					    if (countJson == numTabLine) {
+					            pcInsert[strlen(pcInsert) - 1] = '\0';
+					        }
+					    } else {
+					        pcInsert[0] = '\0';
+					    }
+					break;
+				case 4:
+					if(PinsConf[variable].topin == 3){
+						idplus = variable + 1;
 
-					str = cJSON_Print(root);
-					cJSON_Delete(root);
+					    root = cJSON_CreateObject();
+					    while (i <= NUMPINLINKS - 1) {
+					    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
+					    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
+					    	}
+					    	i++;
+					    }
+						str = cJSON_Print(root);
+						cJSON_Delete(root);
 
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, str, PinsConf[variable].info, PinsConf[variable].onoff);
+						sprintf(pcInsert,
+								"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"encoderb\":%d,\"hinter\":%d,\"repeat\":%d,\"rinter\":%d,\"dcinter\":%d,\"pclick\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+								PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+								PinsConf[variable].ptype, PinsConf[variable].encoderb,
+								PinsConf[variable].hinter, PinsConf[variable].repeat,
+								PinsConf[variable].rinter, PinsConf[variable].dcinter,
+								PinsConf[variable].pclick, str, PinsConf[variable].info,
+								PinsConf[variable].onoff);
 
-					free(str);
+						free(str);
+						////////////////
+						countJson++;
 
-					////////////////
-					countJson++;
-
-					if(countJson == numTabLine){
-						//printf("DELLL ',' \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+						if(countJson == numTabLine){
+							pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+						}
+					} else {
+						pcInsert = "";
 					}
+					break;
+				// Encoder table json
+				case 5:
+					if(PinsConf[variable].topin == 8){
+						idplus = variable + 1;
 
-				} else {
-					pcInsert = "";
-				}
-			}
+					    root = cJSON_CreateObject();
+					    while (i <= NUMPINLINKS - 1) {
+					    	if(PinsLinks[i].idin == variable && PinsLinks[i].flag == 1){
+					    		cJSON_AddNumberToObject(root, PinsInfo[PinsLinks[i].idout].pins,i + 1);
+					    	}
+					    	i++;
+					    }
+						str = cJSON_Print(root);
+						cJSON_Delete(root);
 
-			if(tab == 5){
-				if(PinsConf[variable].topin == 5){
-					// PWM tabjson
-					idplus = variable + 1;
+						sprintf(pcInsert,
+								"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"encoderb\":%d,\"pinact\":%s,\"info\":\"%s\",\"onoff\":%d},",
+								PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
+								PinsConf[variable].encoderb, str, PinsConf[variable].info, PinsConf[variable].onoff);
 
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"ptype\":%d,\"pwm\":%d,\"on\":%d,\"istate\":%d,\"dvalue\":%d,\"ponr\":%d,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].ptype, PinsConf[variable].pwm, PinsConf[variable].on,
-							PinsConf[variable].istate, PinsConf[variable].dvalue,
-							PinsConf[variable].ponr, PinsConf[variable].info,
-							PinsConf[variable].onoff);
-					////////////////
+						free(str);
+						////////////////
+						countJson++;
 
-					countJson++;
-
-					if(countJson == numTabLine){
-						//printf("DELLL ',' \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+						if(countJson == numTabLine){
+							pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
+						}
+					} else {
+						pcInsert = "";
 					}
-
-				} else {
-					pcInsert = "";
-				}
+					break;
+				default:
+					break;
 			}
-			if(tab == 6){
-				if(PinsConf[variable].topin == 4){
-					// OneWire tabjson
-					idplus = variable + 1;
-
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"numdevices\":%d,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].numdevices, PinsConf[variable].info,
-							PinsConf[variable].onoff);
-					////////////////
-
-					countJson++;
-					printf("countJson = %d numTabLine = %d \r\n",countJson, numTabLine);
-					if(countJson == numTabLine){
-//					if(countJson >0){
-						//printf("DELLL ',' \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
-					}
-
-				} else {
-					pcInsert = "";
-				}
-			}
-			if(tab == 7){
-				if(PinsConf[variable].topin == 4){
-					// I2C tabjson
-					idplus = variable + 1;
-
-					sprintf(pcInsert,
-							"{\"topin\":%d,\"id\":%d,\"pins\":\"%s\",\"numdevices\":%d,\"info\":\"%s\",\"onoff\":%d},",
-							PinsConf[variable].topin, idplus, PinsInfo[variable].pins,
-							PinsConf[variable].numdevices, PinsConf[variable].info,
-							PinsConf[variable].onoff);
-					////////////////
-
-					countJson++;
-					printf("countJson = %d numTabLine = %d \r\n",countJson, numTabLine);
-					if(countJson == numTabLine){
-//					if(countJson >0){
-						//printf("DELLL ',' \n");
-						pcInsert[strlen(pcInsert) - 1] = '\0'; // Удаляем "," из JSON в конце
-					}
-
-				} else {
-					pcInsert = "";
-				}
-			}
+			// End JSON generation for tables ///////
 
 			*next_tag_part = variable;
 			variable++;
@@ -366,9 +333,9 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			return strlen(pcInsert);
 			break;
 
-		// ssi tag <!--#menu-->//
+		// ssi tag <!--#menu-->
 		case 3:
-			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Button pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"tabpwm.shtml?ssid=%s\">PWM</a> | <a href=\"tab1wire.shtml?ssid=%s\">OneWire</a> | <a href=\"tabI2C.shtml?ssid=%s\">I2C</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
+			sprintf(pcInsert,"<a href=\"index.shtml?ssid=%s\">Home</a> | <a href=\"select.shtml?ssid=%s\">Select pin</a> | <a href=\"tabswitch.shtml?ssid=%s\">Switch pin</a> | <a href=\"tabbutton.shtml?ssid=%s\">Button pin</a> | <a href=\"tabencoder.shtml?ssid=%s\">Encoder pin</a> | <a href=\"tabrelay.shtml?ssid=%s\">Relay pin</a> | <a href=\"tabpwm.shtml?ssid=%s\">PWM pin</a> | <a href=\"tabcron.shtml?ssid=%s\">Timers (crone)</a> | <a href=\"tab1wire.shtml?ssid=%s\">OneWire</a> | <a href=\"tabI2C.shtml?ssid=%s\">I2C</a> | <a href=\"settings.shtml?ssid=%s\">Settings</a> | <a href=\"logout.shtml\">Logout</a> ", randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID,randomSSID);
 			return strlen(pcInsert);
 			break;
 
@@ -378,140 +345,173 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 			return strlen(pcInsert);
 			break;
 
-		// ssi tag <!--#formjson-->
+		// ssi tag <!--#formjson--> START
 		case 5:
-			if(tab != 0){
-				//root = cJSON_CreateArray();
-				//root = cJSON_CreateObject();
-				//cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
+				switch (tab) {
+					// Form Edit Button JSON
+					case 1:
+						root = cJSON_CreateObject();
+						cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
+						cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
+						cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
+						cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
+						cJSON_AddNumberToObject(root, "sclick", PinsConf[id].sclick);
+						cJSON_AddStringToObject(root, "dclick", PinsConf[id].dclick);
+						cJSON_AddStringToObject(root, "lpress", PinsConf[id].lpress);
+						cJSON_AddNumberToObject(root, "numdevices", PinsConf[id].numdevices);
+						cJSON_AddNumberToObject(root, "uppert", PinsConf[id].uppert);
+						cJSON_AddStringToObject(root, "textupt", PinsConf[id].textupt);
+						cJSON_AddNumberToObject(root, "lowert", PinsConf[id].lowert);
+						cJSON_AddStringToObject(root, "textlowt", PinsConf[id].textlowt);
+						cJSON_AddNumberToObject(root, "sensor", PinsConf[id].sensor);
+						cJSON_AddStringToObject(root, "info", PinsConf[id].info);
+						cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					// Form Edit Relay/PWM/DS18B20 JSON
+					case 2:
+						root = cJSON_CreateObject();
+						cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
+						cJSON_AddNumberToObject(root, "id", id + 1);  // id numbering from 1
+						cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
+						cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
+						cJSON_AddNumberToObject(root, "pwm", PinsConf[id].pwm);
+						cJSON_AddNumberToObject(root, "on", PinsConf[id].on);
+						cJSON_AddNumberToObject(root, "istate", PinsConf[id].istate);
+						cJSON_AddNumberToObject(root, "dvalue", PinsConf[id].dvalue);
+						cJSON_AddNumberToObject(root, "ponr", PinsConf[id].ponr);
+						cJSON_AddNumberToObject(root, "numdevices", PinsConf[id].numdevices);
+						cJSON_AddNumberToObject(root, "uppert", PinsConf[id].uppert);
+						cJSON_AddStringToObject(root, "textupt", PinsConf[id].textupt);
+						cJSON_AddNumberToObject(root, "lowert", PinsConf[id].lowert);
+						cJSON_AddStringToObject(root, "textlowt", PinsConf[id].textlowt);
+						cJSON_AddNumberToObject(root, "sensor", PinsConf[id].sensor);
+						cJSON_AddStringToObject(root, "info", PinsConf[id].info);
+						cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					// Form Edit Connection JSON
+					case 3:
+						root = cJSON_CreateObject();
+						cJSON_AddNumberToObject(root, "id",id + 1);
+						cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
+						fld = cJSON_CreateObject();
 
-				if(tab == 1){
-					root = cJSON_CreateObject();
-					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
-					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
-					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
-					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
-					cJSON_AddNumberToObject(root, "sclick", PinsConf[id].sclick);
-					cJSON_AddStringToObject(root, "dclick", PinsConf[id].dclick);
-					cJSON_AddStringToObject(root, "lpress", PinsConf[id].lpress);
-					cJSON_AddNumberToObject(root, "numdevices", PinsConf[id].numdevices);
-					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
-					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
-					str = cJSON_PrintUnformatted(root);
-					cJSON_Delete(root);
-				}
-
-				if(tab == 2){ // Form for button/pwm/OneWire
-					root = cJSON_CreateObject();
-					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
-					cJSON_AddNumberToObject(root, "id", id + 1);  // id numbering from 1
-					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
-					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
-					cJSON_AddNumberToObject(root, "pwm", PinsConf[id].pwm);
-					cJSON_AddNumberToObject(root, "on", PinsConf[id].on);
-					cJSON_AddNumberToObject(root, "istate", PinsConf[id].istate);
-					cJSON_AddNumberToObject(root, "dvalue", PinsConf[id].dvalue);
-					cJSON_AddNumberToObject(root, "ponr", PinsConf[id].ponr);
-					cJSON_AddNumberToObject(root, "numdevices", PinsConf[id].numdevices);
-					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
-					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
-					str = cJSON_PrintUnformatted(root);
-					cJSON_Delete(root);
-				}
-
-				if(tab == 3){
-					root = cJSON_CreateObject();
-
-					cJSON_AddNumberToObject(root, "id",id + 1);
-					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
-					fld = cJSON_CreateObject();
-
-					while (variable <=  NUMPIN - 1) {
-						if (PinsConf[variable].topin == 2 || PinsConf[variable].topin == 5) {
-							cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable + 1);
+						while (variable <=  NUMPIN - 1) {
+							if (PinsConf[variable].topin == 2 || PinsConf[variable].topin == 5) {
+								cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable + 1);
+							}
+							variable++;
 						}
-						variable++;
-					}
-					variable = 0;
+						variable = 0;
 
-					cJSON_AddItemToObject(root, "rpins", fld);
+						cJSON_AddItemToObject(root, "rpins", fld);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					// Form Edit Settings JSON
+					case 4:
+						root = cJSON_CreateObject();
+						cJSON_AddStringToObject(root, "lang", SetSettings.lang);
+						cJSON_AddNumberToObject(root, "lon_de", SetSettings.lon_de);
+						cJSON_AddNumberToObject(root, "lat_de", SetSettings.lat_de);
+						cJSON_AddNumberToObject(root, "check_mqtt", SetSettings.check_mqtt);
+						cJSON_AddNumberToObject(root, "mqtt_prt", SetSettings.mqtt_prt);
+						cJSON_AddStringToObject(root, "mqtt_clt", SetSettings.mqtt_clt);
+						cJSON_AddStringToObject(root, "mqtt_usr", SetSettings.mqtt_usr);
+						cJSON_AddStringToObject(root, "mqtt_pswd", SetSettings.mqtt_pswd);
+						cJSON_AddStringToObject(root, "mqtt_tpc", SetSettings.mqtt_tpc);
+						cJSON_AddStringToObject(root, "mqtt_ftpc", SetSettings.mqtt_ftpc);
+						cJSON_AddNumberToObject(root, "mqtt_hst0", SetSettings.mqtt_hst0);
+						cJSON_AddNumberToObject(root, "mqtt_hst1", SetSettings.mqtt_hst1);
+						cJSON_AddNumberToObject(root, "mqtt_hst2", SetSettings.mqtt_hst2);
+						cJSON_AddNumberToObject(root, "mqtt_hst3", SetSettings.mqtt_hst3);
+						cJSON_AddNumberToObject(root, "check_ip", SetSettings.check_ip);
+						cJSON_AddNumberToObject(root, "ip_addr0", SetSettings.ip_addr0);
+						cJSON_AddNumberToObject(root, "ip_addr1", SetSettings.ip_addr1);
+						cJSON_AddNumberToObject(root, "ip_addr2", SetSettings.ip_addr2);
+						cJSON_AddNumberToObject(root, "ip_addr3", SetSettings.ip_addr3);
+						cJSON_AddNumberToObject(root, "sb_mask0", SetSettings.sb_mask0);
+						cJSON_AddNumberToObject(root, "sb_mask1", SetSettings.sb_mask1);
+						cJSON_AddNumberToObject(root, "sb_mask2", SetSettings.sb_mask2);
+						cJSON_AddNumberToObject(root, "sb_mask3", SetSettings.sb_mask3);
+						cJSON_AddNumberToObject(root, "gateway0", SetSettings.gateway0);
+						cJSON_AddNumberToObject(root, "gateway1", SetSettings.gateway1);
+						cJSON_AddNumberToObject(root, "gateway2", SetSettings.gateway2);
+						cJSON_AddNumberToObject(root, "gateway3", SetSettings.gateway3);
+						snprintf(macStr, sizeof(macStr), "%02X-%02X-%02X-%02X-%02X-%02X", SetSettings.macaddr0, SetSettings.macaddr1, SetSettings.macaddr2, SetSettings.macaddr3, SetSettings.macaddr4, SetSettings.macaddr5);
+						cJSON_AddStringToObject(root, "macaddr", macStr);
+						cJSON_AddStringToObject(root, "adm_name", SetSettings.adm_name);
+						cJSON_AddStringToObject(root, "adm_pswd", SetSettings.adm_pswd);
+						cJSON_AddStringToObject(root, "token", SetSettings.token);
+						cJSON_AddNumberToObject(root, "timezone", SetSettings.timezone);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					// Form Edit Cron JSON
+					case 5:
+						root = cJSON_CreateObject();
+						cJSON_AddNumberToObject(root, "id", id); // в JS доваляеме +1
+						cJSON_AddStringToObject(root, "cron", dbCrontxt[id].cron);
+						cJSON_AddStringToObject(root, "activ", dbCrontxt[id].activ);
+						cJSON_AddStringToObject(root, "info", dbCrontxt[id].info);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					// Form Edit Switch JSON
+					case 6:
+						root = cJSON_CreateObject();
+						cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
+						cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
+						cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
+						cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
+						cJSON_AddNumberToObject(root, "encoderb", PinsConf[id].encoderb);
+						cJSON_AddNumberToObject(root, "hinter", PinsConf[id].hinter);
+						cJSON_AddNumberToObject(root, "repeat", PinsConf[id].repeat);
+						cJSON_AddNumberToObject(root, "rinter", PinsConf[id].rinter);
+						cJSON_AddNumberToObject(root, "dcinter", PinsConf[id].dcinter);
+						cJSON_AddNumberToObject(root, "pclick", PinsConf[id].pclick);
+						cJSON_AddStringToObject(root, "info", PinsConf[id].info);
+						cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					// Form Edit Encoder JSON
+					case 7:
+						root = cJSON_CreateObject();
+						cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
+						cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
+						cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
+						fld = cJSON_CreateObject();
 
-					str = cJSON_PrintUnformatted(root);
-					cJSON_Delete(root);
+							while (variable <=  NUMPIN - 1) {
+								if (PinsConf[variable].topin == 9) {
+									cJSON_AddNumberToObject(fld, PinsInfo[variable].pins, variable + 1);
+								}
+								variable++;
+							}
+							variable = 0;
+
+						cJSON_AddItemToObject(root, "bpins", fld);
+						cJSON_AddNumberToObject(root, "encoderb", PinsConf[id].encoderb);
+						cJSON_AddStringToObject(root, "info", PinsConf[id].info);
+						cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
+						str = cJSON_PrintUnformatted(root);
+						cJSON_Delete(root);
+						break;
+					default:
+						break;
 				}
-				if(tab == 4){
-					root = cJSON_CreateObject();
-					cJSON_AddStringToObject(root, "lang", SetSettings.lang);
-					cJSON_AddNumberToObject(root, "lon_de", SetSettings.lon_de);
-					cJSON_AddNumberToObject(root, "lat_de", SetSettings.lat_de);
-					cJSON_AddNumberToObject(root, "check_mqtt", SetSettings.check_mqtt);
-					cJSON_AddNumberToObject(root, "mqtt_prt", SetSettings.mqtt_prt);
-					cJSON_AddStringToObject(root, "mqtt_clt", SetSettings.mqtt_clt);
-					cJSON_AddStringToObject(root, "mqtt_usr", SetSettings.mqtt_usr);
-					cJSON_AddStringToObject(root, "mqtt_pswd", SetSettings.mqtt_pswd);
-					cJSON_AddStringToObject(root, "mqtt_tpc", SetSettings.mqtt_tpc);
-					cJSON_AddStringToObject(root, "mqtt_ftpc", SetSettings.mqtt_ftpc);
-					cJSON_AddNumberToObject(root, "mqtt_hst0", SetSettings.mqtt_hst0);
-					cJSON_AddNumberToObject(root, "mqtt_hst1", SetSettings.mqtt_hst1);
-					cJSON_AddNumberToObject(root, "mqtt_hst2", SetSettings.mqtt_hst2);
-					cJSON_AddNumberToObject(root, "mqtt_hst3", SetSettings.mqtt_hst3);
-					cJSON_AddNumberToObject(root, "check_ip", SetSettings.check_ip);
-					cJSON_AddNumberToObject(root, "ip_addr0", SetSettings.ip_addr0);
-					cJSON_AddNumberToObject(root, "ip_addr1", SetSettings.ip_addr1);
-					cJSON_AddNumberToObject(root, "ip_addr2", SetSettings.ip_addr2);
-					cJSON_AddNumberToObject(root, "ip_addr3", SetSettings.ip_addr3);
-					cJSON_AddNumberToObject(root, "sb_mask0", SetSettings.sb_mask0);
-					cJSON_AddNumberToObject(root, "sb_mask1", SetSettings.sb_mask1);
-					cJSON_AddNumberToObject(root, "sb_mask2", SetSettings.sb_mask2);
-					cJSON_AddNumberToObject(root, "sb_mask3", SetSettings.sb_mask3);
-					cJSON_AddNumberToObject(root, "gateway0", SetSettings.gateway0);
-					cJSON_AddNumberToObject(root, "gateway1", SetSettings.gateway1);
-					cJSON_AddNumberToObject(root, "gateway2", SetSettings.gateway2);
-					cJSON_AddNumberToObject(root, "gateway3", SetSettings.gateway3);
-					snprintf(macStr, sizeof(macStr), "%02X-%02X-%02X-%02X-%02X-%02X",
-							SetSettings.macaddr0, SetSettings.macaddr1, SetSettings.macaddr2, SetSettings.macaddr3, SetSettings.macaddr4, SetSettings.macaddr5);
-					cJSON_AddStringToObject(root, "macaddr", macStr);
-					cJSON_AddStringToObject(root, "adm_name", SetSettings.adm_name);
-					cJSON_AddStringToObject(root, "adm_pswd", SetSettings.adm_pswd);
-					cJSON_AddStringToObject(root, "token", SetSettings.token);
-					cJSON_AddNumberToObject(root, "timezone", SetSettings.timezone);
-
-
-					str = cJSON_PrintUnformatted(root);
-					cJSON_Delete(root);
-				}
-				if(tab == 5){
-					root = cJSON_CreateObject();
-
-					cJSON_AddNumberToObject(root, "id", id); // в JS добавляет +1
-					cJSON_AddStringToObject(root, "cron", dbCrontxt[id].cron);
-					cJSON_AddStringToObject(root, "activ", dbCrontxt[id].activ);
-					cJSON_AddStringToObject(root, "info", dbCrontxt[id].info);
-					str = cJSON_PrintUnformatted(root);
-					cJSON_Delete(root);
-				}
-				if(tab == 6){// formswitch
-					root = cJSON_CreateObject();
-					cJSON_AddNumberToObject(root, "topin", PinsConf[id].topin);
-					cJSON_AddNumberToObject(root, "id", id + 1); // id numbering from 1
-					cJSON_AddStringToObject(root, "pins", PinsInfo[id].pins);
-					cJSON_AddNumberToObject(root, "ptype", PinsConf[id].ptype);
-					cJSON_AddNumberToObject(root, "sclick", PinsConf[id].sclick);
-					cJSON_AddStringToObject(root, "dclick", PinsConf[id].dclick);
-					cJSON_AddStringToObject(root, "lpress", PinsConf[id].lpress);
-					cJSON_AddStringToObject(root, "info", PinsConf[id].info);
-					cJSON_AddNumberToObject(root, "onoff", PinsConf[id].onoff);
-					str = cJSON_PrintUnformatted(root);
-					cJSON_Delete(root);
-				}
-
-			}
 
 			sprintf(pcInsert, "%s", str);
 			free(str);
 			return strlen(pcInsert);
 			break;
-			// ssi tag <!--#cronjson-->
+			// ssi tag <!--#formjson--> END
+
+		    // ssi tag <!--#cronjson-->
 			case 6:
 
 				root = cJSON_CreateArray();
@@ -543,72 +543,63 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 //////////////////////////////  CGI HANDLER  //////////////////////////////////
 
-const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* IndexCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+//const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+//const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+//const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+//const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* InputCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);	//???
+const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);		//???
 const char* LogoutCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormSwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]); ////////////////////
 const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* RebootCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
 const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* Form1WireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* OneWireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* FormI2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
-const char* I2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);// index = 27
+const char* TabCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]);
+
 
 static const tCGI URL_TABLES[] = {
-		{"/index.shtml", (tCGIHandler) FormCGI_Handler },
-		{"/logon.shtml", (tCGIHandler) LoginCGI_Handler },
-		{"/select.shtml", (tCGIHandler) SelectCGI_Handler },
-		{"/tabrelay.shtml", (tCGIHandler) RelayCGI_Handler },
-		{"/tabbutton.shtml", (tCGIHandler) ButtonCGI_Handler },
-		{"/settings.shtml", (tCGIHandler) SettingCGI_Handler },
-		{"/timers.shtml", (tCGIHandler) TimerCGI_Handler },
-		{"/logout.shtml", (tCGIHandler) LogoutCGI_Handler },
-		{"/tabjson.shtml", (tCGIHandler) TabjsonCGI_Handler },
-		{"/selectset.shtml", (tCGIHandler) SelectSetCGI_Handler },
-		{"/formrelay.shtml", (tCGIHandler) FormRelayCGI_Handler },
-		{"/formbutton.shtml", (tCGIHandler) FormButtonCGI_Handler },
-		{"/formtopin.shtml", (tCGIHandler) FormPinToPinCGI_Handler },
-		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler },
-		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },
-		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },
-		{"/formcron.shtml", (tCGIHandler) FormcronCGI_Handler },
-		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },
-		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler },
-		{"/api.shtml", (tCGIHandler) ApiCGI_Handler },
-		{"/tabswitch.shtml", (tCGIHandler) SwitchCGI_Handler },
-		{"/formswitch.shtml", (tCGIHandler) FormSwitchCGI_Handler },
-		{"/tabpwm.shtml", (tCGIHandler) PwmCGI_Handler },
-		{"/formpwm.shtml", (tCGIHandler) FormPWMCGI_Handler },
-		{"/form1wire.shtml", (tCGIHandler) Form1WireCGI_Handler },
-		{"/tab1wire.shtml", (tCGIHandler) OneWireCGI_Handler },// index = 25
-		{"/formI2C.shtml", (tCGIHandler) Form1WireCGI_Handler },// index = 26
-		{"/tabI2C.shtml", (tCGIHandler) OneWireCGI_Handler }// index = 27
+		{"/index.shtml", (tCGIHandler) IndexCGI_Handler },			// index = 0
+		{"/logon.shtml", (tCGIHandler) LoginCGI_Handler },			// index = 1
+		{"/select.shtml", (tCGIHandler) TabCGI_Handler },			// index = 2
+		{"/tabrelay.shtml", (tCGIHandler) TabCGI_Handler },			// index = 3
+		{"/tabbutton.shtml", (tCGIHandler) InputCGI_Handler },		// index = 4
+		{"/tabencoder.shtml", (tCGIHandler) InputCGI_Handler },		// index = 5
+		{"/formencoder.shtml", (tCGIHandler) FormCGI_Handler},	    // index = 6
+		{"/logout.shtml", (tCGIHandler) LogoutCGI_Handler },		// index = 7
+		{"/tabjson.shtml", (tCGIHandler) TabjsonCGI_Handler },		// index = 8
+		{"/selectset.shtml", (tCGIHandler) SelectSetCGI_Handler },	// index = 9
+		{"/formrelay.shtml", (tCGIHandler) FormCGI_Handler },		// index = 10
+		{"/formbutton.shtml", (tCGIHandler) FormCGI_Handler },		// index = 11
+		{"/formtopin1.shtml", (tCGIHandler) FormCGI_Handler },		// index = 12
+		{"/onoffset.shtml", (tCGIHandler) OnOffSetCGI_Handler },	// index = 13
+		{"/formjson.shtml", (tCGIHandler) FormjsonCGI_Handler },	// index = 14
+		{"/settings.shtml", (tCGIHandler) SettingsCGI_Handler },	// index = 15
+		{"/formcron.shtml", (tCGIHandler) FormCGI_Handler },		// index = 16
+		{"/tabcron.shtml", (tCGIHandler) CronCGI_Handler },			// index = 17
+		{"/reboot.shtml", (tCGIHandler) RebootCGI_Handler },		// index = 18
+		{"/api.shtml", (tCGIHandler) ApiCGI_Handler },				// index = 19
+		{"/tabswitch.shtml", (tCGIHandler) InputCGI_Handler },		// index = 20
+		{"/formswitch.shtml", (tCGIHandler) FormCGI_Handler },		// index = 21
+		{"/tabpwm.shtml", (tCGIHandler) TabCGI_Handler },			// index = 22
+		{"/formpwm.shtml", (tCGIHandler) FormCGI_Handler },			// index = 23
+		{"/formtopin2.shtml", (tCGIHandler) FormCGI_Handler },		// index = 24
+		{"/formtopin3.shtml", (tCGIHandler) FormCGI_Handler },	    // index = 25
+		{"/form1wire.shtml", (tCGIHandler) FormCGI_Handler },       // index = 26
+		{"/tab1wire.shtml", (tCGIHandler) TabCGI_Handler }         // index = 27
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
 
 
 // index.shtml Handler (Index 0)
-const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+const char* IndexCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	if (iIndex == 0) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -617,13 +608,14 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
-		}	}
+		}
+	}
 
 	//printf("URL %s \n", URL_TABLES[iIndex].pcCGIName);
 
 	/* login succeeded */
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
+
 		restartSSID();
 		return URL_TABLES[iIndex].pcCGIName;
 	} else {
@@ -659,13 +651,12 @@ const char* LoginCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	return "/logon.shtml";
 }
 
+// tab1wire.shtml Handler Index 27
+// select.shtml tabrelay.shtml tabencoder.shtml formpwm.shtml
+// Handler (Index 2 Index 3 Index 5 Index 23)
+const char* TabCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
-// select.shtml Handler (Index 2)
-const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-
-	if (iIndex == 2) {
+	if (iIndex == 2 || iIndex == 3 || iIndex == 5 || iIndex == 23 || iIndex == 27) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
@@ -688,35 +679,38 @@ const char* SelectCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 }
 
 
-// tabrelay.shtml Handler (Index 3)
-const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+//// tabrelay.shtml Handler (Index 3)
+//const char* RelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+//		char *pcValue[]) {
+//
+//
+//	if (iIndex == 3) {
+//		for (int i = 0; i < iNumParams; i++) {
+//			if (strcmp(pcParam[i], "ssid") == 0)
+//			{
+//				memset(ssid, '\0', sizeof(ssid));
+//				strcpy(ssid, pcValue[i]);
+//			}
+//		}
+//	}
+//
+//	/* login succeeded */
+//	if(strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+//		//printf("SSID OK \n");
+//		restartSSID();
+//		return "/tabrelay.shtml"; //
+//	} else {
+//		printf("SSID Failed \n");
+//		memset(randomSSID, '\0', sizeof(randomSSID));
+//		return "/login.shtml";
+//	}
+//}
 
 
-	if (iIndex == 3) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if(1){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/tabrelay.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-// tabbuttom.shtml Handler (Index 4)
-const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+// tabbutton.shtml Handler (Index 4)
+// tabencoder.shtml Handler (Index 5)
+// tabswitch.shtml Handler (Index 20)
+const char* InputCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	int idin = 0;
 	int idout = 0;
@@ -724,7 +718,7 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	int del = 0;
 	uint16_t usbdata = 0;
 
-	if (iIndex == 4) {
+	if (iIndex == 4 || iIndex == 5 || iIndex == 20) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "ssid") == 0)
 			{
@@ -762,7 +756,6 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				printf("usbdata = 4 \n");
 			}
 			usbdata = 0;
-
 		}
 		if(del != 0){
 			PinsLinks[del-1].idin = 0;
@@ -778,10 +771,10 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 
 	/* login succeeded */
-	if(1){
+	if(strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		//printf("SSID OK \n");
 		restartSSID();
-		return "/tabbutton.shtml"; //
+		return URL_TABLES[iIndex].pcCGIName;
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -789,61 +782,39 @@ const char* ButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	}
 }
 
-// settings.shtml Handler (Index 5)
-const char* SettingCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
 
 
-	if (iIndex == 5) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-		}
-	}
+//
+//// tabencoder.shtml Handler (Index 5)
+//const char* EncoderCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+//		char *pcValue[]) {
+//
+//
+//	if (iIndex == 5) {
+//		for (int i = 0; i < iNumParams; i++) {
+//			if (strcmp(pcParam[i], "ssid") == 0)
+//			{
+//				memset(ssid, '\0', sizeof(ssid));
+//				strcpy(ssid, pcValue[i]);
+//			}
+//		}
+//	}
+//
+//	/* login succeeded */
+//	if(strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
+//		printf("SSID OK \n");
+//		restartSSID();
+//		memset(ssid, '\0', sizeof(ssid));
+//		return "/tabencoder.shtml"; //
+//	} else {
+//		printf("SSID Failed \n");
+//		memset(randomSSID, '\0', sizeof(randomSSID));
+//		return "/login.shtml";
+//	}
+//
+//}
 
-	/* login succeeded */
-	if(1){
-		printf("SSID OK \n");
-		restartSSID();
-		memset(ssid, '\0', sizeof(ssid));
-		return "/settings.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
 
-}
-
-// timers.shtml Handler (Index 6)
-const char* TimerCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-
-	if (iIndex == 6) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if(1){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/timers.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
 
 // logout.shtml Handler logout (Index 7)
 const char* LogoutCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
@@ -852,7 +823,6 @@ const char* LogoutCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (iIndex == 7) {
 		memset(randomSSID, '\0', sizeof(randomSSID));
 	}
-
 	return "/login.shtml";
 }
 
@@ -874,29 +844,19 @@ const char* TabjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 				if(tab == 2)
 				{
 					numTabLine = MultiPartTabCount(1,NUMPIN-1, numTabLine);
-				}
-				if(tab == 3)
-				{
+				} else if(tab == 3) {
 					numTabLine = MultiPartTabCount(2,NUMPIN-1, numTabLine);
-				}
-				if(tab == 4)
-				{
+				} else if(tab == 4) {
 					numTabLine = MultiPartTabCount(3,NUMPIN-1, numTabLine);
-				}
-				if(tab == 5)
-				{
-					numTabLine = MultiPartTabCount(5,NUMPIN-1, numTabLine);
-				}
-				if(tab == 6)
-				{
-					numTabLine = MultiPartTabCount(4,NUMPIN-1, numTabLine);
+				} else if(tab == 5) {
+					numTabLine = MultiPartTabCount(8,NUMPIN-1, numTabLine);
 				}
 			}
 		}
 	}
 
 	/* login succeeded */
-	if(1){
+	if(strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		//printf("SSID OK \n");
 		restartSSID();
 		return "/tabjson.shtml"; //
@@ -957,32 +917,29 @@ const char* SelectSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 		memset(randomSSID, '\0', sizeof(randomSSID));
 		return "/login.shtml";
 	}
-
 }
 
 
-
-
-// formbutton.shtml Handler (Index 10)
-const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+// formbutton.shtml formtopin1.shtml formrelay.shtml formcron.shtml formswitch.shtml formencoder.shtml formepwm.shtml, form1wire.shtml
+// Handler (Index  6, Index  10,  Index  11,  Index 12, Index 16,  Index  21, ,  Index  23, Index  24,Index  25,Index  26)
+const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcValue[]) {
 
 	id = 0;
 	tab = 0;
 
-	if (iIndex == 10) {
+	if (iIndex == 6 || iIndex == 10 || iIndex == 11 || iIndex == 12 || iIndex == 16 || iIndex == 21 || iIndex == 23 || iIndex == 24 || iIndex == 25 || iIndex == 26) {
 		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
+			// GET ssid
+			if (strcmp(pcParam[i], "ssid") == 0) {
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
+			// GET id
+			else if (strcmp(pcParam[i], "id") == 0) {
 				id = atoi(pcValue[i]) - 1;
 			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
+			// GET tab
+			else if (strcmp(pcParam[i], "tab") == 0) {
 				tab = atoi(pcValue[i]);
 			}
 		}
@@ -992,79 +949,7 @@ const char* FormRelayCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
 		//printf("SSID OK \n");
 		restartSSID();
-		return "/formrelay.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// formbutton.shtml Handler (Index 11)
-const char* FormButtonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 11) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/formbutton.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// formtopin.shtml Handler (Index 12)
-const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-
-	if (iIndex == 12) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/formtopin.shtml"; //
+		return URL_TABLES[iIndex].pcCGIName;
 	} else {
 		printf("SSID Failed \n");
 		memset(randomSSID, '\0', sizeof(randomSSID));
@@ -1074,8 +959,7 @@ const char* FormPinToPinCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 
 // onoffset.shtml Handler (Index 13)
-const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	int varid;
 	int val;
@@ -1114,8 +998,7 @@ const char* OnOffSetCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 
 
 // formjson.shtml Handler table json (Index 14)
-const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	if (iIndex == 14) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -1144,8 +1027,7 @@ const char*  FormjsonCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 }
 
 // settings.shtml Handler table json (Index 15)
-const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
 	if (iIndex == 15) {
 		for (int i = 0; i < iNumParams; i++) {
@@ -1170,43 +1052,8 @@ const char*  SettingsCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
 }
 
 
-// formcron.shtml Handler table json (Index 16)
-const char*  FormcronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	if (iIndex == 16) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/formcron.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
 // tabcron.shtml Handler (Index 17)
-const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+const char* CronCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 	int del = 0;
 	uint16_t usbdata = 3;
 
@@ -1281,6 +1128,7 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 	int pulse = 0; 	// PWM value
 	char token[11] = {0};
 
+
 	if (iIndex == 19) {
 		for (int i = 0; i < iNumParams; i++) {
 			if (strcmp(pcParam[i], "token") == 0)
@@ -1307,7 +1155,7 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 	}
 	if(strcmp(token, SetSettings.token) == 0 && pinid != 0){
 		printf("token OK \n");
-		if(PinsConf[pinid-1].topin == 2){ // Для реле/led
+		if(PinsConf[pinid-1].topin == 2){
 			printf("relay OK \n");
 			data_pin.pin = pinid-1;
 			data_pin.action = action;
@@ -1318,323 +1166,77 @@ const char* ApiCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pcV
 	}
 	return "/api.shtml";
 }
+
 // /tabswitch.shtml Handler (Index 20)
-const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	int idin = 0;
-	int idout = 0;
-	int i = 0;
-	int del = 0;
-	uint16_t usbdata = 0;
-
-	if (iIndex == 20) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "idin") == 0)
-			{
-				idin = atoi(pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "idout") == 0)
-			{
-				idout = atoi(pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "del") == 0)
-			{
-				del = atoi(pcValue[i]);
-			}
-		}
-		if(idin != 0 && idout != 0){
-			// @todo проверка перед записью превязан ли этот пин уже или нет
-			while (i <= NUMPINLINKS - 1) {
-				if (PinsLinks[i].flag == 0) {
-					//printf("flag %d \n", i);
-					PinsLinks[i].idin = idin - 1;
-					PinsLinks[i].idout = idout - 1;
-					PinsLinks[i].flag = 1;
-					usbdata = 4;
-					break;
-				}
-				i++;
-			}
-			if(usbdata != 0){
-				xQueueSend(usbQueueHandle, &usbdata, 0);
-				printf("usbdata = 4 \n");
-			}
-			usbdata = 0;
-
-		}
-		if(del != 0){
-			PinsLinks[del-1].idin = 0;
-			PinsLinks[del-1].idout = 0;
-			PinsLinks[del-1].flag = 0;
-		}
-	}
-
-	/* login succeeded */
-	if(1){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/tabswitch.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// formswitch.shtml Handler (Index 21)
-const char* FormSwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 21) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/formswitch.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// tabpwm.shtml Handler (Index 22)
-const char* PwmCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
+//const char* SwitchCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
+//		char *pcValue[]) {
+//
+//	int idin = 0;
+//	int idout = 0;
+//	int i = 0;
+//	int del = 0;
+//	uint16_t usbdata = 0;
+//
+//	if (iIndex == 20) {
+//		for (int i = 0; i < iNumParams; i++) {
+//			if (strcmp(pcParam[i], "ssid") == 0)
+//			{
+//				memset(ssid, '\0', sizeof(ssid));
+//				strcpy(ssid, pcValue[i]);
+//			}
+//			if (strcmp(pcParam[i], "idin") == 0)
+//			{
+//				idin = atoi(pcValue[i]);
+//			}
+//			if (strcmp(pcParam[i], "idout") == 0)
+//			{
+//				idout = atoi(pcValue[i]);
+//			}
+//			if (strcmp(pcParam[i], "del") == 0)
+//			{
+//				del = atoi(pcValue[i]);
+//			}
+//		}
+//		if(idin != 0 && idout != 0){
+//			// @todo проверка перед записью превязан ли этот пин уже или нет
+//			while (i <= NUMPINLINKS - 1) {
+//				if (PinsLinks[i].flag == 0) {
+//					//printf("flag %d \n", i);
+//					PinsLinks[i].idin = idin - 1;
+//					PinsLinks[i].idout = idout - 1;
+//					PinsLinks[i].flag = 1;
+//					usbdata = 4;
+//					break;
+//				}
+//				i++;
+//			}
+//			if(usbdata != 0){
+//				xQueueSend(usbQueueHandle, &usbdata, 0);
+//				printf("usbdata = 4 \n");
+//			}
+//			usbdata = 0;
+//
+//		}
+//		if(del != 0){
+//			PinsLinks[del-1].idin = 0;
+//			PinsLinks[del-1].idout = 0;
+//			PinsLinks[del-1].flag = 0;
+//		}
+//	}
+//
+//	/* login succeeded */
+//	if(1){
+//		//printf("SSID OK \n");
+//		restartSSID();
+//		return "/tabswitch.shtml"; //
+//	} else {
+//		printf("SSID Failed \n");
+//		memset(randomSSID, '\0', sizeof(randomSSID));
+//		return "/login.shtml";
+//	}
+//}
 
 
-	if (iIndex == 22) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if(1){ // ?zerg?
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/tabpwm.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// formPWM.shtml Handler (Index 23)
-const char* FormPWMCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 23) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/formpwm.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// form1Wire.shtml Handler (Index 24)
-const char* Form1WireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 24) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/form1wire.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// tab1Wire.shtml Handler (Index 25)
-const char* OneWireCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 25) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/tab1wire.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// form1Wire.shtml Handler (Index 26)
-const char* FormI2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 26) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/formI2C.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
-
-// tabI2C.shtml Handler (Index 27)
-const char* I2CCGI_Handler(int iIndex, int iNumParams, char *pcParam[],
-		char *pcValue[]) {
-
-	id = 0;
-	tab = 0;
-
-	if (iIndex == 27) {
-		for (int i = 0; i < iNumParams; i++) {
-			if (strcmp(pcParam[i], "ssid") == 0)
-			{
-				memset(ssid, '\0', sizeof(ssid));
-				strcpy(ssid, pcValue[i]);
-			}
-			if (strcmp(pcParam[i], "id") == 0)
-			{
-				id = atoi(pcValue[i]) - 1;
-			}
-			if (strcmp(pcParam[i], "tab") == 0)
-			{
-				tab = atoi(pcValue[i]);
-			}
-		}
-	}
-
-	/* login succeeded */
-	if (strcmp (ssid, randomSSID) == 0 && strlen(randomSSID) != 0){
-		//printf("SSID OK \n");
-		restartSSID();
-		return "/tabI2C.shtml"; //
-	} else {
-		printf("SSID Failed \n");
-		memset(randomSSID, '\0', sizeof(randomSSID));
-		return "/login.shtml";
-	}
-}
 ////////////////////////////// POST START //////////////////////////////////
 
 
@@ -1664,28 +1266,6 @@ void setPinRelay(int idpin, char *name, char *token) {
 
 	}
 }
-// POST request PWM
-void setPinPwm(int idpin, char *name, char *token) {
-
-	idpin = idpin - 1;
-	if (strcmp(name, "pwm") == 0) {
-		PinsConf[idpin].pwm = atoi(token);
-	} else if (strcmp(name, "on") == 0) {
-		PinsConf[idpin].on = atoi(token);
-	} else if (strcmp(name, "istate") == 0) {
-		PinsConf[idpin].istate = atoi(token);
-	} else if (strcmp(name, "dvalue") == 0) {
-		PinsConf[idpin].dvalue = atoi(token);
-	} else if (strcmp(name, "ponr") == 0) {
-		PinsConf[idpin].ponr = atoi(token);
-	} else if (strcmp(name, "info") == 0) {
-		strcpy(PinsConf[idpin].info, token);
-	} else if (strcmp(name, "onoff") == 0) {
-		PinsConf[idpin].onoff = atoi(token);
-	} else {
-
-	}
-}
 
 // POST request Switch
 void setPinSwitch(int idpin, char *name, char *token) {
@@ -1693,12 +1273,18 @@ void setPinSwitch(int idpin, char *name, char *token) {
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
 		PinsConf[idpin].ptype = atoi(token);
-	} else if (strcmp(name, "sclick") == 0) {
-		PinsConf[idpin].sclick = atoi(token);
-	} else if (strcmp(name, "dclick") == 0) {
-		strcpy(PinsConf[idpin].dclick, token);
-	} else if (strcmp(name, "lpress") == 0) {
-		strcpy(PinsConf[idpin].lpress, token);
+	} else if (strcmp(name, "encoderb") == 0) {
+		PinsConf[idpin].encoderb = atoi(token);
+	} else if (strcmp(name, "hinter") == 0) {
+		PinsConf[idpin].hinter = atoi(token);
+	} else if (strcmp(name, "repeat") == 0) {
+		PinsConf[idpin].repeat = atoi(token);
+	} else if (strcmp(name, "rinter") == 0) {
+		PinsConf[idpin].rinter = atoi(token);
+	} else if (strcmp(name, "dcinter") == 0) {
+		PinsConf[idpin].dcinter = atoi(token);
+	} else if (strcmp(name, "pclick") == 0) {
+		PinsConf[idpin].pclick = atoi(token);
 	} else if (strcmp(name, "info") == 0) {
 		strcpy(PinsConf[idpin].info, token);
 	} else if (strcmp(name, "onoff") == 0) {
@@ -1714,7 +1300,7 @@ void setPinButtom(int idpin, char *name, char *token) {
 
 	idpin = idpin - 1;
 	if (strcmp(name, "ptype") == 0) {
-		PinsConf[idpin].ptype = atoi(token);
+		PinsConf[idpin].ptype =  atoi(token);
 	} else if (strcmp(name, "sclick") == 0) {
 		PinsConf[idpin].sclick = atoi(token);
 	} else if (strcmp(name, "dclick") == 0) {
@@ -1723,6 +1309,23 @@ void setPinButtom(int idpin, char *name, char *token) {
 	} else if (strcmp(name, "lpress") == 0) {
 		url_decode(token, decoded_url);
 		strcpy(PinsConf[idpin].lpress, decoded_url);
+	} else if (strcmp(name, "info") == 0) {
+		strcpy(PinsConf[idpin].info, token);
+	} else if (strcmp(name, "onoff") == 0) {
+		PinsConf[idpin].onoff = atoi(token);
+	} else {
+
+	}
+}
+
+// POST request Encoder
+void setPinEncoder(int idpin, char *name, char *token) {
+
+	idpin = idpin - 1;
+	if (strcmp(name, "ptype") == 0) {
+		PinsConf[idpin].ptype =  atoi(token);
+	} else if (strcmp(name, "encoderb") == 0) {
+		PinsConf[idpin].encoderb = atoi(token);
 	} else if (strcmp(name, "info") == 0) {
 		strcpy(PinsConf[idpin].info, token);
 	} else if (strcmp(name, "onoff") == 0) {
@@ -1753,10 +1356,23 @@ void setCron(int idpin, char *name, char *token) {
 
 // POST request OneWire
 void setPin1Wire(int idpin, char *name, char *token) {
+	char decoded_url[50] = {0};
 
 	idpin = idpin - 1;
 	if (strcmp(name, "numdevices") == 0) {
 		PinsConf[idpin].numdevices = atoi(token);
+	} else if (strcmp(name, "uppert") == 0) {
+		PinsConf[idpin].uppert = atoi(token);
+	} else if (strcmp(name, "textupt") == 0) {
+		url_decode(token, decoded_url);
+		strcpy(PinsConf[idpin].textupt, decoded_url);
+	}else if (strcmp(name, "lowert") == 0) {
+		PinsConf[idpin].lowert = atoi(token);
+	}else if (strcmp(name, "textlowt") == 0) {
+		url_decode(token, decoded_url);
+		strcpy(PinsConf[idpin].textlowt, decoded_url);
+	}else if (strcmp(name, "sensor") == 0) {
+		PinsConf[idpin].sensor = atoi(token);
 	} else if (strcmp(name, "info") == 0) {
 		strcpy(PinsConf[idpin].info, token);
 	} else if (strcmp(name, "onoff") == 0) {
@@ -1765,21 +1381,6 @@ void setPin1Wire(int idpin, char *name, char *token) {
 
 	}
 }
-// POST request I2C
-void setPinI2C(int idpin, char *name, char *token) {
-
-	idpin = idpin - 1;
-	if (strcmp(name, "numdevices") == 0) {
-		PinsConf[idpin].numdevices = atoi(token);
-	} else if (strcmp(name, "info") == 0) {
-		strcpy(PinsConf[idpin].info, token);
-	} else if (strcmp(name, "onoff") == 0) {
-		PinsConf[idpin].onoff = atoi(token);
-	} else {
-
-	}
-}
-
 
 // Функция декодирования URL
 void url_decode(char* url, char* decoded)
@@ -1938,9 +1539,7 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 
 	if (current_connection == connection && p != NULL) {
 	  if(strcmp("upgrade.shtml", v_PostBufer.uri) == 0){
-
 		  // @todo  Firmware update in flash
-
 		  return ERR_OK;
 	  } else {
 		  strncpy(tempbufer, p->payload, p->len);
@@ -1991,7 +1590,7 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         			id = atoi(token2);
         		}
         		// POST request Relay
-        		if (strcmp(v_PostBufer.uri, "/tabrelay.shtml") == 0 && id != 0){
+        		if ((strcmp(v_PostBufer.uri, "/tabrelay.shtml") == 0 || strcmp(v_PostBufer.uri, "/tabpwm.shtml") == 0) && id != 0){
         			if(token2 != NULL){
         				setPinRelay(id, name, token2);
         				usbdata = 1;
@@ -2004,10 +1603,17 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
         				usbdata = 1;
         			}
         		}
-        		// POST request Buttom
+        		// POST request Switch
         		if (strcmp(v_PostBufer.uri, "/tabswitch.shtml") == 0 && id != 0){
         			if(token2 != NULL){
         				setPinSwitch(id, name, token2);
+        				usbdata = 1;
+        			}
+        		}
+        		// POST request Encoder
+        		if (strcmp(v_PostBufer.uri, "/tabencoder.shtml") == 0 && id != 0){
+        			if(token2 != NULL){
+        				setPinEncoder(id, name, token2);
         				usbdata = 1;
         			}
         		}
@@ -2025,27 +1631,13 @@ void httpd_post_finished(void *connection, char *response_uri, u16_t response_ur
 						usbdata = 3;
 					}
 				}
-				// POST request PWM
-				if (strcmp(v_PostBufer.uri, "/tabpwm.shtml") == 0 && id != 0){
-					if(token2 != NULL){
-						setPinPwm(id, name, token2);
-						usbdata = 1;
-					}
-				}
-				// POST request 1Wire
-				if (strcmp(v_PostBufer.uri, "/tab1wire.shtml") == 0 && id != 0){
-					if(token2 != NULL){
-						setPin1Wire(id, name, token2);
-						usbdata = 1;
-					}
-				}
-				// POST request I2C
-				if (strcmp(v_PostBufer.uri, "/tabI2C.shtml") == 0 && id != 0){
-					if(token2 != NULL){
-						setPin1Wire(id, name, token2);
-						usbdata = 1;
-					}
-				}
+        		// POST request OneWire
+        		if (strcmp(v_PostBufer.uri, "/tab1wire.shtml") == 0 && id != 0){
+        			if(token2 != NULL){
+        				setPin1Wire(id, name, token2);
+        				usbdata = 1;
+        			}
+        		}
         	}
             token2 = strtok_r(NULL, "=", &end_token);
         }

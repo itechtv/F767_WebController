@@ -81,11 +81,15 @@
         </tr>
       </table>
     </div>
-  </center>
-  <!-- Добавляем раздел текста-->
-
-  <div id="help1">
+    
+   <!-- Добавляем раздел текста-->   
+   <div id="help1">
   </div>
+  </center>
+  
+
+
+
 
   <script>
     $(document).ready(function () {
