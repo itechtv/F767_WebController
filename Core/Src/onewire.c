@@ -10,6 +10,47 @@
  */
 #include "onewire.h"
 #include "ds18b20.h"
+#include "stdio.h"/* для printf */
+#include "cmsis_os.h"
+
+  void TIM14Config (void)
+  {
+  	/************** STEPS TO FOLLOW *****************
+  	1. Enable Timer clock
+  	2. Set the prescalar and the ARR
+  	3. Enable the Timer, and wait for the update Flag to set
+  	************************************************/
+
+  // 1. Enable Timer clock
+  	RCC->APB1ENR |= (1<<8);  // Enable the timer14 clock RM_407 -> 7.3.8 RCC APB1 peripheral reset register (RCC_APB1RSTR)
+
+  // 2. Set the prescalar and the ARR
+  	TIM14->PSC = 84-1;  // 90MHz/90 = 1 MHz ~~ 1 uS delay  RM_407 -> 19.5.8 TIM10/11/13/14 prescaler (TIMx_PSC
+  	TIM14->ARR = 0xffff;  // MAX ARR value
+
+  // 3. Enable the Timer, and wait for the update Flag to set
+  	TIM14->CR1 |= (1<<0); // Enable the Counter RM_407 -> 19.5.3c TIM10/11/13/14 status register (TIMx_SR)
+  	while (!(TIM14->SR & (1<<0)));  // UIF: Update interrupt flag..  This bit is set by hardware when the registers are updated
+  }
+
+  void Delay_us (uint16_t us)
+  {
+  	/************** STEPS TO FOLLOW *****************
+  	1. RESET the Counter
+  	2. Wait for the Counter to reach the entered value. As each count will take 1 us,
+  		 the total waiting time will be the required us delay
+  	************************************************/
+  	TIM14->CNT = 0;
+  	while (TIM14->CNT < us);
+  }
+
+  void Delay_ms (uint16_t ms)
+  {
+  	for (uint16_t i=0; i<ms; i++)
+  	{
+  		Delay_us (1000); // delay of 1 ms (микросекунд)
+  	}
+  }
 
 //
 //	Delay function for constant 1-Wire timings
@@ -18,8 +59,9 @@ void OneWire_Delay(uint16_t delay)
 {
 //	_DS18B20_TIMER.Instance->CNT = 0;
 //	while(_DS18B20_TIMER.Instance->CNT <= us);
-	__HAL_TIM_SET_COUNTER(&htim1, 0); // Укажи таймер! zerg
-	while (__HAL_TIM_GET_COUNTER(&htim1) < delay); // Ждем поока он начнет работать.
+//	__HAL_TIM_SET_COUNTER(&htim1, 0); // Укажи таймер! zerg
+//	while (__HAL_TIM_GET_COUNTER(&htim1) < delay); // Ждем поока он начнет работать.
+	Delay_us (delay);
 }
 
 //
@@ -69,7 +111,7 @@ void OneWire_OutputHigh(OneWire_t *onewire)
 //
 uint8_t OneWire_Reset(OneWire_t* onewire)
 {
-	uint8_t i;
+	uint8_t i = 0;
 
 	OneWire_OutputLow(onewire);  // Write bus output low
 	OneWire_BusOutputDirection(onewire);
@@ -283,7 +325,6 @@ uint8_t OneWire_Search(OneWire_t* onewire, uint8_t command)
 uint8_t OneWire_First(OneWire_t* onewire)
 {
 	OneWire_ResetSearch(onewire);
-
 	return OneWire_Search(onewire, ONEWIRE_CMD_SEARCHROM);
 }
 
@@ -327,12 +368,15 @@ void OneWire_SelectWithPointer(OneWire_t* onewire, uint8_t *ROM)
 //
 //	Get the ROM of found device
 //
+//TODO
 void OneWire_GetFullROM(OneWire_t* onewire, uint8_t *firstIndex)
 {
 	uint8_t i;
 	for (i = 0; i < 8; i++) {
 		*(firstIndex + i) = onewire->ROM_NO[i];
+		printf("+%02X", *(firstIndex + i));
 	}
+	printf("\r\n");
 }
 
 //
@@ -364,17 +408,20 @@ uint8_t OneWire_CRC8(uint8_t *addr, uint8_t len) {
 //
 void OneWire_Init(OneWire_t* onewire, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
-//	HAL_TIM_Base_Start(&_DS18B20_TIMER); // Start the delay timer zerg?
-
+	TIM14Config();// Enable Timer clock for OneWire.
+//	printf("onewire: %p, GPIOx: %p, GPIO_Pin: %u\n", onewire, GPIOx, GPIO_Pin);
 	onewire->GPIOx = GPIOx; // Save 1-wire bus pin
 	onewire->GPIO_Pin = GPIO_Pin;
 
 	// 1-Wire bit bang initialization
 	OneWire_BusOutputDirection(onewire);
 	OneWire_OutputHigh(onewire);
-	HAL_Delay(100);
+	osDelay(100);
+//	Delay_ms(100);
 	OneWire_OutputLow(onewire);
-	HAL_Delay(100);
+	osDelay(100);
+//	Delay_ms(100);
 	OneWire_OutputHigh(onewire);
-	HAL_Delay(200);
+	osDelay(200);
+//	Delay_ms(200);
 }

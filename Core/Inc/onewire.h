@@ -11,6 +11,8 @@
 #ifndef ONEWIRE_H
 #define ONEWIRE_H
 #include "main.h"
+
+void TIM14Config (void);
 //
 //	1-Wire bus structure
 //
@@ -26,15 +28,15 @@ typedef struct {
 //
 //	COMMANDS
 //
-#define ONEWIRE_CMD_RSCRATCHPAD			0xBE
+#define ONEWIRE_CMD_RSCRATCHPAD			0xBE //чтения из регистра Scratchpad на каждом устройстве
 #define ONEWIRE_CMD_WSCRATCHPAD			0x4E
 #define ONEWIRE_CMD_CPYSCRATCHPAD		0x48
 #define ONEWIRE_CMD_RECEEPROM			0xB8
 #define ONEWIRE_CMD_RPWRSUPPLY			0xB4
-#define ONEWIRE_CMD_SEARCHROM			0xF0
+#define ONEWIRE_CMD_SEARCHROM			0xF0 // поиск устройств и и читаем их идентификаторы.
 #define ONEWIRE_CMD_READROM				0x33
 #define ONEWIRE_CMD_MATCHROM			0x55
-#define ONEWIRE_CMD_SKIPROM				0xCC
+#define ONEWIRE_CMD_SKIPROM				0xCC //
 
 //
 //	FUNCTIONS

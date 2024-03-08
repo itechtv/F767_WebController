@@ -38,6 +38,20 @@
 #include "multi_button.h"
 #include "ds18b20.h"
 #define DEBOUNCE_DELAY 45 //Encoder (ms)
+
+/**********************************OneWire ********************************************/
+#include "ds18b20.h"
+float temperature;
+char message[64];
+const char *ROMs[_DS18B20_MAX_SENSORS];
+char romString[14 + 2];
+extern OneWire_t OneWire;
+extern OneWire_t OneWire_instances[NUMPIN];
+uint8_t ROM_tmp[8]; // Массив для значений temperature
+#define MAX_SENSORS 10 // Максимальное количество датчиков
+extern uint8_t quentySensorCounts[_DS18B20_MAX_SENSORS];
+//char ROM[NUMPIN][17];
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -345,7 +359,20 @@ char pacote[50];
 
       //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
   }
-
+  /**********************************OneWire ********************************************/
+  void printROM(uint8_t* ROM) {
+    for (int i = 0; i < 8; i++) {
+      printf("%02X", ROM[i]);
+    }
+  }
+  void configureGPIO(uint8_t quentity) {
+  	for (uint8_t i = 0; i < quentity; i++) {
+//  		printf("quentity %d\r\n",quentity);
+  		if (PinsConf[i].topin == 4) {
+  			configureGPIOpin(&PinsInfo[i]);
+  		}
+  	}
+  }
 /* USER CODE END 0 */
 
 /**
@@ -1061,7 +1088,8 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
 					xTaskNotifyGive(EncoderTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
-
+					osDelay(100);
+					xTaskNotifyGive(OneWireTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OneWire
 				} else {
 					StartSetingsConfig();
 
@@ -1071,6 +1099,8 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(OutputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OutputTask
 					xTaskNotifyGive(InputTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ InputTask
 					xTaskNotifyGive(EncoderTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ PWMTask
+					osDelay(100);
+					xTaskNotifyGive(OneWireTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OneWire
 				}
 				usbflag = 0;
 			}
@@ -1331,11 +1361,42 @@ void StartEncoderTask(void const * argument)
 void StartOneWireTask(void const * argument)
 {
   /* USER CODE BEGIN StartOneWireTask */
+	ulTaskNotifyTake(0, portMAX_DELAY);
+    if(osThreadGetPriority(OneWireTaskHandle)==osPriorityNormal){
+      osThreadSetPriority(OneWireTaskHandle,osPriorityAboveNormal);
+    }
+	configureGPIO(NUMPIN); // Конфигурируем pin's как OneWire
+	DS18B20_Init(DS18B20_Resolution_12bits, &PinsInfo[0]);
+    if(osThreadGetPriority(OneWireTaskHandle)==osPriorityAboveNormal){
+      osThreadSetPriority(OneWireTaskHandle,osPriorityNormal);
+    }
+	osDelay(1);
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
-  }
+	float temperature;
+	uint8_t ROM_tmp[8];
+	for (uint8_t i = 0; i < NUMPIN; i++) {
+		if (PinsConf[i].topin == 4) {
+			DS18B20_StartAll(&OneWire_instances[i]);
+			while (!DS18B20_AllDone(&OneWire_instances[i])) {
+				// ждем окончания преобразования
+			}
+			DS18B20_ReadAll(&OneWire_instances[i], i);
+			HAL_Delay(1);
+			for (uint8_t j = 0; j < _DS18B20_MAX_SENSORS; j++) {
+				if (DS18B20_GetTemperature(j, &temperature, i)) {
+					DS18B20_GetROM(j, ROM_tmp);
+					printf("DS18B20_GetTemperature, Pin-%d, sensor-%d:", i,j);
+					printROM(ROM_tmp);
+					printf(" Temp_%d = %f\r\n", j, temperature);
+				}
+			}
+		}
+	}
+	printf("\r\n");
+	osDelay(1000);
+	}
   /* USER CODE END StartOneWireTask */
 }
 
