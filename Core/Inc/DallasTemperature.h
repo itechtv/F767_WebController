@@ -161,4 +161,23 @@ int16_t DT_CalculateTemperature(const uint8_t* deviceAddress, uint8_t* scratchPa
 
 #endif
 
+/******************************* Zerg *****************************************/
+#define _DS18B20_MAX_SENSORS		    5 // Укажи количество ds18b20! ???zerg???
+
+//
+//	Sensor structure
+//
+typedef struct
+{
+	int         idpin;        // ID пина
+	uint8_t 	Address[8];   // ROM
+	float 		Temperature;
+	uint8_t     qsensors;     // Общее количество датчико на всех пинах.
+	int         uppert;       // Верхний предел температуры (ds18b20 -55°C to +125°C)
+	char        textupt[30];  // Поле ввода для действия при достижении верхнего предела температуры. (ds18b20 -55°C to +125°C)
+	int         lowert;       // Нижний предел температуры  (ds18b20 -55°C to +125°C)
+	char        textlowt[30]; // Поле ввода для действия при достижении нижнего предела температуры. (ds18b20 -55°C to +125°C)
+	char        info[30];	  // Info
+} Ds18b20Sensor_t;
+
 #endif /* INC_DALLASTEMPERATURE_H_ */

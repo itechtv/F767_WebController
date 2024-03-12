@@ -64,8 +64,8 @@ struct dbPinsInfo { // Создали структуру с необходимы
 	char pins[5];
 	char port[2];
 	int number;
-	uint16_t hal_pin;
-	GPIO_TypeDef* gpio_name;
+	uint16_t hal_pin;//GPIO_PIN_x
+	GPIO_TypeDef* gpio_name;//GPIOx
 	short onewire; // 0 - Not able; 1 - Able
 	short pwm; // 0 - Not able; 1 - Able
 	short i2cdata; // 0 - Not able; 1 - Able
