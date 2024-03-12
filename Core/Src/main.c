@@ -164,7 +164,8 @@ void StartOneWireTask(void const * argument);
 void StartI2CTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-
+void checkOneWireDevices();
+void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -376,9 +377,8 @@ char pacote[50];
       //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
   }
   /**********************************OneWire ********************************************/
-  OneWire_HandleTypeDef ow;
-  DallasTemperature_HandleTypeDef dt;
-
+ OneWire_HandleTypeDef ow;
+ DallasTemperature_HandleTypeDef dt;
 	void printAddress(CurrentDeviceAddress deviceAddress) {// function to print a device address
 		for (uint8_t i = 0; i < 8; i++) {
 			printf("0x%02X ", deviceAddress[i]);
@@ -393,93 +393,6 @@ char pacote[50];
 		}
 		DT_SetOneWire(&dt, &ow);
 	}
-
-	void configureGPIO(uint8_t quentity) {
-		for (uint8_t i = 0; i < quentity; i++) {
-	//  		printf("quentity %d\r\n",quentity);
-			if (PinsConf[i].topin == 4) { // Если OneWire то...
-				// Проверяем, какой пин был выбран и инициализируем соответствующий UART
-				char zerg[15];
-				if (PinsInfo[i].hal_pin == GPIO_PIN_0) {
-					strcpy(zerg, "GPIO_PIN_0");
-				} else if (PinsConf[i].topin == GPIO_PIN_1) {
-					strcpy(zerg, "GPIO_PIN_1");
-				} else if (PinsConf[i].topin == GPIO_PIN_2) {
-					strcpy(zerg, "GPIO_PIN_2");
-				} else if (PinsConf[i].topin == GPIO_PIN_3) {
-					strcpy(zerg, "GPIO_PIN_3");
-				} else if (PinsConf[i].topin == GPIO_PIN_4) {
-					strcpy(zerg, "GPIO_PIN_4");
-				} else if (PinsConf[i].topin == GPIO_PIN_5) {
-					strcpy(zerg, "GPIO_PIN_5");
-				} else if (PinsConf[i].topin == GPIO_PIN_6) {
-					strcpy(zerg, "GPIO_PIN_6");
-				} else if (PinsConf[i].topin == GPIO_PIN_7) {
-					strcpy(zerg, "GPIO_PIN_7");
-				} else if (PinsConf[i].topin == GPIO_PIN_8) {
-					strcpy(zerg, "GPIO_PIN_8");
-				} else if (PinsConf[i].topin == GPIO_PIN_9) {
-					strcpy(zerg, "GPIO_PIN_9");
-				} else if (PinsConf[i].topin == GPIO_PIN_10) {
-					strcpy(zerg, "GPIO_PIN_10");
-				} else if (PinsConf[i].topin == GPIO_PIN_11) {
-					strcpy(zerg, "GPIO_PIN_11");
-				} else if (PinsConf[i].topin == GPIO_PIN_12) {
-					strcpy(zerg, "GPIO_PIN_12");
-				} else if (PinsConf[i].topin == GPIO_PIN_13) {
-					strcpy(zerg, "GPIO_PIN_13");
-				} else if (PinsConf[i].topin == GPIO_PIN_14) {
-					strcpy(zerg, "GPIO_PIN_14");
-				} else if (PinsConf[i].topin == GPIO_PIN_15) {
-					strcpy(zerg, "GPIO_PIN_15");
-				} else {
-					strcpy(zerg, "Unknown");
-				}
-				printf("PinsConf[i].topin = %s\r\n", zerg);
-				switch (PinsInfo[i].hal_pin) {
-				case GPIO_PIN_3: //PB3
-					//MX_DMA_Init();
-					//MX_USART1_UART_Init();
-					OW_Begin(&ow, &huart1);
-					checkOneWireDevices();
-					break;
-				case GPIO_PIN_5: //PD5 TEST
-					// MX_DMA_Init();
-					//MX_USART2_UART_Init();
-					OW_Begin(&ow, &huart2);// Конфигурируем pin's как OneWire
-					checkOneWireDevices();
-					break;
-				case GPIO_PIN_0: //PA0
-					//MX_DMA_Init();
-					//MX_UART4_Init();
-					OW_Begin(&ow, &huart4);
-					checkOneWireDevices();
-					break;
-				case GPIO_PIN_12: //PC12
-					//MX_DMA_Init();
-					//MX_UART5_Init();
-					OW_Begin(&ow, &huart5);
-					checkOneWireDevices();
-					break;
-				case GPIO_PIN_6: //PC6
-					//MX_DMA_Init();
-					//MX_USART6_UART_Init();
-					OW_Begin(&ow, &huart6);
-					break;
-				case GPIO_PIN_7: //PF7
-					//MX_DMA_Init();
-					//MX_UART7_Init();
-					OW_Begin(&ow, &huart7);
-					checkOneWireDevices();
-					break;
-				default:
-					// Если выбран неверный пин, можно добавить соответствующее действие или сообщение об ошибке
-					printf("Error UART pin!\r\n");
-					break;
-				}
-			}
-		}
-	}
 	void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors) {
 		CurrentDeviceAddress ROM;					// arrays to hold device address
 		for (int i = 0; i < numSensors; ++i) {
@@ -487,14 +400,13 @@ char pacote[50];
 				printf("Unable to find address for Device %d\r\n", i);
 			}
 
-			printf("Device %d Address: ", i);
+			printf("Device-%d has address: ", i);
 			printAddress(ROM);
 			printf("\r\n");
 
-			// Set the resolution to 12 bit
-			DT_SetResolution(dt, ROM, 12, true);
-			uint8_t resolution = DT_GetResolution(dt, ROM);
-			printf("Device %d Resolution: %d\r\n", i, resolution);
+			DT_SetResolution(dt, ROM, 12, true);// Set the resolution to 12 bit
+	//			uint8_t resolution = DT_GetResolution(dt, ROM);
+	//			printf("Device %d Resolution: %d\r\n", i, resolution);
 		}
 	}
 /* USER CODE END 0 */
@@ -1754,14 +1666,6 @@ void StartOneWireTask(void const * argument)
 {
   /* USER CODE BEGIN StartOneWireTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-//	  OW_Begin(&ow, &huart2);
-	  configureGPIO(NUMPIN);// Конфигурация пина как OneWire.
-
-	  DT_Begin(&dt);// locate devices on the bus
-	  printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-
-	  GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
-
   /* Infinite loop */
   for(;;)
   {
@@ -1769,7 +1673,7 @@ void StartOneWireTask(void const * argument)
 	// request to all devices on the bus
 	DT_RequestTemperatures(&dt); // Send the command to get temperatures
 	for (int i = 0; i < DT_GetDeviceCount(&dt); i++) {
-		printf("[%8lu] Temperature for the device %d (index %d) is: %.2f\r\n", HAL_GetTick(), i + 1, i, DT_GetTempCByIndex(&dt, i));
+		printf("Temperature for the device with index %d is = %.2f\r\n",i, DT_GetTempCByIndex(&dt, i));
 	}
 	if(DT_GetDeviceCount(&dt) != 0){
 	printf("\r\n");

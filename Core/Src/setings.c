@@ -14,8 +14,8 @@
 #include "db.h"
 #include "setings.h"
 #include "multi_button.h"
-
-
+#include "OneWire.h"
+#include "DallasTemperature.h"
 
 char fsbuffer[25500] = { 0 };//2000
 
@@ -25,6 +25,16 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct Button button[NUMPIN];
+
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef huart7;
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef huart6;
+extern OneWire_HandleTypeDef ow;
+extern DallasTemperature_HandleTypeDef dt;
 
 extern TIM_HandleTypeDef htim[NUMPIN];
 /**************************************************************************/
@@ -589,7 +599,77 @@ void SetPinToPin() {
 }
 
 
-
+void configureGPIO(uint8_t id) {
+	switch (id) {
+	case 11: //
+		OW_Begin(&ow, &huart1); // Конфигурируем pin's как OneWire
+		checkOneWireDevices();
+		DT_Begin(&dt); // Count quantity of devices on the bus
+		if (DT_GetDeviceCount(&dt) > 0) {
+			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
+			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
+		} else {
+			printf("Devices NOT found.\r\n");
+		}
+		break;
+	case 36: //PD5 TEST
+		OW_Begin(&ow, &huart2); //Конфигурируем pin's как OneWire
+		checkOneWireDevices();
+		DT_Begin(&dt); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt) > 0) {
+			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
+			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
+		} else {
+			printf("Devices NOT found.\r\n");
+		}
+		break;
+	case 0: //PA0
+		OW_Begin(&ow, &huart4);		// Конфигурируем pin's как OneWire
+		checkOneWireDevices();
+		DT_Begin(&dt); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt) > 0) {
+			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
+			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
+		} else {
+			printf("Devices NOT found.\r\n");
+		}
+		break;
+	case 29: //PC12
+		OW_Begin(&ow, &huart5);		// Конфигурируем pin's как OneWire
+		checkOneWireDevices();
+		DT_Begin(&dt); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt) > 0) {
+			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
+			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
+		} else {
+			printf("Devices NOT found.\r\n");
+		}
+		break;
+	case 24: //PC6
+		OW_Begin(&ow, &huart6);		// Конфигурируем pin's как OneWire
+		if (DT_GetDeviceCount(&dt) > 0) {
+			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
+			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
+		} else {
+			printf("Devices NOT found.\r\n");
+		}
+		break;
+	case 68: //PF7
+		OW_Begin(&ow, &huart7);		// Конфигурируем pin's как OneWire
+		checkOneWireDevices();
+		DT_Begin(&dt);					// Find devices on the bus
+		if (DT_GetDeviceCount(&dt) > 0) {
+			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
+			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
+		} else {
+			printf("Devices NOT found.\r\n");
+		}
+		break;
+	default:
+		printf("Error UART pin!\r\n");
+		break;
+	}
+}
 
 void InitPin() {
 	int i = 0;
@@ -615,6 +695,11 @@ void InitPin() {
     		HAL_GPIO_Init(PinsInfo[i].gpio_name, &GPIO_InitStruct);
 
     	}
+    	else if(PinsConf[i].topin == 4){
+    		configureGPIO(i);
+    	}
+
+
     	// initialization Encoder
 		else if(PinsConf[i].topin == 8 || PinsConf[i].topin == 9){
 			//сбрасываем биты для данного пина
@@ -771,6 +856,7 @@ void InitPin() {
 
 
     }
+
 }
 
 
