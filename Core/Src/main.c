@@ -126,7 +126,7 @@ osMessageQId usbQueueHandle;
 uint8_t usbQueueBuffer[ 16 * sizeof( uint16_t ) ];
 osStaticMessageQDef_t usbQueueControlBlock;
 /* USER CODE BEGIN PV */
-
+extern uint8_t owflag;
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsConf PinsConf[NUMPIN];
@@ -1662,25 +1662,26 @@ void StartEncoderTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartOneWireTask */
-void StartOneWireTask(void const * argument)
-{
-  /* USER CODE BEGIN StartOneWireTask */
+void StartOneWireTask(void const *argument) {
+	/* USER CODE BEGIN StartOneWireTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-  /* Infinite loop */
-  for(;;)
-  {
-	// call DT_RequestTemperatures(&dt) to issue a global temperature
-	// request to all devices on the bus
-	DT_RequestTemperatures(&dt); // Send the command to get temperatures
-	for (int i = 0; i < DT_GetDeviceCount(&dt); i++) {
-		printf("Temperature for the device with index %d is = %.2f\r\n",i, DT_GetTempCByIndex(&dt, i));
+	/* Infinite loop */
+	for (;;) {
+		// call DT_RequestTemperatures(&dt) to issue a global temperature
+		// request to all devices on the bus
+		if (owflag) {
+			DT_RequestTemperatures(&dt); // Send the command to get temperatures
+			for (int i = 0; i < DT_GetDeviceCount(&dt); i++) {
+				printf("Temperature for the device with index %d is = %.2f\r\n",
+						i, DT_GetTempCByIndex(&dt, i));
+			}
+			if (DT_GetDeviceCount(&dt) != 0) {
+				printf("\r\n");
+			}
+			osDelay(1);
+		}
 	}
-	if(DT_GetDeviceCount(&dt) != 0){
-	printf("\r\n");
-	}
-	osDelay(1);
-  }
-  /* USER CODE END StartOneWireTask */
+	/* USER CODE END StartOneWireTask */
 }
 
 /* USER CODE BEGIN Header_StartI2CTask */

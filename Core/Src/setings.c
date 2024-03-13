@@ -18,7 +18,7 @@
 #include "DallasTemperature.h"
 
 char fsbuffer[25500] = { 0 };//2000
-
+uint8_t owflag = 0;
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
@@ -606,6 +606,7 @@ void configureGPIO(uint8_t id) {
 		checkOneWireDevices();
 		DT_Begin(&dt); // Count quantity of devices on the bus
 		if (DT_GetDeviceCount(&dt) > 0) {
+			owflag = 1;
 			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
 			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
 		} else {
@@ -617,6 +618,7 @@ void configureGPIO(uint8_t id) {
 		checkOneWireDevices();
 		DT_Begin(&dt); // Find devices on the bus
 		if (DT_GetDeviceCount(&dt) > 0) {
+			owflag = 1;
 			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
 			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
 		} else {
@@ -628,6 +630,7 @@ void configureGPIO(uint8_t id) {
 		checkOneWireDevices();
 		DT_Begin(&dt); // Find devices on the bus
 		if (DT_GetDeviceCount(&dt) > 0) {
+			owflag = 1;
 			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
 			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
 		} else {
@@ -639,6 +642,7 @@ void configureGPIO(uint8_t id) {
 		checkOneWireDevices();
 		DT_Begin(&dt); // Find devices on the bus
 		if (DT_GetDeviceCount(&dt) > 0) {
+			owflag = 1;
 			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
 			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
 		} else {
@@ -648,6 +652,7 @@ void configureGPIO(uint8_t id) {
 	case 24: //PC6
 		OW_Begin(&ow, &huart6);		// Конфигурируем pin's как OneWire
 		if (DT_GetDeviceCount(&dt) > 0) {
+			owflag = 1;
 			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
 			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
 		} else {
@@ -659,6 +664,7 @@ void configureGPIO(uint8_t id) {
 		checkOneWireDevices();
 		DT_Begin(&dt);					// Find devices on the bus
 		if (DT_GetDeviceCount(&dt) > 0) {
+			owflag = 1;
 			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
 			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt));
 		} else {
