@@ -39,7 +39,7 @@ typedef void AlarmHandler(const uint8_t*);
 #endif
 
 typedef struct{
-	OneWire_HandleTypeDef* ow;
+//	OneWire_HandleTypeDef* ow;
 	// count of devices on the bus
 	uint8_t devices;
 	// count of DS18xxx Family devices on bus
@@ -72,47 +72,50 @@ typedef uint8_t AllDeviceAddress[8 * ONEWIRE_MAX_DEVICES];
 typedef uint8_t CurrentDeviceAddress[8];
 
 // initialise bus
-void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow);
-void DT_Begin(DallasTemperature_HandleTypeDef* dt);
+void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt);
+void DT_Begin(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow);
+
 uint8_t DT_GetDeviceCount(DallasTemperature_HandleTypeDef* dt);
 uint8_t DT_GetDS18Count(DallasTemperature_HandleTypeDef* dt);
 bool DT_ValidAddress(const uint8_t* deviceAddress);
 bool DT_ValidFamily(const uint8_t* deviceAddress);
-bool DT_GetAddress(DallasTemperature_HandleTypeDef* dt, uint8_t* currentDeviceAddress, uint8_t index);
-bool DT_IsConnected(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-bool DT_IsConnected_ScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad);
-bool DT_ReadScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad);
-void DT_WriteScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, const uint8_t* scratchPad);
-bool DT_ReadPowerSupply(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-void DT_SetAllResolution(DallasTemperature_HandleTypeDef* dt, uint8_t newResolution);
-bool DT_SetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t newResolution, bool skipGlobalBitResolutionCalculation);
+bool DT_GetAddress(DallasTemperature_HandleTypeDef* dt, uint8_t* currentDeviceAddress, uint8_t index, OneWire_HandleTypeDef* ow);
+bool DT_IsConnected(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+bool DT_IsConnected_ScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad, OneWire_HandleTypeDef* ow);
+bool DT_ReadScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad, OneWire_HandleTypeDef* ow);
+
+
+void DT_WriteScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, const uint8_t* scratchPad, OneWire_HandleTypeDef* ow);
+bool DT_ReadPowerSupply(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress,OneWire_HandleTypeDef* ow);
+void DT_SetAllResolution(DallasTemperature_HandleTypeDef* dt, uint8_t newResolution,OneWire_HandleTypeDef* ow);
+bool DT_SetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t newResolution, bool skipGlobalBitResolutionCalculation, OneWire_HandleTypeDef* ow);
 uint8_t DT_GetAllResolution(DallasTemperature_HandleTypeDef* dt);
-uint8_t DT_GetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
+uint8_t DT_GetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
 void DT_SetWaitForConversion(DallasTemperature_HandleTypeDef* dt, bool flag);
 bool DT_GetWaitForConversion(DallasTemperature_HandleTypeDef* dt);
 void DT_SetCheckForConversion(DallasTemperature_HandleTypeDef* dt, bool flag);
 bool DT_GetCheckForConversion(DallasTemperature_HandleTypeDef* dt);
-bool DT_IsConversionComplete(DallasTemperature_HandleTypeDef* dt);
-void DT_RequestTemperatures(DallasTemperature_HandleTypeDef* dt);
-bool DT_RequestTemperaturesByAddress(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-bool DT_RequestTemperaturesByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex);
+bool DT_IsConversionComplete(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow);
+void DT_RequestTemperatures(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow);
+bool DT_RequestTemperaturesByAddress(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+bool DT_RequestTemperaturesByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow);
 int16_t DT_MillisToWaitForConversion(uint8_t bitResolution);
-bool DT_SaveScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex);
-bool DT_SaveScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-bool DT_RecallScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex);
-bool DT_RecallScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
+bool DT_SaveScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow);
+bool DT_SaveScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+bool DT_RecallScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow);
+bool DT_RecallScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
 void DT_SetAutoSaveScratchPad(DallasTemperature_HandleTypeDef* dt, bool flag);
 bool DT_GetAutoSaveScratchPad(DallasTemperature_HandleTypeDef* dt);
 uint8_t DT_GetAllResolution(DallasTemperature_HandleTypeDef* dt);
-uint8_t DT_GetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-float DT_GetTempCByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex);
-float DT_GetTempFByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex);
-int16_t DT_GetTemp(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-float DT_GetTempC(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-float DT_GetTempF(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-int16_t DT_GetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress);
-int16_t DT_GetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex);
-void DT_SetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, int16_t data);
+uint8_t DT_GetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+float DT_GetTempCByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow);
+float DT_GetTempFByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow);
+int16_t DT_GetTemp(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+float DT_GetTempC(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+float DT_GetTempF(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+int16_t DT_GetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow);
+int16_t DT_GetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow);
+void DT_SetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, int16_t data, OneWire_HandleTypeDef* ow);
 float DT_ToFahrenheit(float celsius);
 float DT_ToCelsius(float fahrenheit);
 float DT_RawToCelsius(int16_t raw);

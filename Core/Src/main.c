@@ -41,7 +41,7 @@
 /**********************************OneWire ********************************************/
 #include "DallasTemperature.h"
 #include "OneWire.h"
-
+uint8_t ow_index = 7;
 Ds18b20Sensor_t	ds18b20[_DS18B20_MAX_SENSORS];
 /* USER CODE END Includes */
 
@@ -164,8 +164,8 @@ void StartOneWireTask(void const * argument);
 void StartI2CTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void checkOneWireDevices();
-void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors);
+void checkOneWireDevices(OneWire_HandleTypeDef* ow);
+void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors, OneWire_HandleTypeDef* ow);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -377,7 +377,7 @@ char pacote[50];
       //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
   }
   /**********************************OneWire ********************************************/
- OneWire_HandleTypeDef ow;
+ OneWire_HandleTypeDef ow[5];
  DallasTemperature_HandleTypeDef dt;
 	void printAddress(CurrentDeviceAddress deviceAddress) {// function to print a device address
 		for (uint8_t i = 0; i < 8; i++) {
@@ -385,18 +385,18 @@ char pacote[50];
 			HAL_Delay(5);
 		}
 	}
-	void checkOneWireDevices() {
-		if (OW_Reset(&ow) == OW_OK) {
+	void checkOneWireDevices(OneWire_HandleTypeDef* ow) {
+		if (OW_Reset(ow) == OW_OK) {
 			printf("COOL, OneWire devices detected!\r\n");
 		} else {
 			printf("OneWire devices NOT detected!\r\n");
 		}
-		DT_SetOneWire(&dt, &ow);
+		DT_SetOneWire(&dt);
 	}
-	void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors) {
-		CurrentDeviceAddress ROM;					// arrays to hold device address
+	void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors, OneWire_HandleTypeDef* ow) {
+		CurrentDeviceAddress ROM;// arrays to hold device address
 		for (int i = 0; i < numSensors; ++i) {
-			if (!DT_GetAddress(dt, ROM, i)) {
+			if (!DT_GetAddress(dt, ROM, i, ow)) {
 				printf("Unable to find address for Device %d\r\n", i);
 			}
 
@@ -404,7 +404,7 @@ char pacote[50];
 			printAddress(ROM);
 			printf("\r\n");
 
-			DT_SetResolution(dt, ROM, 12, true);// Set the resolution to 12 bit
+			DT_SetResolution(dt, ROM, 12, true, ow);// Set the resolution to 12 bit
 	//			uint8_t resolution = DT_GetResolution(dt, ROM);
 	//			printf("Device %d Resolution: %d\r\n", i, resolution);
 		}
@@ -1670,10 +1670,10 @@ void StartOneWireTask(void const *argument) {
 		// call DT_RequestTemperatures(&dt) to issue a global temperature
 		// request to all devices on the bus
 		if (owflag) {
-			DT_RequestTemperatures(&dt); // Send the command to get temperatures
+			DT_RequestTemperatures(&dt, &ow[ow_index]); // Send the command to get temperatures
 			for (int i = 0; i < DT_GetDeviceCount(&dt); i++) {
 				printf("Temperature for the device with index %d is = %.2f\r\n",
-						i, DT_GetTempCByIndex(&dt, i));
+						i, DT_GetTempCByIndex(&dt, i, &ow[ow_index]));
 			}
 			if (DT_GetDeviceCount(&dt) != 0) {
 				printf("\r\n");

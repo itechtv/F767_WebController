@@ -38,20 +38,20 @@
 
 #define MAX_CONVERSION_TIMEOUT		750
 
-static void BlockTillConversionComplete(DallasTemperature_HandleTypeDef* dt, uint8_t bitResolution);
+static void BlockTillConversionComplete(DallasTemperature_HandleTypeDef* dt, uint8_t bitResolution, OneWire_HandleTypeDef* ow);
 static void ActivateExternalPullup(DallasTemperature_HandleTypeDef* dt);
 static void DeactivateExternalPullup(DallasTemperature_HandleTypeDef* dt);
 //static bool IsAllZeros(const uint8_t * const scratchPad, const size_t length);
 
 // Continue to check if the IC has responded with a temperature
-static void BlockTillConversionComplete(DallasTemperature_HandleTypeDef* dt, uint8_t bitResolution)
+static void BlockTillConversionComplete(DallasTemperature_HandleTypeDef* dt, uint8_t bitResolution, OneWire_HandleTypeDef* ow)
 {
 	int delms = DT_MillisToWaitForConversion(bitResolution);
 
 	if (dt->checkForConversion && !dt->parasite)
 	{
 		unsigned long now = HAL_GetTick();
-		while (!DT_IsConversionComplete(dt) && (HAL_GetTick() - delms < now))
+		while (!DT_IsConversionComplete(dt,ow) && (HAL_GetTick() - delms < now))
 		{
 			__NOP();
 		}
@@ -109,9 +109,9 @@ void DT_SetPullupPin(DallasTemperature_HandleTypeDef* dt, GPIO_TypeDef* port, ui
 	DeactivateExternalPullup(dt);
 }
 
-void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow)
+void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt)
 {
-	dt->ow 					= ow;
+//	dt->ow 					= ow;
 	dt->devices 			= 0;
 	dt->ds18Count 			= 0;
 	dt->parasite 			= false;
@@ -122,25 +122,25 @@ void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* o
 	dt->useExternalPullup 	= false;
 }
 
-void DT_Begin(DallasTemperature_HandleTypeDef* dt)
+void DT_Begin(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow)
 {
 	AllDeviceAddress deviceAddress;
 
-	OW_ResetSearch(dt->ow);
+	OW_ResetSearch(ow);
 	dt->devices = 0; 	// Reset the number of devices when we enumerate wire devices
 	dt->ds18Count = 0; 	// Reset number of DS18xxx Family devices
 
-	dt->devices = OW_Search(dt->ow, deviceAddress, ONEWIRE_MAX_DEVICES);
+	dt->devices = OW_Search(ow, deviceAddress, ONEWIRE_MAX_DEVICES);
 
 	for(uint8_t i = 0; i < dt->devices; i++)
 	{
 		if (DT_ValidAddress(&deviceAddress[i * 8]))
 		{
 
-			if (!dt->parasite && DT_ReadPowerSupply(dt, &deviceAddress[i * 8]))
+			if (!dt->parasite && DT_ReadPowerSupply(dt, &deviceAddress[i * 8], ow))
 				dt->parasite = true;
 
-			dt->bitResolution = max(dt->bitResolution, DT_GetResolution(dt, &deviceAddress[i * 8]));
+			dt->bitResolution = max(dt->bitResolution, DT_GetResolution(dt, &deviceAddress[i * 8], ow));
 
 			if (DT_ValidFamily(&deviceAddress[i * 8]))
 			{
@@ -184,13 +184,13 @@ bool DT_ValidFamily(const uint8_t* deviceAddress)
 
 // finds an address at a given index on the bus
 // returns true if the device was found
-bool DT_GetAddress(DallasTemperature_HandleTypeDef* dt, uint8_t* currentDeviceAddress, uint8_t index)
+bool DT_GetAddress(DallasTemperature_HandleTypeDef* dt, uint8_t* currentDeviceAddress, uint8_t index, OneWire_HandleTypeDef* ow)
 {
 	AllDeviceAddress deviceAddress;
 
 	uint8_t depth = 0;
 
-	depth = OW_Search(dt->ow, deviceAddress, ONEWIRE_MAX_DEVICES);
+	depth = OW_Search(ow, deviceAddress, ONEWIRE_MAX_DEVICES);
 
 	if(index < depth && DT_ValidAddress(&deviceAddress[index * 8]))
 	{
@@ -202,24 +202,24 @@ bool DT_GetAddress(DallasTemperature_HandleTypeDef* dt, uint8_t* currentDeviceAd
 }
 
 // attempt to determine if the device at the given address is connected to the bus
-bool DT_IsConnected(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+bool DT_IsConnected(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	ScratchPad scratchPad;
-	return DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad);
+	return DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad, ow);
 }
 
 // attempt to determine if the device at the given address is connected to the bus
 // also allows for updating the read scratchpad
-bool DT_IsConnected_ScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad)
+bool DT_IsConnected_ScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad, OneWire_HandleTypeDef* ow)
 {
-	bool b = DT_ReadScratchPad(dt, deviceAddress, scratchPad);
+	bool b = DT_ReadScratchPad(dt, deviceAddress, scratchPad, ow);
 	return (b /*&& IsAllZeros(scratchPad, 8)*/ && (OW_Crc8(scratchPad, 8) == scratchPad[SCRATCHPAD_CRC]));
 }
 
-bool DT_ReadScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad)
+bool DT_ReadScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t* scratchPad, OneWire_HandleTypeDef* ow)
 {
 	// send the reset command and fail fast
-	int b = OW_Reset(dt->ow);
+	int b = OW_Reset(ow);
 
 	if (b == 0)
 		return false;
@@ -241,12 +241,12 @@ bool DT_ReadScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* devic
 	//         DS18B20 & DS1822: store for crc
 	// byte 8: SCRATCHPAD_CRC
 
-	b = OW_Send(dt->ow, query, 19, scratchPad, 9, 10);
+	b = OW_Send(ow, query, 19, scratchPad, 9, 10);
 
 	return (b == OW_OK);
 }
 
-void DT_WriteScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, const uint8_t* scratchPad)
+void DT_WriteScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, const uint8_t* scratchPad, OneWire_HandleTypeDef* ow)
 {
 	uint8_t query[13]={0x55, 0, 0, 0, 0, 0, 0, 0, 0, WRITESCRATCH, scratchPad[HIGH_ALARM_TEMP], scratchPad[LOW_ALARM_TEMP], scratchPad[CONFIGURATION]};
 	memcpy(&query[1], deviceAddress, 8);
@@ -254,20 +254,20 @@ void DT_WriteScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* devi
 	// DS1820 and DS18S20 have no configuration register
 	if (deviceAddress[DSROM_FAMILY] != DS18S20MODEL)
 	{
-		OW_Send(dt->ow, query, 13, NULL, 0, OW_NO_READ);
+		OW_Send(ow, query, 13, NULL, 0, OW_NO_READ);
 	}
 	else
 	{
-		OW_Send(dt->ow, query, 12, NULL, 0, OW_NO_READ);
+		OW_Send(ow, query, 12, NULL, 0, OW_NO_READ);
 	}
 
 	if (dt->autoSaveScratchPad)
 	{
-		DT_SaveScratchPad(dt, deviceAddress);
+		DT_SaveScratchPad(dt, deviceAddress, ow);
 	}
 	else
 	{
-		OW_Reset(dt->ow);
+		OW_Reset(ow);
 	}
 }
 
@@ -275,11 +275,11 @@ void DT_WriteScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* devi
 // returns false if normal mode is used (3 wire)
 // if no address is given (or nullptr) it checks if any device on the bus
 // uses parasite mode.
-bool DT_ReadPowerSupply(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+bool DT_ReadPowerSupply(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	uint8_t parasiteMode = 0;
 
-	OW_Reset(dt->ow);
+	OW_Reset(ow);
 
 	uint8_t query[11]={0x55, 0, 0, 0, 0, 0, 0, 0, 0, READPOWERSUPPLY, 0xFF};
 
@@ -287,16 +287,16 @@ bool DT_ReadPowerSupply(DallasTemperature_HandleTypeDef* dt, const uint8_t* devi
 	{
 	  query[0] = 0xCC;
 	  query[1] = READPOWERSUPPLY;
-	  OW_Send(dt->ow, query, 3, &parasiteMode, 1, 2);
+	  OW_Send(ow, query, 3, &parasiteMode, 1, 2);
 	}
 	else
 	{
 	  query[0] = 0x55;
 	  memcpy(&query[1], deviceAddress, 8);
-	  OW_Send(dt->ow, query, 10, &parasiteMode, 1, 10);
+	  OW_Send(ow, query, 10, &parasiteMode, 1, 10);
 	}
 
-	OW_Reset(dt->ow);
+	OW_Reset(ow);
 
 	if (parasiteMode == 0)
 	{
@@ -310,32 +310,32 @@ bool DT_ReadPowerSupply(DallasTemperature_HandleTypeDef* dt, const uint8_t* devi
 
 // set resolution of all devices to 9, 10, 11, or 12 bits
 // if new resolution is out of range, it is constrained.
-void DT_SetAllResolution(DallasTemperature_HandleTypeDef* dt, uint8_t newResolution)
+void DT_SetAllResolution(DallasTemperature_HandleTypeDef* dt, uint8_t newResolution, OneWire_HandleTypeDef* ow)
 {
 	dt->bitResolution = constrain(newResolution, 9, 12);
 	CurrentDeviceAddress deviceAddress;
 
 	for (int i = 0; i < dt->devices; i++)
 	{
-		DT_GetAddress(dt, deviceAddress, i);
-		DT_SetResolution(dt, deviceAddress, dt->bitResolution, true);
+		DT_GetAddress(dt, deviceAddress, i, ow);
+		DT_SetResolution(dt, deviceAddress, dt->bitResolution, true, ow);
 	}
 }
 
 // set resolution of a device to 9, 10, 11, or 12 bits
 // if new resolution is out of range, 9 bits is used.
-bool DT_SetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t newResolution, bool skipGlobalBitResolutionCalculation)
+bool DT_SetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, uint8_t newResolution, bool skipGlobalBitResolutionCalculation, OneWire_HandleTypeDef* ow)
 {
 	// ensure same behavior as setResolution(uint8_t newResolution)
 	newResolution = constrain(newResolution, 9, 12);
 
 	// return when stored value == new value
-	if (DT_GetResolution(dt, deviceAddress) == newResolution)
+	if (DT_GetResolution(dt, deviceAddress, ow) == newResolution)
 		return true;
 
 	ScratchPad scratchPad;
 
-	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad))
+	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad, ow))
 	{
 		// DS1820 and DS18S20 have no resolution configuration register
 		if (deviceAddress[DSROM_FAMILY] != DS18S20MODEL)
@@ -357,7 +357,7 @@ bool DT_SetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* device
 				break;
 			}
 
-			DT_WriteScratchPad(dt, deviceAddress, scratchPad);
+			DT_WriteScratchPad(dt, deviceAddress, scratchPad, ow);
 
 			// without calculation we can always set it to max
 			dt->bitResolution = max(dt->bitResolution, newResolution);
@@ -370,8 +370,8 @@ bool DT_SetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* device
 
 				for (int i = 0; i < dt->devices; i++)
 				{
-					DT_GetAddress(dt, deviceAddr, i);
-					dt->bitResolution = max(dt->bitResolution, DT_GetResolution(dt, deviceAddr));
+					DT_GetAddress(dt, deviceAddr, i, ow);
+					dt->bitResolution = max(dt->bitResolution, DT_GetResolution(dt, deviceAddr, ow));
 				}
 			}
 		}
@@ -388,14 +388,14 @@ uint8_t DT_GetAllResolution(DallasTemperature_HandleTypeDef* dt)
 
 // returns the current resolution of the device, 9-12
 // returns 0 if device not found
-uint8_t DT_GetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+uint8_t DT_GetResolution(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	// DS1820 and DS18S20 have no resolution configuration register
 	if (deviceAddress[0] == DS18S20MODEL)
 		return 12;
 
 	ScratchPad scratchPad;
-	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad))
+	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad, ow))
 	{
 		switch (scratchPad[CONFIGURATION])
 		{
@@ -445,32 +445,32 @@ bool DT_GetCheckForConversion(DallasTemperature_HandleTypeDef* dt)
 	return dt->checkForConversion;
 }
 
-bool DT_IsConversionComplete(DallasTemperature_HandleTypeDef* dt)
+bool DT_IsConversionComplete(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow)
 {
 	uint8_t b;
-	OW_Send(dt->ow, (uint8_t *) OW_READ_SLOT, 0, &b, 1, 0);
+	OW_Send(ow, (uint8_t *) OW_READ_SLOT, 0, &b, 1, 0);
 
 	return (b == 1);
 }
 
 // sends command for all devices on the bus to perform a temperature conversion
-void DT_RequestTemperatures(DallasTemperature_HandleTypeDef* dt)
+void DT_RequestTemperatures(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow)
 {
-	OW_Send(dt->ow, (uint8_t *) "\xcc\x44", 2, (uint8_t *) NULL, 0, OW_NO_READ);
+	OW_Send(ow, (uint8_t *) "\xcc\x44", 2, (uint8_t *) NULL, 0, OW_NO_READ);
 
 	// ASYNC mode?
 	if (!dt->waitForConversion)
 		return;
 
-	BlockTillConversionComplete(dt, dt->bitResolution);
+	BlockTillConversionComplete(dt, dt->bitResolution, ow);
 }
 
 // sends command for one device to perform a temperature by address
 // returns FALSE if device is disconnected
 // returns TRUE  otherwise
-bool DT_RequestTemperaturesByAddress(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+bool DT_RequestTemperaturesByAddress(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
-	uint8_t bitResolution = DT_GetResolution(dt, deviceAddress);
+	uint8_t bitResolution = DT_GetResolution(dt, deviceAddress, ow);
 
 	if (bitResolution == 0)
 	{
@@ -479,24 +479,24 @@ bool DT_RequestTemperaturesByAddress(DallasTemperature_HandleTypeDef* dt, const 
 
 	uint8_t query[10]={0x55, 0, 0, 0, 0, 0, 0, 0, 0, STARTCONVO};
 	memcpy(&query[1], deviceAddress, 8);
-	OW_Send(dt->ow, query, 10, NULL, 0, OW_NO_READ);
+	OW_Send(ow, query, 10, NULL, 0, OW_NO_READ);
 
 	// ASYNC mode?
 	if (!dt->waitForConversion)
 		return true;
 
-	BlockTillConversionComplete(dt, dt->bitResolution);
+	BlockTillConversionComplete(dt, dt->bitResolution, ow);
 
 	return true;
 }
 
 // sends command for one device to perform a temp conversion by index
-bool DT_RequestTemperaturesByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex)
+bool DT_RequestTemperaturesByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow)
 {
 	CurrentDeviceAddress deviceAddress;
-	DT_GetAddress(dt, deviceAddress, deviceIndex);
+	DT_GetAddress(dt, deviceAddress, deviceIndex, ow);
 
-	return DT_RequestTemperaturesByAddress(dt, deviceAddress);
+	return DT_RequestTemperaturesByAddress(dt, deviceAddress, ow);
 }
 
 // returns number of milliseconds to wait till conversion is complete (based on IC datasheet)
@@ -517,36 +517,36 @@ int16_t DT_MillisToWaitForConversion(uint8_t bitResolution)
 
 // Sends command to one device to save values from scratchpad to EEPROM by index
 // Returns true if no errors were encountered, false indicates failure
-bool DT_SaveScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex)
+bool DT_SaveScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow)
 {
 	CurrentDeviceAddress deviceAddress;
-  if (!DT_GetAddress(dt, deviceAddress, deviceIndex)) return false;
+  if (!DT_GetAddress(dt, deviceAddress, deviceIndex, ow)) return false;
 
-  return DT_SaveScratchPad(dt, deviceAddress);
+  return DT_SaveScratchPad(dt, deviceAddress, ow);
 }
 
 // Sends command to one or more devices to save values from scratchpad to EEPROM
 // If optional argument deviceAddress is omitted the command is send to all devices
 // Returns true if no errors were encountered, false indicates failure
-bool DT_SaveScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+bool DT_SaveScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	uint8_t query[10]={0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-	if (OW_Reset(dt->ow) == 0)
+	if (OW_Reset(ow) == 0)
 		return false;
 
   if (deviceAddress == NULL)
   {
 	  query[0] = 0xCC;
 	  query[1] = COPYSCRATCH;
-	  OW_Send(dt->ow, query, 2, NULL, 0, OW_NO_READ);
+	  OW_Send(ow, query, 2, NULL, 0, OW_NO_READ);
   }
   else
   {
 	  query[0] = 0x55;
 	  memcpy(&query[1], deviceAddress, 8);
 	  query[9] = COPYSCRATCH;
-	  OW_Send(dt->ow, query, 10, NULL, 0, OW_NO_READ);
+	  OW_Send(ow, query, 10, NULL, 0, OW_NO_READ);
   }
 
   // Specification: NV Write Cycle Time is typically 2ms, max 10ms
@@ -563,54 +563,54 @@ bool DT_SaveScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* devic
     DeactivateExternalPullup(dt);
   }
 
-  return OW_Reset(dt->ow) == 1;
+  return OW_Reset(ow) == 1;
 }
 
 // Sends command to one device to recall values from EEPROM to scratchpad by index
 // Returns true if no errors were encountered, false indicates failure
-bool DT_RecallScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex)
+bool DT_RecallScratchPadByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow)
 {
   CurrentDeviceAddress deviceAddress;
-  if (!DT_GetAddress(dt, deviceAddress, deviceIndex)) return false;
+  if (!DT_GetAddress(dt, deviceAddress, deviceIndex, ow)) return false;
 
-  return DT_RecallScratchPad(dt, deviceAddress);
+  return DT_RecallScratchPad(dt, deviceAddress, ow);
 }
 
 // Sends command to one or more devices to recall values from EEPROM to scratchpad
 // If optional argument deviceAddress is omitted the command is send to all devices
 // Returns true if no errors were encountered, false indicates failure
-bool DT_RecallScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+bool DT_RecallScratchPad(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	uint8_t query[10]={0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-	if (OW_Reset(dt->ow) == 0)
+	if (OW_Reset(ow) == 0)
 		return false;
 
 	if (deviceAddress == NULL)
 	{
 	  query[0] = 0xCC;
 	  query[1] = RECALLSCRATCH;
-	  OW_Send(dt->ow, query, 2, NULL, 0, OW_NO_READ);
+	  OW_Send(ow, query, 2, NULL, 0, OW_NO_READ);
 	}
 	else
 	{
 	  query[0] = 0x55;
 	  memcpy(&query[1], deviceAddress, 8);
 	  query[9] = RECALLSCRATCH;
-	  OW_Send(dt->ow, query, 10, NULL, 0, OW_NO_READ);
+	  OW_Send(ow, query, 10, NULL, 0, OW_NO_READ);
 	}
 
 	// Specification: Strong pullup only needed when writing to EEPROM (and temp conversion)
 	uint32_t start = HAL_GetTick();
 
-	while (dt->ow->huart->gState == HAL_UART_STATE_TIMEOUT)
+	while (ow->huart->gState == HAL_UART_STATE_TIMEOUT)
 	{
 		// Datasheet doesn't specify typical/max duration, testing reveals typically within 1ms
 		if (HAL_GetTick() - start > 20) return false;
 		__NOP();
 	}
 
-	return OW_Reset(dt->ow) == 1;
+	return OW_Reset(ow) == 1;
 }
 
 // Sets the autoSaveScratchPad flag
@@ -626,29 +626,29 @@ bool DT_GetAutoSaveScratchPad(DallasTemperature_HandleTypeDef* dt)
 }
 
 // Fetch temperature for device index
-float DT_GetTempCByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex)
+float DT_GetTempCByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow)
 {
 	CurrentDeviceAddress deviceAddress;
 
-	if (!DT_GetAddress(dt, deviceAddress, deviceIndex))
+	if (!DT_GetAddress(dt, deviceAddress, deviceIndex, ow))
 	{
 		return DEVICE_DISCONNECTED_C;
 	}
 
-	return DT_GetTempC(dt, (uint8_t*) deviceAddress);
+	return DT_GetTempC(dt, (uint8_t*) deviceAddress, ow);
 }
 
 // Fetch temperature for device index
-float DT_GetTempFByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex)
+float DT_GetTempFByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow)
 {
 	CurrentDeviceAddress deviceAddress;
 
-	if (!DT_GetAddress(dt, deviceAddress, deviceIndex))
+	if (!DT_GetAddress(dt, deviceAddress, deviceIndex, ow))
 	{
 		return DEVICE_DISCONNECTED_F;
 	}
 
-	return DT_GetTempF(dt, (uint8_t*) deviceAddress);
+	return DT_GetTempF(dt, (uint8_t*) deviceAddress, ow);
 }
 
 // reads scratchpad and returns fixed-point temperature, scaling factor 2^-7
@@ -694,10 +694,10 @@ int16_t DT_CalculateTemperature(const uint8_t* deviceAddress, uint8_t* scratchPa
 // the numeric value of DEVICE_DISCONNECTED_RAW is defined in
 // DallasTemperature.h. It is a large negative number outside the
 // operating range of the device
-int16_t DT_GetTemp(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+int16_t DT_GetTemp(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	ScratchPad scratchPad;
-	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad))
+	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad, ow))
 		return DT_CalculateTemperature(deviceAddress, scratchPad);
 	return DEVICE_DISCONNECTED_RAW;
 }
@@ -707,9 +707,9 @@ int16_t DT_GetTemp(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAdd
 // the numeric value of DEVICE_DISCONNECTED_C is defined in
 // DallasTemperature.h. It is a large negative number outside the
 // operating range of the device
-float DT_GetTempC(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+float DT_GetTempC(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
-	return DT_RawToCelsius(DT_GetTemp(dt, deviceAddress));
+	return DT_RawToCelsius(DT_GetTemp(dt, deviceAddress, ow));
 }
 
 // returns temperature in degrees F or DEVICE_DISCONNECTED_F if the
@@ -717,9 +717,9 @@ float DT_GetTempC(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddr
 // the numeric value of DEVICE_DISCONNECTED_F is defined in
 // DallasTemperature.h. It is a large negative number outside the
 // operating range of the device
-float DT_GetTempF(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+float DT_GetTempF(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
-	return DT_RawToFahrenheit(DT_GetTemp(dt, deviceAddress));
+	return DT_RawToFahrenheit(DT_GetTemp(dt, deviceAddress, ow));
 }
 
 // returns true if the bus requires parasite power
@@ -733,26 +733,26 @@ bool DT_IsParasitePowerMode(DallasTemperature_HandleTypeDef* dt)
 // See github issue #29
 
 // note if device is not connected it will fail writing the data.
-void DT_SetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, int16_t data)
+void DT_SetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, int16_t data, OneWire_HandleTypeDef* ow)
 {
 	// return when stored value == new value
-	if (DT_GetUserData(dt, deviceAddress) == data)
+	if (DT_GetUserData(dt, deviceAddress, ow) == data)
 		return;
 
 	ScratchPad scratchPad;
-	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad))
+	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad, ow))
 	{
 		scratchPad[HIGH_ALARM_TEMP] = data >> 8;
 		scratchPad[LOW_ALARM_TEMP] = data & 255;
-		DT_WriteScratchPad(dt, deviceAddress, scratchPad);
+		DT_WriteScratchPad(dt, deviceAddress, scratchPad, ow);
 	}
 }
 
-int16_t DT_GetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress)
+int16_t DT_GetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* deviceAddress, OneWire_HandleTypeDef* ow)
 {
 	int16_t data = 0;
 	ScratchPad scratchPad;
-	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad))
+	if (DT_IsConnected_ScratchPad(dt, deviceAddress, scratchPad, ow))
 	{
 		data = scratchPad[HIGH_ALARM_TEMP] << 8;
 		data += scratchPad[LOW_ALARM_TEMP];
@@ -761,18 +761,18 @@ int16_t DT_GetUserData(DallasTemperature_HandleTypeDef* dt, const uint8_t* devic
 }
 
 // note If address cannot be found no error will be reported.
-int16_t DT_GetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex)
+int16_t DT_GetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, OneWire_HandleTypeDef* ow)
 {
 	CurrentDeviceAddress deviceAddress;
-	DT_GetAddress(dt, deviceAddress, deviceIndex);
-	return DT_GetUserData(dt, (uint8_t*) deviceAddress);
+	DT_GetAddress(dt, deviceAddress, deviceIndex, ow);
+	return DT_GetUserData(dt, (uint8_t*) deviceAddress, ow);
 }
 
-void DT_SetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, int16_t data)
+void DT_SetUserDataByIndex(DallasTemperature_HandleTypeDef* dt, uint8_t deviceIndex, int16_t data, OneWire_HandleTypeDef* ow)
 {
 	CurrentDeviceAddress deviceAddress;
-	DT_GetAddress(dt, deviceAddress, deviceIndex);
-	DT_SetUserData(dt, (uint8_t*) deviceAddress, data);
+	DT_GetAddress(dt, deviceAddress, deviceIndex, ow);
+	DT_SetUserData(dt, (uint8_t*) deviceAddress, data, ow);
 }
 
 // Convert float Celsius to Fahrenheit
