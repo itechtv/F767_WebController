@@ -5,7 +5,8 @@
  *      Author: tabur
  */
 #include "DallasTemperature.h"
-
+#include <stdio.h>
+#include "OneWire.h"
 // OneWire commands
 #define STARTCONVO      0x44  // Tells device to take a temperature reading and put it on the scratchpad
 #define COPYSCRATCH     0x48  // Copy scratchpad to EEPROM
@@ -94,6 +95,42 @@ static void DeactivateExternalPullup(DallasTemperature_HandleTypeDef* dt)
 //	return true;
 //}
 
+//TODO zerg
+extern  DallasTemperature_HandleTypeDef dt[ONEWIRE_MAX_DEVICES];
+
+void printAddress(CurrentDeviceAddress deviceAddress) { // function to print a device address
+	for (uint8_t i = 0; i < 8; i++) {
+		printf("0x%02X ", deviceAddress[i]);
+		HAL_Delay(5);
+	}
+}
+
+void checkOneWireDevices(OneWire_HandleTypeDef *ow, DallasTemperature_HandleTypeDef *dt) {
+	if (OW_Reset(ow) == OW_OK) {
+		printf("COOL, OneWire devices detected!\r\n");
+	} else {
+		printf("OneWire devices NOT detected!\r\n");
+	}
+	DT_SetOneWire(dt);
+}
+void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors,
+		OneWire_HandleTypeDef *ow) {
+	CurrentDeviceAddress ROM; // arrays to hold device address
+	for (int i = 0; i < numSensors; ++i) {
+		if (!DT_GetAddress(dt, ROM, i, ow)) {
+			printf("Unable to find address for Device %d\r\n", i);
+		}
+
+		printf("Device-%d has address: ", i);
+		printAddress(ROM);
+		printf("\r\n");
+
+		DT_SetResolution(dt, ROM, 12, true, ow); // Set the resolution to 12 bit
+		//			uint8_t resolution = DT_GetResolution(dt, ROM);
+		//			printf("Device %d Resolution: %d\r\n", i, resolution);
+	}
+}
+
 void DT_SetPullupPin(DallasTemperature_HandleTypeDef* dt, GPIO_TypeDef* port, uint32_t pin)
 {
 	dt->useExternalPullup = true;
@@ -124,7 +161,7 @@ void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt)
 
 void DT_Begin(DallasTemperature_HandleTypeDef* dt, OneWire_HandleTypeDef* ow)
 {
-	AllDeviceAddress deviceAddress;
+	AllDeviceAddress deviceAddress;// ROM
 
 	OW_ResetSearch(ow);
 	dt->devices = 0; 	// Reset the number of devices when we enumerate wire devices

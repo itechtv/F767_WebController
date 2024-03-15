@@ -19,7 +19,8 @@
 
 char fsbuffer[25500] = { 0 };//2000
 uint8_t owflag = 0;
-extern uint8_t ow_index;
+
+extern uint8_t ow_index_array[MAX_ONEWIRE_PINS];
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
 extern struct dbPinsInfo PinsInfo[NUMPIN];
@@ -35,7 +36,7 @@ extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 extern OneWire_HandleTypeDef ow[5];
-extern DallasTemperature_HandleTypeDef dt;
+extern DallasTemperature_HandleTypeDef dt[125];
 
 extern TIM_HandleTypeDef htim[NUMPIN];
 /**************************************************************************/
@@ -599,85 +600,85 @@ void SetPinToPin() {
 
 }
 
-
-void configureGPIO(uint8_t id) {
+//TODO zerg
+void configurOneWirePin(uint8_t id) {
 	switch (id) {
 	case 11: //
 		OW_Begin(&ow[0], &huart1); // Конфигурируем pin's как OneWire
-		checkOneWireDevices(&ow[0]);
-		DT_Begin(&dt,&ow[0]); // Count quantity of devices on the bus
-		if (DT_GetDeviceCount(&dt) > 0) {
-			ow_index = 0;
+		checkOneWireDevices(&ow[0],&dt[0]);
+		DT_Begin(&dt[0],&ow[0]); // Count quantity of devices on the bus
+		if (DT_GetDeviceCount(&dt[0]) > 0) {
 			owflag = 1;
-			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt), &ow[0]);
+			ow_index_array[0] = 0;
+			printf("Found %d devices on 'huart1'.\r\n", DT_GetDeviceCount(&dt[0]));
+			GetDeviceAddress(&dt[0], DT_GetDeviceCount(&dt[0]), &ow[0]);
 		} else {
-			printf("Devices NOT found.\r\n");
+			printf("Devices NOT found on 'huart1'!\r\n");
 		}
 		break;
 	case 36: //PD5 TEST
 		OW_Begin(&ow[1], &huart2); //Конфигурируем pin's как OneWire
-		checkOneWireDevices(&ow[1]);
-		DT_Begin(&dt,&ow[1]); // Find devices on the bus
-		if (DT_GetDeviceCount(&dt) > 0) {
-			ow_index = 1;
+		checkOneWireDevices(&ow[1],&dt[1]);// Поиск устройств на шине.
+		DT_Begin(&dt[1],&ow[1]); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt[1]) > 0) {
 			owflag = 1;
-			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt), &ow[1]);
+			ow_index_array[1] = 1;
+			printf("Found %d devices on 'huart2'.\r\n", DT_GetDeviceCount(&dt[1]));
+			GetDeviceAddress(&dt[1], DT_GetDeviceCount(&dt[1]), &ow[1]);
 		} else {
-			printf("Devices NOT found.\r\n");
+			printf("Devices NOT found on 'huart2'!\r\n");
 		}
 		break;
 	case 0: //PA0
 		OW_Begin(&ow[2], &huart4);		// Конфигурируем pin's как OneWire
-		checkOneWireDevices(&ow[2]);
-		DT_Begin(&dt,&ow[2]); // Find devices on the bus
-		if (DT_GetDeviceCount(&dt) > 0) {
-			ow_index = 2;
+		checkOneWireDevices(&ow[2],&dt[2]);
+		DT_Begin(&dt[2],&ow[2]); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt[2]) > 0) {
 			owflag = 1;
-			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt), &ow[2]);
+			ow_index_array[2] = 2;
+			printf("Found %d devices on 'huart4'.\r\n", DT_GetDeviceCount(&dt[2]));
+			GetDeviceAddress(&dt[2], DT_GetDeviceCount(&dt[2]), &ow[2]);
 		} else {
-			printf("Devices NOT found.\r\n");
+			printf("Devices NOT found on 'huart4'!\r\n");
 		}
 		break;
 	case 29: //PC12
 		OW_Begin(&ow[3], &huart5);		// Конфигурируем pin's как OneWire
-		checkOneWireDevices(&ow[3]);
-		DT_Begin(&dt,&ow[3]); // Find devices on the bus
-		if (DT_GetDeviceCount(&dt) > 0) {
-			ow_index = 3;
+		checkOneWireDevices(&ow[3],&dt[3]);
+		DT_Begin(&dt[3],&ow[3]); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt[3]) > 0) {
 			owflag = 1;
-			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt), &ow[3]);
+			ow_index_array[3] = 3;
+			printf("Found %d devices on 'huart5'.\r\n", DT_GetDeviceCount(&dt[3]));
+			GetDeviceAddress(&dt[3], DT_GetDeviceCount(&dt[3]), &ow[3]);
 		} else {
-			printf("Devices NOT found.\r\n");
+			printf("Devices NOT found on 'huart5'!\r\n");
 		}
 		break;
 	case 24: //PC6
 		OW_Begin(&ow[4], &huart6);		// Конфигурируем pin's как OneWire
-		checkOneWireDevices(&ow[4]);
-		DT_Begin(&dt,&ow[4]); // Find devices on the bus
-		if (DT_GetDeviceCount(&dt) > 0) {
-			ow_index = 4;
+		checkOneWireDevices(&ow[4],&dt[4]);
+		DT_Begin(&dt[4],&ow[4]); // Find devices on the bus
+		if (DT_GetDeviceCount(&dt[4]) > 0) {
 			owflag = 1;
-			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt), &ow[4]);
+			ow_index_array[4] = 4;
+			printf("Found %d devices on 'huart6'.\r\n", DT_GetDeviceCount(&dt[4]));
+			GetDeviceAddress(&dt[4], DT_GetDeviceCount(&dt[4]), &ow[4]);
 		} else {
-			printf("Devices NOT found.\r\n");
+			printf("Devices NOT found on 'huart6'!\r\n");
 		}
 		break;
 	case 68: //PF7
 		OW_Begin(&ow[5], &huart7);		// Конфигурируем pin's как OneWire
-		checkOneWireDevices(&ow[5]);
-		DT_Begin(&dt,&ow[5]);					// Find devices on the bus
-		if (DT_GetDeviceCount(&dt) > 0) {
-			ow_index = 5;
+		checkOneWireDevices(&ow[5],&dt[5]);
+		DT_Begin(&dt[5],&ow[5]);					// Find devices on the bus
+		if (DT_GetDeviceCount(&dt[5]) > 0) {
 			owflag = 1;
-			printf("Found %d devices.\r\n", DT_GetDeviceCount(&dt));
-			GetDeviceAddress(&dt, DT_GetDeviceCount(&dt), &ow[5]);
+			ow_index_array[5] = 5;
+			printf("Found %d devices on 'huart7'.\r\n", DT_GetDeviceCount(&dt[5]));
+			GetDeviceAddress(&dt[5], DT_GetDeviceCount(&dt[5]), &ow[5]);
 		} else {
-			printf("Devices NOT found.\r\n");
+			printf("Devices NOT found on 'huart7'!\r\n");
 		}
 		break;
 	default:
@@ -685,6 +686,7 @@ void configureGPIO(uint8_t id) {
 		break;
 	}
 }
+
 
 void InitPin() {
 	int i = 0;
@@ -711,7 +713,7 @@ void InitPin() {
 
     	}
     	else if(PinsConf[i].topin == 4){
-    		configureGPIO(i);
+    		configurOneWirePin(i);
     	}
 
 

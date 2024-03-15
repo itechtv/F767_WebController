@@ -148,12 +148,13 @@ uint8_t OW_Send(OneWire_HandleTypeDef* ow, uint8_t *command, uint8_t cLen, uint8
 		{
 			__NOP();
 		}
-
+//		printf("Sent: %02X\n", ow->ROM_NO); // Вывод отправленных данных
 		if (readStart == 0 && dLen > 0)
 		{
 			*data = OW_ToByte(ow->ROM_NO);
 			data++;
 			dLen--;
+//			printf("Received: %02X\n", *data); // Вывод полученных данных
 		}
 		else
 		{

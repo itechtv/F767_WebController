@@ -41,8 +41,7 @@
 /**********************************OneWire ********************************************/
 #include "DallasTemperature.h"
 #include "OneWire.h"
-uint8_t ow_index = 7;
-Ds18b20Sensor_t	ds18b20[_DS18B20_MAX_SENSORS];
+uint8_t ow_index_array[MAX_ONEWIRE_PINS]= {7, 7, 7, 7, 7, 7};
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -164,8 +163,7 @@ void StartOneWireTask(void const * argument);
 void StartI2CTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void checkOneWireDevices(OneWire_HandleTypeDef* ow);
-void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors, OneWire_HandleTypeDef* ow);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -377,38 +375,9 @@ char pacote[50];
       //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
   }
   /**********************************OneWire ********************************************/
- OneWire_HandleTypeDef ow[5];
- DallasTemperature_HandleTypeDef dt;
-	void printAddress(CurrentDeviceAddress deviceAddress) {// function to print a device address
-		for (uint8_t i = 0; i < 8; i++) {
-			printf("0x%02X ", deviceAddress[i]);
-			HAL_Delay(5);
-		}
-	}
-	void checkOneWireDevices(OneWire_HandleTypeDef* ow) {
-		if (OW_Reset(ow) == OW_OK) {
-			printf("COOL, OneWire devices detected!\r\n");
-		} else {
-			printf("OneWire devices NOT detected!\r\n");
-		}
-		DT_SetOneWire(&dt);
-	}
-	void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors, OneWire_HandleTypeDef* ow) {
-		CurrentDeviceAddress ROM;// arrays to hold device address
-		for (int i = 0; i < numSensors; ++i) {
-			if (!DT_GetAddress(dt, ROM, i, ow)) {
-				printf("Unable to find address for Device %d\r\n", i);
-			}
-
-			printf("Device-%d has address: ", i);
-			printAddress(ROM);
-			printf("\r\n");
-
-			DT_SetResolution(dt, ROM, 12, true, ow);// Set the resolution to 12 bit
-	//			uint8_t resolution = DT_GetResolution(dt, ROM);
-	//			printf("Device %d Resolution: %d\r\n", i, resolution);
-		}
-	}
+// TODO zerg
+ OneWire_HandleTypeDef ow[MAX_ONEWIRE_PINS];
+ DallasTemperature_HandleTypeDef dt[ONEWIRE_MAX_DEVICES];
 /* USER CODE END 0 */
 
 /**
@@ -1667,19 +1636,22 @@ void StartOneWireTask(void const *argument) {
 	ulTaskNotifyTake(0, portMAX_DELAY);
 	/* Infinite loop */
 	for (;;) {
-		// call DT_RequestTemperatures(&dt) to issue a global temperature
-		// request to all devices on the bus
 		if (owflag) {
-			DT_RequestTemperatures(&dt, &ow[ow_index]); // Send the command to get temperatures
-			for (int i = 0; i < DT_GetDeviceCount(&dt); i++) {
-				printf("Temperature for the device with index %d is = %.2f\r\n",
-						i, DT_GetTempCByIndex(&dt, i, &ow[ow_index]));
+			for (uint8_t i = 0; i < MAX_ONEWIRE_PINS; i++) {
+				if (ow_index_array[i] != 7) {
+					if (DT_GetDeviceCount(&dt[ow_index_array[i]]) > 0) {
+						DT_RequestTemperatures(&dt[ow_index_array[i]],&ow[ow_index_array[i]]); // Send the command to get temperatures
+						printf("Quentity of DS18B20 = %d on UART%d\r\n",DT_GetDeviceCount(&dt[ow_index_array[i]]),i);
+						for (uint8_t j = 0;j < DT_GetDeviceCount(&dt[ow_index_array[i]]);j++) {
+							printf("Temperature for the DS18B20[%d] on OneWire %d is = %.2f\r\n",j, ow_index_array[i],
+									DT_GetTempCByIndex(&dt[ow_index_array[i]],j, &ow[ow_index_array[i]]));
+						}
+						printf("\r\n");
+					}
+				}
 			}
-			if (DT_GetDeviceCount(&dt) != 0) {
-				printf("\r\n");
-			}
-			osDelay(1);
 		}
+		osDelay(1);
 	}
 	/* USER CODE END StartOneWireTask */
 }

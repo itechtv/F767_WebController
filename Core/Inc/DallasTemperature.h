@@ -30,7 +30,7 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
-#define ONEWIRE_MAX_DEVICES	3
+#define ONEWIRE_MAX_DEVICES	70 // ZERG Общее количество устройств на шине.
 
 #if REQUIRESALARMS
 typedef void AlarmHandler(const uint8_t*);
@@ -38,12 +38,15 @@ typedef void AlarmHandler(const uint8_t*);
 #define NO_ALARM_HANDLER ((AlarmHandler *)0)
 #endif
 
+//TODO zerg
+#define MAX_ONEWIRE_PINS 6// ZERG
+
 typedef struct{
 //	OneWire_HandleTypeDef* ow;
 	// count of devices on the bus
 	uint8_t devices;
 	// count of DS18xxx Family devices on bus
-	uint8_t ds18Count;
+	uint8_t ds18Count;// Количество устройств семейства "ds18" на шине.
 	// parasite power on or off
 	bool parasite;
 	// external pullup
@@ -57,6 +60,17 @@ typedef struct{
 	bool checkForConversion;
 	// used to determine if values will be saved from scratchpad to EEPROM on every scratchpad write
 	bool autoSaveScratchPad;
+
+	int         idpin;        // ID пина
+//	uint8_t 	Address[8];   // ROM, AllDeviceAddress и CurrentDeviceAddress
+	float 		Temperature;
+//	uint8_t     qsensors;     // Количество датчиков на данном пине.
+	int         uppert;       // Верхний предел температуры (ds18b20 -55°C to +125°C)
+	char        textupt[30];  // Поле ввода для действия при достижении верхнего предела температуры. (ds18b20 -55°C to +125°C)
+	int         lowert;       // Нижний предел температуры  (ds18b20 -55°C to +125°C)
+	char        textlowt[30]; // Поле ввода для действия при достижении нижнего предела температуры. (ds18b20 -55°C to +125°C)
+	char        info[30];	  // Info
+
 #if REQUIRESALARMS
 	// required for alarmSearch
 	uint8_t alarmSearchAddress[8];
@@ -70,6 +84,9 @@ typedef struct{
 typedef uint8_t ScratchPad[9];
 typedef uint8_t AllDeviceAddress[8 * ONEWIRE_MAX_DEVICES];
 typedef uint8_t CurrentDeviceAddress[8];
+
+void checkOneWireDevices(OneWire_HandleTypeDef* ow, DallasTemperature_HandleTypeDef* dt);
+void GetDeviceAddress(DallasTemperature_HandleTypeDef *dt, int numSensors, OneWire_HandleTypeDef* ow);
 
 // initialise bus
 void DT_SetOneWire(DallasTemperature_HandleTypeDef* dt);
@@ -170,17 +187,17 @@ int16_t DT_CalculateTemperature(const uint8_t* deviceAddress, uint8_t* scratchPa
 //
 //	Sensor structure
 //
-typedef struct
-{
-	int         idpin;        // ID пина
-	uint8_t 	Address[8];   // ROM
-	float 		Temperature;
-	uint8_t     qsensors;     // Общее количество датчико на всех пинах.
-	int         uppert;       // Верхний предел температуры (ds18b20 -55°C to +125°C)
-	char        textupt[30];  // Поле ввода для действия при достижении верхнего предела температуры. (ds18b20 -55°C to +125°C)
-	int         lowert;       // Нижний предел температуры  (ds18b20 -55°C to +125°C)
-	char        textlowt[30]; // Поле ввода для действия при достижении нижнего предела температуры. (ds18b20 -55°C to +125°C)
-	char        info[30];	  // Info
-} Ds18b20Sensor_t;
+//typedef struct
+//{
+//	int         idpin;        // ID пина
+//	uint8_t 	Address[8];   // ROM
+//	float 		Temperature;
+//	uint8_t     qsensors;     // Количество датчиков на данном пине.
+//	int         uppert;       // Верхний предел температуры (ds18b20 -55°C to +125°C)
+//	char        textupt[30];  // Поле ввода для действия при достижении верхнего предела температуры. (ds18b20 -55°C to +125°C)
+//	int         lowert;       // Нижний предел температуры  (ds18b20 -55°C to +125°C)
+//	char        textlowt[30]; // Поле ввода для действия при достижении нижнего предела температуры. (ds18b20 -55°C to +125°C)
+//	char        info[30];	  // Info
+//} Ds18b20Sensor_t;
 
 #endif /* INC_DALLASTEMPERATURE_H_ */
