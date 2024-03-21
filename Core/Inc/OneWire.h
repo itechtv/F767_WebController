@@ -1,172 +1,114 @@
-/*
- * OneWire.h
- *
- *  Created on: Dec 16, 2020
- *      Author: Andriy Honcharenko
+/**
+    @author Stanislav Lakhtin
+    @date   11.07.2016
+    @brief  Реализация протокола 1wire на базе библиотеки libopencm3 для микроконтроллера STM32F103
+            Возможно, библиотека будет корректно работать и на других uK (требуется проверка).
+            Общая идея заключается в использовании аппаратного USART uK для иммитации работы 1wire.
+            Подключение устройств осуществляется на выбранный USART к TX пину, который должен быть подтянут к линии питания сопротивлением 4.7К.
+            Реализация библиотеки осуществляет замыкание RX на TX внутри uK, оставляя ножку RX доступной для использования в других задачах.
  */
 
-#ifndef INC_ONEWIRE_H_
-#define INC_ONEWIRE_H_
+#ifndef STM32_DS18X20_ONEWIRE_H
+#define STM32_DS18X20_ONEWIRE_H
+#include <stdint.h>
+#define ONEWIRE_NOBODY 0xF0 //команда поиска ROM
+#define ONEWIRE_SEARCH 0xF0 //команда поиска ROM
+#define ONEWIRE_SKIP_ROM 0xCC  //команда пропуска ROM
+#define ONEWIRE_READ_ROM 0x33
+#define ONEWIRE_MATCH_ROM 0x55 //команда совпадение ROM позволяет мастеру обращаться к конкретному  ведомому устройству
+#define ONEWIRE_CONVERT_TEMPERATURE 0x44
+#define ONEWIRE_READ_SCRATCHPAD 0xBE    //команда для чтения памяти датчика
+#define ONEWIRE_WRITE_SCRATCHPAD 0x4E   //команда запись в память дтачика
+#define ONEWIRE_COPY_SCRATCHPAD 0x48
+#define ONEWIRE_RECALL_E2 0xB8
 
-#include "main.h"
-#include <stdbool.h>
-#include <string.h>
-//#include "DallasTemperature.h"
-
-// You can exclude certain features from OneWire.  In theory, this
-// might save some space.  In practice, the compiler automatically
-// removes unused code (technically, the linker, using -fdata-sections
-// and -ffunction-sections when compiling, and Wl,--gc-sections
-// when linking), so most of these will not result in any code size
-// reduction.  Well, unless you try to use the missing features
-// and redesign your program to not need them!  ONEWIRE_CRC8_TABLE
-// is the exception, because it selects a fast but large algorithm
-// or a small but slow algorithm.
-
-// you can exclude onewire_search by defining that to 0
-#ifndef ONEWIRE_SEARCH
-#define ONEWIRE_SEARCH 1
+#ifndef MAXDEVICES_ON_THE_BUS
+#define MAXDEVICES_ON_THE_BUS 3  // maximum planned number of devices on the bus
 #endif
 
-// You can exclude CRC checks altogether by defining this to 0
-#ifndef ONEWIRE_CRC
-#define ONEWIRE_CRC 1
-#endif
+#define DS18B20 0x28  //код семейсва датчика
+#define DS18S20 0x10  //код семейсва датчика
 
-// Select the table-lookup method of computing the 8-bit CRC
-// by setting this to 1.  The lookup table enlarges code size by
-// about 250 bytes.  It does NOT consume RAM (but did in very
-// old versions of OneWire).  If you disable this, a slower
-// but very compact algorithm is used.
-#ifndef ONEWIRE_CRC8_TABLE
-#define ONEWIRE_CRC8_TABLE 1
-#endif
+#define WIRE_0    0x00 // 0x00 --default
+#define WIRE_1    0xff //ответ
+#define OW_READ   0xff
 
-// You can allow 16-bit CRC checks by defining this to 1
-// (Note that ONEWIRE_CRC must also be 1.)
-#ifndef ONEWIRE_CRC16
-#define ONEWIRE_CRC16 1
-#endif
+typedef struct {
+  int8_t inCelsus;
+  uint8_t frac;
+} Temperature; //
 
-#define OW_OK				1
-#define OW_ERROR			2
-#define OW_NO_DEVICE		3
+typedef struct {
+  uint8_t family;
+  uint8_t code[6];
+  uint8_t crc;
+} RomCode; //
 
-#define OW_0				0x00
-#define OW_1				0xff
-#define OW_R_1				0xff
+typedef struct {
+  uint8_t crc;
+  uint8_t reserved[3];
+  uint8_t configuration;
+  uint8_t tl;
+  uint8_t th;
+  uint8_t temp_msb;
+  uint8_t temp_lsb;
+} Scratchpad_DS18B20;//
 
-#define OW_SEND_RESET		1
-#define OW_NO_RESET			2
+typedef struct {
+  uint8_t crc;
+  uint8_t count_per;
+  uint8_t count_remain;
+  uint8_t reserved[2];
+  uint8_t tl;
+  uint8_t th;
+  uint8_t temp_msb;
+  uint8_t temp_lsb;
+} Scratchpad_DS18S20;//
 
-#define OW_NO_READ			0xff
-#define OW_READ_SLOT		0xff
+typedef struct {
+  RomCode ids[MAXDEVICES_ON_THE_BUS];//для всех ромов наших датчиков
+  int lastDiscrepancy;
+  uint8_t lastROM[8];//последний считанный ROM для поиска всех ROM
+} OneWire;
 
-typedef struct{
-	UART_HandleTypeDef* huart;
-	unsigned char ROM_NO[8];
-	#if ONEWIRE_SEARCH
-	// global search state
-	uint8_t LastDiscrepancy;
-	uint8_t LastFamilyDiscrepancy;
-	bool LastDeviceFlag;
-	#endif
-}OneWire_HandleTypeDef;
+typedef struct {
+	int device;
+	char info[30];
+}DEVInfo;
+//DEVInfo devInfo;
 
-HAL_StatusTypeDef OneWire(OneWire_HandleTypeDef* ow, UART_HandleTypeDef* huart);
-HAL_StatusTypeDef OW_Begin(OneWire_HandleTypeDef* ow, UART_HandleTypeDef* huart);
+void usart_setup_(uint32_t baud);
 
-// Perform a 1-Wire reset cycle. Returns 1 if a device responds
-// with a presence pulse.  Returns 0 if there is no device or the
-// bus is shorted or otherwise held low for more than 250uS
-uint8_t OW_Reset(OneWire_HandleTypeDef* ow);
-uint8_t OW_Send(OneWire_HandleTypeDef* ow, uint8_t *command, uint8_t cLen, uint8_t *data, uint8_t dLen, uint8_t readStart);
+uint16_t owResetCmd(void);
 
-#if ONEWIRE_SEARCH
-// Clear the search state so that if will start from the beginning again.
-void OW_ResetSearch(OneWire_HandleTypeDef* ow);
+int owSearchCmd(OneWire *ow);
 
-// Setup the search to find the device type 'family_code' on the next call
-// to search(*newAddr) if it is present.
-void OW_TargetSearch(OneWire_HandleTypeDef* ow, uint8_t family_code);
+void owSkipRomCmd(OneWire *ow);
 
-// Look for the next device. Returns 1 if a new address has been
-// returned. A zero might mean that the bus is shorted, there are
-// no devices, or you have already retrieved all of them.  It
-// might be a good idea to check the CRC to make sure you didn't
-// get garbage.  The order is deterministic. You will always get
-// the same devices in the same order.
-uint8_t OW_Search(OneWire_HandleTypeDef* ow, uint8_t *buf, uint8_t num);
-#endif
+uint8_t owCRC8(RomCode *rom);
 
-#if ONEWIRE_CRC
-// Compute a Dallas Semiconductor 8 bit CRC, these are used in the
-// ROM and scratchpad registers.
-uint8_t OW_Crc8(const uint8_t *addr, uint8_t len);
+void owMatchRomCmd(RomCode *rom);
 
-#if ONEWIRE_CRC16
-// Compute the 1-Wire CRC16 and compare it against the received CRC.
-// Example usage (reading a DS2408):
-//    // Put everything in a buffer so we can compute the CRC easily.
-//    uint8_t buf[13];
-//    buf[0] = 0xF0;    // Read PIO Registers
-//    buf[1] = 0x88;    // LSB address
-//    buf[2] = 0x00;    // MSB address
-//    WriteBytes(net, buf, 3);    // Write 3 cmd bytes
-//    ReadBytes(net, buf+3, 10);  // Read 6 data bytes, 2 0xFF, 2 CRC16
-//    if (!CheckCRC16(buf, 11, &buf[11])) {
-//        // Handle error.
-//    }
-//
-// @param input - Array of bytes to checksum.
-// @param len - How many bytes to use.
-// @param inverted_crc - The two CRC16 bytes in the received data.
-//                       This should just point into the received data,
-//                       *not* at a 16-bit integer.
-// @param crc - The crc starting value (optional)
-// @return True, iff the CRC matches.
-bool OW_CheckCrc16(const uint8_t* input, uint16_t len, const uint8_t* inverted_crc, uint16_t crc);
+void owConvertTemperatureCmd(OneWire *ow, RomCode *rom);
 
-// Compute a Dallas Semiconductor 16 bit CRC.  This is required to check
-// the integrity of data received from many 1-Wire devices.  Note that the
-// CRC computed here is *not* what you'll get from the 1-Wire network,
-// for two reasons:
-//   1) The CRC is transmitted bitwise inverted.
-//   2) Depending on the endian-ness of your processor, the binary
-//      representation of the two-byte return value may have a different
-//      byte order than the two bytes you get from 1-Wire.
-// @param input - Array of bytes to checksum.
-// @param len - How many bytes to use.
-// @param crc - The crc starting value (optional)
-// @return The CRC16, as defined by Dallas Semiconductor.
-uint16_t OW_Crc16(const uint8_t* input, uint16_t len, uint16_t crc);
-#endif
-#endif
+uint8_t* owReadScratchpadCmd(OneWire *ow, RomCode *rom, uint8_t *data);
 
+void owCopyScratchpadCmd(OneWire *ow, RomCode *rom);
 
-/********************** zerg TEST ************************/
-//void init_UART(uint16_t selected_pin);
+void owRecallE2Cmd(OneWire *ow, RomCode *rom);
 
-//void MX_DMA1_Init(void);
-//void MX_USART1_UART_Init(void);
-//
-//void MX_DMA2_Init(void);
-//void MX_USART2_UART_Init(void);
-//
-//void MX_DMA4_Init(void);
-//void MX_USART4_UART_Init(void);
-//
-//void MX_DMA5_Init(void);
-//void MX_USART5_UART_Init(void);
-//
-//void MX_DMA6_Init(void);
-//void MX_USART6_UART_Init(void);
-//
-//void MX_DMA7_Init(void);
-//void MX_USART7_UART_Init(void);
-//
-//void MX_DMA8_Init(void);
-//void MX_USART8_UART_Init(void);
+Temperature readTemperature(OneWire *ow, RomCode *rom, uint8_t reSense);
 
+void owSend(uint16_t data);
 
-#endif /* INC_ONEWIRE_H_ */
+void owSendByte(uint8_t data);
+
+uint16_t owEchoRead(void);
+
+void owReadHandler(void);
+
+int get_ROMid (void);
+
+void get_Temperature (void);
+
+#endif //STM32_DS18X20_ONEWIRE_H
