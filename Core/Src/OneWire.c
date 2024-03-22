@@ -2,6 +2,12 @@
 #include "stm32f7xx_hal.h"
 #include "stdio.h"
 #include "string.h"
+/******************************** mqtt ********************************/
+#include <lwip_mqtt.h>
+extern mqtt_client_t *client;
+extern char pacote[50];
+char topic[] = "Zagotovka"; // Топик для публикации
+/********************************/
 volatile uint8_t recvFlag;
 volatile uint16_t rc_buffer[5];
 DEVInfo devInfo;
@@ -433,6 +439,8 @@ int get_ROMid (void){
 
 void get_Temperature (void)
 {
+//	char topic[] = "Zagotovka"; // Топик для публикации
+
 	i=0;
 	for (; i < devices; i++) {
 		switch ((ow.ids[i]).family) {//че у нас за датчик
@@ -440,10 +448,20 @@ void get_Temperature (void)
 			// будет возвращено значение предыдущего измерения!
 			t = readTemperature(&ow, &ow.ids[i], 1);
 			Temp[i] = (float)(t.inCelsus*10+t.frac)/10.0;
+//			if (client != NULL) {
+//				sprintf(pacote, "Device %lu: %.2f C", i, Temp[i]);// Формируем строку с температурой
+//				example_do_connect(client, topic); // Подключение к MQTT-серверу
+//				example_publish(client, pacote);// Публикация сообщения
+//			}
 			break;
 		case DS18S20:
 			t = readTemperature(&ow, &ow.ids[i], 1);
 			Temp[i] = (float)(t.inCelsus*10+t.frac)/10.0;
+//			if (client != NULL) {
+//				sprintf(pacote, "Device %lu: %.2f C", i, Temp[i]);// Формируем строку с температурой
+//				example_do_connect(client, topic); // Подключение к MQTT-серверу
+//				example_publish(client, pacote);// Публикация сообщения
+//			}
 			break;
 		case 0x00:
 			break;

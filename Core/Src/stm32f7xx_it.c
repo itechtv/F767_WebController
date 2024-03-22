@@ -58,8 +58,13 @@
 /* External variables --------------------------------------------------------*/
 extern ETH_HandleTypeDef heth;
 extern HCD_HandleTypeDef hhcd_USB_OTG_FS;
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef huart7;
+extern UART_HandleTypeDef huart8;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart6;
 extern TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN EV */
@@ -184,12 +189,40 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-	owReadHandler();
+
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
 
   /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART4 global interrupt.
+  */
+void UART4_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART4_IRQn 0 */
+
+  /* USER CODE END UART4_IRQn 0 */
+  HAL_UART_IRQHandler(&huart4);
+  /* USER CODE BEGIN UART4_IRQn 1 */
+
+  /* USER CODE END UART4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART5 global interrupt.
+  */
+void UART5_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART5_IRQn 0 */
+
+  /* USER CODE END UART5_IRQn 0 */
+  HAL_UART_IRQHandler(&huart5);
+  /* USER CODE BEGIN UART5_IRQn 1 */
+
+  /* USER CODE END UART5_IRQn 1 */
 }
 
 /**
@@ -234,6 +267,129 @@ void OTG_FS_IRQHandler(void)
   /* USER CODE END OTG_FS_IRQn 1 */
 }
 
-/* USER CODE BEGIN 1 */
+/**
+  * @brief This function handles USART6 global interrupt.
+  */
+void USART6_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART6_IRQn 0 */
 
+  /* USER CODE END USART6_IRQn 0 */
+  HAL_UART_IRQHandler(&huart6);
+  /* USER CODE BEGIN USART6_IRQn 1 */
+
+  /* USER CODE END USART6_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART7 global interrupt.
+  */
+void UART7_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART7_IRQn 0 */
+
+  /* USER CODE END UART7_IRQn 0 */
+  HAL_UART_IRQHandler(&huart7);
+  /* USER CODE BEGIN UART7_IRQn 1 */
+
+  /* USER CODE END UART7_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART8 global interrupt.
+  */
+void UART8_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART8_IRQn 0 */
+
+  /* USER CODE END UART8_IRQn 0 */
+  HAL_UART_IRQHandler(&huart8);
+  /* USER CODE BEGIN UART8_IRQn 1 */
+
+  /* USER CODE END UART8_IRQn 1 */
+}
+
+/* USER CODE BEGIN 1 */
+/**********************************OneWire ********************************************/
+
+//extern UART_HandleTypeDef huart1;
+//extern UART_HandleTypeDef huart2;
+//extern UART_HandleTypeDef huart4;
+//extern UART_HandleTypeDef huart5;
+//extern UART_HandleTypeDef huart6;
+//extern UART_HandleTypeDef huart7;
+//extern UART_HandleTypeDef huart8;
+
+//void USART1_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart1);
+//}
+//
+//void USART2_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart2);
+//}
+//
+//void UART4_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart4);
+//}
+//
+//void UART5_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart5);
+//}
+//
+//void USART6_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart6);
+//}
+//
+//void UART7_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart7);
+//
+//}
+//
+//void UART8_IRQHandler(void)
+//{
+//	owReadHandler();
+//  HAL_UART_IRQHandler(&huart8);
+//
+//}
+//
+//void handleUARTInterrupt(uint8_t uartNumber) {
+//    switch (uartNumber) {
+//        case 1:
+//            USART1_IRQHandler();
+//            break;
+//        case 2:
+//            USART2_IRQHandler();
+//            break;
+//        case 4:
+//            UART4_IRQHandler();
+//            break;
+//        case 5:
+//            UART5_IRQHandler();
+//            break;
+//        case 6:
+//            USART6_IRQHandler();
+//            break;
+//        case 7:
+//            UART7_IRQHandler();
+//            break;
+//        case 8:
+//            UART8_IRQHandler();
+//            break;
+//        default:
+//            Error_Handler();
+//            break;
+//    }
+//}
 /* USER CODE END 1 */
