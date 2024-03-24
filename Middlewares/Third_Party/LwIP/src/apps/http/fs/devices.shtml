@@ -1,1 +1,54 @@
-[<!--#devjson-->]
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Home</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="js/jquerymin.js"></script>
+</head>
+<body>
+    <center>
+        <h1>NUCLEO-F767ZI</h1>
+        <!--#menu-->
+        <h2 id="title1">Edit Button pin</h2>
+        <table class="zebra_2" border="1" align="center" id="tab1">
+            <tr>
+                <th>ID
+                    <a class="support" href="#">(?)
+                        <span class="tooltiptext" id="lang1"></span>
+                    </a>
+                </th>
+                <th>SN
+                    <a class="support" href="#">(?)
+                        <span class="tooltiptext" id="lang2"></span>
+                    </a>
+                </th>
+                <th>T&nbsp;&#8451;
+                    <a class="support" href="#">(?)
+                        <span class="tooltiptext" id="lang2"></span>
+                    </a>
+                </th>
+            </tr>
+        </table>
+    </center>
+    <script>
+            var response = `<!--#devjson-->`;        
+            $(document).ready(function () {
+            var valdata = JSON.parse(response);
+            var temp_data = '';
+            for (var i = 0; i < valdata.length; i++) {
+                var val = valdata[i];
+                val.id = val.id + 1; // Increment the id by 1
+                temp_data += '<tr>';
+                temp_data += '<td align=\"center\">' + val.id + '</td>';
+                temp_data += '<td align=\"center\">' + val.sn + '</td>';
+                temp_data += '<td align=\"center\">' + val.temp + '</td>';
+                temp_data += '</tr>';
+            }
+            $('#tab1').append(temp_data);
+        });
+    </script>
+</body>
+</html>

@@ -551,8 +551,8 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 						i++;
 					}
 				}
-
-				str = cJSON_Print(root);
+				str = cJSON_PrintUnformatted(root);
+//				str = cJSON_Print(root);
 
 				cJSON_Delete(root);
 				sprintf(pcInsert, "%s", str);
