@@ -78,7 +78,7 @@
 
 #define configGENERATE_RUN_TIME_STATS_USE_TICKS   1
 #define configRECORD_STACK_HIGH_ADDRESS           1
-//#define configUSE_HEAP_SCHEME                     4
+#define configUSE_HEAP_SCHEME                     ( 4 )
 
 
 
