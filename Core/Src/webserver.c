@@ -18,6 +18,7 @@
 #include "cJSON.h"
 #include "db.h"
 #include "cmsis_os.h"
+//#include "OneWire.h"
 
 //#include "data_pin_t"
 #define MAX_BUFFER_SIZE 1000 // zerg Замените на необходимый размер буфера
@@ -42,7 +43,7 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct dbSettings SetSettings;
 extern struct dbCron dbCrontxt[MAXSIZE];
-
+extern struct dbdevice strdev[MAXDEVICES];
 ///////////////////////////
 
 extern osMessageQId usbQueueHandle;
@@ -129,7 +130,7 @@ int MultiPartTabCount(int num, int pinnum, int count)
 }
 //////////////////////////////  SSI HANDLER  //////////////////////////////////
 
-char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson"};
+char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson", "devjson"};
 char const **TAGS = TAGCHAR;
 
 
@@ -513,7 +514,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 		    // ssi tag <!--#cronjson-->
 			case 6:
-
 				root = cJSON_CreateArray();
 				i = 0;
 				fld = cJSON_CreateObject();
@@ -525,6 +525,31 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 					cJSON_AddStringToObject(fld, "info", dbCrontxt[i].info);
 
 					i++;
+				}
+
+				str = cJSON_Print(root);
+
+				cJSON_Delete(root);
+				sprintf(pcInsert, "%s", str);
+				free(str);
+
+				return strlen(pcInsert);
+				break;
+			case 7:// ssi tag <!--#devjson-->
+				root = cJSON_CreateArray();
+				i = 0;
+				fld = cJSON_CreateObject();
+				while (i <= 2) {
+					if(strdev[i].idpin == 37){
+						cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
+						cJSON_AddNumberToObject(fld, "id", i);
+						cJSON_AddStringToObject(fld, "sn", strdev[i].romaddr);
+						cJSON_AddNumberToObject(fld, "temp", strdev[i].temperature);
+//						cJSON_AddNumberToObject(fld, "activ", strdev[i].activ);
+//						cJSON_AddStringToObject(fld, "info", strdev[i].info);
+
+						i++;
+					}
 				}
 
 				str = cJSON_Print(root);
@@ -592,7 +617,8 @@ static const tCGI URL_TABLES[] = {
 		{"/formtopin2.shtml", (tCGIHandler) FormCGI_Handler },		// index = 24
 		{"/formtopin3.shtml", (tCGIHandler) FormCGI_Handler },	    // index = 25
 		{"/form1wire.shtml", (tCGIHandler) FormCGI_Handler },       // index = 26
-		{"/tab1wire.shtml", (tCGIHandler) TabCGI_Handler }         // index = 27
+		{"/tab1wire.shtml", (tCGIHandler) TabCGI_Handler },         // index = 27
+		{"/devices.shtml", (tCGIHandler) FormCGI_Handler }          // index = 28
 };
 
 const uint8_t CGI_URL_NUM = (sizeof(URL_TABLES) / sizeof(tCGI));
@@ -663,6 +689,14 @@ const char* TabCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pc
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
+
+//			if (strcmp(pcParam[i], "owtest") == 0){// TODO
+//				int owtest  = atoi(pcValue[i]);
+//				if(owtest == 1){
+//					printf("owtest == 1 \n");
+//					my_get_ROMid();
+//				}
+//			}
 		}
 	}
 

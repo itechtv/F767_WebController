@@ -3,9 +3,11 @@
 #include "stdio.h"
 #include "string.h"
 /******************************** mqtt ********************************/
+#include <db.h>
 #include <lwip_mqtt.h>
 extern mqtt_client_t *client;
 extern char pacote[50];
+extern struct dbdevice strdev[MAXDEVICES];
 char topic[] = "Zagotovka"; // Топик для публикации
 /********************************/
 volatile uint8_t recvFlag;
@@ -400,10 +402,26 @@ void owRecallE2Cmd(OneWire *ow, RomCode *rom) {
   owSendByte(ONEWIRE_RECALL_E2);
 }
 
+void printOneWireDevices(OneWire *ow) {
+    int i;
+    for (i = 0; i < MAXDEVICES_ON_THE_BUS; i++) {
+        if (ow->ids[i].family != 0) {
+            printf("Device %d:\n", i);
+            printf("  Family Code: 0x%02X\n", ow->ids[i].family);
+            printf("  ROM Code: ");
+            for (int j = 0; j < 6; j++) {
+                printf("%02X", ow->ids[i].code[j]);
+            }
+            printf("\n");
+            printf("  CRC: 0x%02X\n", ow->ids[i].crc);
+        }
+    }
+}
 
 int get_ROMid (void){
 	if (owResetCmd() != ONEWIRE_NOBODY) {    // is anybody on the bus?
 		devices = owSearchCmd(&ow);        // получить ROMid в�?ех у�?трой�?т на шине или вернуть код ошибки
+		printOneWireDevices(&ow);
 		if (devices <= 0) {
 			while (1){
 				pDelay = 1000000;
@@ -412,8 +430,8 @@ int get_ROMid (void){
 			}
 
 		}
-		i = 0;
-		for (; i < devices; i++) {//выводим в кон�?оль в�?е найденные ROM
+
+		for (i = 0; i < devices; i++) {//выводим в кон�?оль в�?е найденные ROM
 			RomCode *r = &ow.ids[i];
 			uint8_t crc = owCRC8(r);
 			crcOK = (crc == r->crc)?"CRC OK":"CRC ERROR!";
@@ -421,7 +439,13 @@ int get_ROMid (void){
 
 			sprintf(devInfo.info, "SN: %02X/%02X%02X%02X%02X%02X%02X/%02X", r->family, r->code[5], r->code[4], r->code[3],
 					r->code[2], r->code[1], r->code[0], r->crc);
-
+			printf("+++ %lu iii - %s \r\n",i,devInfo.info);
+// Здесь будем сравнивать нашу структуру со структурой "devInfo.info"!
+		    /*******************************/
+			strdev[i].idpin = 37;
+			strdev[i].family = ow.ids[i].family;
+			sprintf(strdev[i].romaddr, "%02X%02X%02X%02X%02X%02X%02X%02X",  ow.ids[i].family, ow.ids[i].code[0], ow.ids[i].code[1], ow.ids[i].code[2], ow.ids[i].code[3], ow.ids[i].code[4], ow.ids[i].code[5], ow.ids[i].crc);
+			/*******************************/
 			if (crc != r->crc) {
 				devInfo.device = i;
 				sprintf (devInfo.info,"\n can't read cause CNC error");
@@ -437,31 +461,46 @@ int get_ROMid (void){
 	else return -1;
 }
 
-void get_Temperature (void)
-{
+void get_Temperature(void) {
 //	char topic[] = "Zagotovka"; // Топик для публикации
-
-	i=0;
-	for (; i < devices; i++) {
-		switch ((ow.ids[i]).family) {//че у нас за датчик
+	uint8_t identity = 0;// флаг совпадения.
+	int iddev = -1;// ID датчика.
+	uint8_t b = 0;
+	char strchar[30];
+	for (i = 0; i < devices; i++) {
+		identity = 0;
+		iddev = -1;
+		while (b <= 2) {
+			if (strdev[b].idpin == 37) {
+				sprintf(strchar, "%02X%02X%02X%02X%02X%02X%02X%02X",
+						ow.ids[i].family, ow.ids[i].code[0], ow.ids[i].code[1],
+						ow.ids[i].code[2], ow.ids[i].code[3], ow.ids[i].code[4],
+						ow.ids[i].code[5], ow.ids[i].crc);
+//				printf("+++ %d iii - %s,%lu,%d \r\n", b,strchar,i,devices);
+				if (strcmp(strchar,strdev[b].romaddr) == 0) {
+//					printf("COOL %d\r\n",b);
+					identity = 1;
+					iddev = b;
+				}
+			}
+			b++;
+		}
+		b = 0;
+		switch ((ow.ids[i]).family) {        //че у нас за датчик
 		case DS18B20:
 			// будет возвращено значение предыдущего измерения!
 			t = readTemperature(&ow, &ow.ids[i], 1);
-			Temp[i] = (float)(t.inCelsus*10+t.frac)/10.0;
-//			if (client != NULL) {
-//				sprintf(pacote, "Device %lu: %.2f C", i, Temp[i]);// Формируем строку с температурой
-//				example_do_connect(client, topic); // Подключение к MQTT-серверу
-//				example_publish(client, pacote);// Публикация сообщения
-//			}
+			Temp[i] = (float) (t.inCelsus * 10 + t.frac) / 10.0;
+			if(identity == 1 && iddev != -1){
+				strdev[iddev].temperature = Temp[i];
+			}
 			break;
 		case DS18S20:
 			t = readTemperature(&ow, &ow.ids[i], 1);
-			Temp[i] = (float)(t.inCelsus*10+t.frac)/10.0;
-//			if (client != NULL) {
-//				sprintf(pacote, "Device %lu: %.2f C", i, Temp[i]);// Формируем строку с температурой
-//				example_do_connect(client, topic); // Подключение к MQTT-серверу
-//				example_publish(client, pacote);// Публикация сообщения
-//			}
+			Temp[i] = (float) (t.inCelsus * 10 + t.frac) / 10.0;
+			if(identity == 1 && iddev != -1){
+				strdev[iddev].temperature = Temp[i];
+			}
 			break;
 		case 0x00:
 			break;

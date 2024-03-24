@@ -7,7 +7,7 @@
 
 #ifndef INC_DB_H_
 #define INC_DB_H_
-
+#define MAXDEVICES    125 // Максимальное количество датчиков на всех пинах.
 #define NUMPIN 89 // количество пинов
 #define NUMPINLINKS 100 // количество pin to pin
 #define NUMTASK 30 // кол-во CRON task
@@ -137,5 +137,17 @@ struct dbSettings { 	// Cтруктура для setting
 };
 
 
+struct dbdevice {
+int         idpin;        // ID пина
+char 	    romaddr[30];  // ROM, AllDeviceAddress и CurrentDeviceAddress
+float 		temperature;
+uint8_t     family;       // тип датчика
+int         uppert;       // Верхний предел температуры (ds18b20 -55°C to +125°C)
+char        textupt[30];  // Поле ввода для действия при достижении верхнего предела температуры. (ds18b20 -55°C to +125°C)
+int         lowert;       // Нижний предел температуры  (ds18b20 -55°C to +125°C)
+char        textlowt[30]; // Поле ввода для действия при достижении нижнего предела температуры. (ds18b20 -55°C to +125°C)
+uint8_t     activ;       //
+char        info[30];	  // Info
+};
 
 #endif /* INC_DB_H_ */

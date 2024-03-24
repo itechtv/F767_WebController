@@ -410,7 +410,7 @@ int main(void)
   /**********************************OneWire ********************************************/
 //  void handleUARTInterrupt(uint8_t uartNumber);
 //  handleUARTInterrupt(1); // USART1
-  get_ROMid();
+
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -1333,8 +1333,8 @@ void StartConfigTask(void const * argument)
 					GetCronConfig();
 					GetPinConfig();
 					GetPinToPin();
-
 					InitPin();
+					get_ROMid();
 
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
@@ -1346,6 +1346,7 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(OneWireTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OneWire
 				} else {
 					StartSetingsConfig();
+					get_ROMid();
 
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
@@ -1620,7 +1621,7 @@ void StartOneWireTask(void const * argument)
 	/* Infinite loop */
 	for (;;) {
 	    get_Temperature();
-		osDelay(1);
+		osDelay(1000);
 	}
   /* USER CODE END StartOneWireTask */
 }
