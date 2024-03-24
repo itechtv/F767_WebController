@@ -51,6 +51,7 @@ uint16_t usbnum = 0;
 const uint8_t freeRTOSMemoryScheme = 4;
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+//// fhgfjgfjhg
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
