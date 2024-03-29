@@ -18,7 +18,6 @@
 #include "cJSON.h"
 #include "db.h"
 #include "cmsis_os.h"
-//#include "OneWire.h"
 
 //#include "data_pin_t"
 #define MAX_BUFFER_SIZE 1000 // zerg Замените на необходимый размер буфера
@@ -130,7 +129,7 @@ int MultiPartTabCount(int num, int pinnum, int count)
 }
 //////////////////////////////  SSI HANDLER  //////////////////////////////////
 
-char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson", "devjson"};
+char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson"};
 char const **TAGS = TAGCHAR;
 
 
@@ -540,16 +539,16 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				i = 0;
 				fld = cJSON_CreateObject();
 				while (i <= 2) {
-					if(strdev[i].idpin == 37){
+//					if(strdev[i].idpin == 37){
 						cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
-						cJSON_AddNumberToObject(fld, "id", i);
-						cJSON_AddStringToObject(fld, "sn", strdev[i].romaddr);
-						cJSON_AddNumberToObject(fld, "temp", strdev[i].temperature);
+//						cJSON_AddNumberToObject(fld, "id", i);
+//						cJSON_AddStringToObject(fld, "sn", strdev[i].romaddr);
+//						cJSON_AddNumberToObject(fld, "temp", strdev[i].temperature);
 //						cJSON_AddNumberToObject(fld, "activ", strdev[i].activ);
 //						cJSON_AddStringToObject(fld, "info", strdev[i].info);
 
 						i++;
-					}
+//					}
 				}
 				str = cJSON_PrintUnformatted(root);
 //				str = cJSON_Print(root);
@@ -689,14 +688,6 @@ const char* TabCGI_Handler(int iIndex, int iNumParams, char *pcParam[], char *pc
 				memset(ssid, '\0', sizeof(ssid));
 				strcpy(ssid, pcValue[i]);
 			}
-
-//			if (strcmp(pcParam[i], "owtest") == 0){// TODO
-//				int owtest  = atoi(pcValue[i]);
-//				if(owtest == 1){
-//					printf("owtest == 1 \n");
-//					my_get_ROMid();
-//				}
-//			}
 		}
 	}
 
@@ -961,7 +952,7 @@ const char* FormCGI_Handler(int iIndex, int iNumParams, char *pcParam[],char *pc
 	id = 0;
 	tab = 0;
 
-	if (iIndex == 6 || iIndex == 10 || iIndex == 11 || iIndex == 12 || iIndex == 16 || iIndex == 21 || iIndex == 23 || iIndex == 24 || iIndex == 25 || iIndex == 26) {
+	if (iIndex == 6 || iIndex == 10 || iIndex == 11 || iIndex == 12 || iIndex == 16 || iIndex == 21 || iIndex == 23 || iIndex == 24 || iIndex == 25 || iIndex == 26 || iIndex == 28) {
 		for (int i = 0; i < iNumParams; i++) {
 			// GET ssid
 			if (strcmp(pcParam[i], "ssid") == 0) {

@@ -36,17 +36,17 @@
 #include "cJSON.h"
 #include "setings.h"
 #include "multi_button.h"
-#include <lwip_mqtt.h>
 #define DEBOUNCE_DELAY 45 //Encoder (ms)
 
 /**********************************OneWire ********************************************/
-#include "OneWire.h"
-extern float Temp[MAXDEVICES_ON_THE_BUS];
-/*------------------------------------MQTT---------------------------------------------*/
-mqtt_client_t *client;
-uint32_t cont = 0, blink = 0;
-char pacote[50];
-extern char topic[];
+#include "ds18b20.h"
+#include "ds18b20Config.h"
+extern Ds18b20Sensor_t ds18b20[_DS18B20_MAX_SENSORS];
+extern OneWire_t    OneWire;
+extern uint8_t	    OneWireDevices;
+extern uint8_t 	    TempSensorCount;
+extern uint8_t		Ds18b20StartConvert;
+extern uint16_t	    Ds18b20Timeout;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -76,14 +76,9 @@ char str[40] = { 0 };
 
 RTC_HandleTypeDef hrtc;
 
-UART_HandleTypeDef huart4;
-UART_HandleTypeDef huart5;
-UART_HandleTypeDef huart7;
-UART_HandleTypeDef huart8;
-UART_HandleTypeDef huart1;
-UART_HandleTypeDef huart2;
+TIM_HandleTypeDef htim1;
+
 UART_HandleTypeDef huart3;
-UART_HandleTypeDef huart6;
 
 osThreadId WebServerTaskHandle;
 uint32_t WebServerTaskBuffer[ 2048 ];
@@ -139,13 +134,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART3_UART_Init(void);
-static void MX_UART4_Init(void);
-static void MX_UART5_Init(void);
-static void MX_UART7_Init(void);
-static void MX_UART8_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_USART2_UART_Init(void);
-static void MX_USART6_UART_Init(void);
+static void MX_TIM1_Init(void);
 void StartWebServerTask(void const * argument);
 void StartSSIDTask(void const * argument);
 void StartCronTask(void const * argument);
@@ -176,7 +165,10 @@ extern char randomSSID[27];
 unsigned long Ti;
 unsigned long Te;
 
-//////////////////////////////////////
+//////////////////////////////////////????????
+mqtt_client_t *client;
+extern char bufmqtt[70];
+
 
 // Функция обратного вызова для обработки событий кнопки
  void button_event_handler(Button* handle)
@@ -399,17 +391,9 @@ int main(void)
   MX_RTC_Init();
 //  MX_FATFS_Init();
   MX_USART3_UART_Init();
-  MX_UART4_Init();
-  MX_UART5_Init();
-  MX_UART7_Init();
-  MX_UART8_Init();
-  MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
-  MX_USART6_UART_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   /**********************************OneWire ********************************************/
-//  void handleUARTInterrupt(uint8_t uartNumber);
-//  handleUARTInterrupt(1); // USART1
 
   /* USER CODE END 2 */
 
@@ -614,212 +598,49 @@ static void MX_RTC_Init(void)
 }
 
 /**
-  * @brief UART4 Initialization Function
+  * @brief TIM1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_UART4_Init(void)
+static void MX_TIM1_Init(void)
 {
 
-  /* USER CODE BEGIN UART4_Init 0 */
+  /* USER CODE BEGIN TIM1_Init 0 */
 
-  /* USER CODE END UART4_Init 0 */
+  /* USER CODE END TIM1_Init 0 */
 
-  /* USER CODE BEGIN UART4_Init 1 */
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  /* USER CODE END UART4_Init 1 */
-  huart4.Instance = UART4;
-  huart4.Init.BaudRate = 115200;
-  huart4.Init.WordLength = UART_WORDLENGTH_8B;
-  huart4.Init.StopBits = UART_STOPBITS_1;
-  huart4.Init.Parity = UART_PARITY_NONE;
-  huart4.Init.Mode = UART_MODE_TX_RX;
-  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart4) != HAL_OK)
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 216-1;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 65535;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN UART4_Init 2 */
-
-  /* USER CODE END UART4_Init 2 */
-
-}
-
-/**
-  * @brief UART5 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_UART5_Init(void)
-{
-
-  /* USER CODE BEGIN UART5_Init 0 */
-
-  /* USER CODE END UART5_Init 0 */
-
-  /* USER CODE BEGIN UART5_Init 1 */
-
-  /* USER CODE END UART5_Init 1 */
-  huart5.Instance = UART5;
-  huart5.Init.BaudRate = 115200;
-  huart5.Init.WordLength = UART_WORDLENGTH_8B;
-  huart5.Init.StopBits = UART_STOPBITS_1;
-  huart5.Init.Parity = UART_PARITY_NONE;
-  huart5.Init.Mode = UART_MODE_TX_RX;
-  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart5.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart5) != HAL_OK)
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN UART5_Init 2 */
-
-  /* USER CODE END UART5_Init 2 */
-
-}
-
-/**
-  * @brief UART7 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_UART7_Init(void)
-{
-
-  /* USER CODE BEGIN UART7_Init 0 */
-
-  /* USER CODE END UART7_Init 0 */
-
-  /* USER CODE BEGIN UART7_Init 1 */
-
-  /* USER CODE END UART7_Init 1 */
-  huart7.Instance = UART7;
-  huart7.Init.BaudRate = 115200;
-  huart7.Init.WordLength = UART_WORDLENGTH_8B;
-  huart7.Init.StopBits = UART_STOPBITS_1;
-  huart7.Init.Parity = UART_PARITY_NONE;
-  huart7.Init.Mode = UART_MODE_TX_RX;
-  huart7.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart7.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart7.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart7.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart7) != HAL_OK)
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN UART7_Init 2 */
+  /* USER CODE BEGIN TIM1_Init 2 */
 
-  /* USER CODE END UART7_Init 2 */
-
-}
-
-/**
-  * @brief UART8 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_UART8_Init(void)
-{
-
-  /* USER CODE BEGIN UART8_Init 0 */
-
-  /* USER CODE END UART8_Init 0 */
-
-  /* USER CODE BEGIN UART8_Init 1 */
-
-  /* USER CODE END UART8_Init 1 */
-  huart8.Instance = UART8;
-  huart8.Init.BaudRate = 115200;
-  huart8.Init.WordLength = UART_WORDLENGTH_8B;
-  huart8.Init.StopBits = UART_STOPBITS_1;
-  huart8.Init.Parity = UART_PARITY_NONE;
-  huart8.Init.Mode = UART_MODE_TX_RX;
-  huart8.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart8.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart8.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart8.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN UART8_Init 2 */
-
-  /* USER CODE END UART8_Init 2 */
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART2_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
+  /* USER CODE END TIM1_Init 2 */
 
 }
 
@@ -859,41 +680,6 @@ static void MX_USART3_UART_Init(void)
 }
 
 /**
-  * @brief USART6 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART6_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART6_Init 0 */
-
-  /* USER CODE END USART6_Init 0 */
-
-  /* USER CODE BEGIN USART6_Init 1 */
-
-  /* USER CODE END USART6_Init 1 */
-  huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
-  huart6.Init.WordLength = UART_WORDLENGTH_8B;
-  huart6.Init.StopBits = UART_STOPBITS_1;
-  huart6.Init.Parity = UART_PARITY_NONE;
-  huart6.Init.Mode = UART_MODE_TX_RX;
-  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart6.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart6.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_HalfDuplex_Init(&huart6) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART6_Init 2 */
-
-  /* USER CODE END USART6_Init 2 */
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -909,13 +695,14 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SENSOR_GPIO_Port, SENSOR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
@@ -928,6 +715,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SENSOR_Pin */
+  GPIO_InitStruct.Pin = SENSOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SENSOR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
   GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
@@ -1106,7 +900,7 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
-	ulTaskNotifyTake(0, portMAX_DELAY);  //
+  ulTaskNotifyTake(0, portMAX_DELAY);  //
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
@@ -1114,22 +908,24 @@ void StartWebServerTask(void const * argument)
   /* USER CODE BEGIN 5 */
 	http_server_init();
 	osDelay(1000);
-	printf("My IP adress is - %d.%d.%d.%d \r\n",IP_ADDRESS[0],IP_ADDRESS[1],IP_ADDRESS[2],IP_ADDRESS[3]);
-
-	/******************************** mqtt ********************************/
-	  client = mqtt_client_new();
-	  example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
-	  sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
-	  example_publish(client, pacote); // Публикуем сообщение.
-
+	printf("My IP adress is - %d.%d.%d.%d \r\n", IP_ADDRESS[0], IP_ADDRESS[1],
+			IP_ADDRESS[2], IP_ADDRESS[3]);
+	if (SetSettings.check_mqtt == 1) {
+		client = mqtt_client_new();
+		example_do_connect(client, SetSettings.mqtt_tpc); // Подписались на топик"Zagotovka"
+		//sprintf(bufmqtt, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
+		//example_publish(client, bufmqtt); // Публикуем сообщение.
+	}
 	osDelay(1000);
 	bsp_sntp_init();
+
 	/* Infinite loop */
 	for (;;) {
-		for (uint8_t i=0; i < MAXDEVICES_ON_THE_BUS; i++) {
-		sprintf(pacote, "Device %d: %.2f C", i, Temp[i]);// Формируем строку с температурой
-
-		example_publish(client, pacote);// Публикация сообщения
+		if (SetSettings.check_mqtt == 1) {
+			for (uint8_t i = 0; i < _DS18B20_MAX_SENSORS; i++) {//
+				sprintf(bufmqtt, "Device %d: %.5f C", i, ds18b20[i].Temperature);// Формируем строку с температурой
+				example_publish(client, bufmqtt);	// Публикация сообщения
+			}
 		}
 		osDelay(1000);
 	}
@@ -1211,6 +1007,9 @@ void StartCronTask(void const * argument)
 	printf("CRONs parsed and ready to go\r\n");
 
 	struct tm stm;
+
+	uint32_t value;
+	value = __LDREXW(&value);
 	/* Infinite loop */
 	for (;;) {
 		if (sDate.Year != 0) {
@@ -1314,7 +1113,6 @@ void StartConfigTask(void const * argument)
 	//FRESULT fresult;
 	FILINFO finfo;
 	//UINT Byteswritten; // File read/write count
-
 	MX_FATFS_Init();
 	/* init code for USB_HOST */
 
@@ -1334,7 +1132,6 @@ void StartConfigTask(void const * argument)
 					GetPinConfig();
 					GetPinToPin();
 					InitPin();
-					get_ROMid();
 
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
@@ -1346,7 +1143,6 @@ void StartConfigTask(void const * argument)
 					xTaskNotifyGive(OneWireTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ OneWire
 				} else {
 					StartSetingsConfig();
-					get_ROMid();
 
 					xTaskNotifyGive(WebServerTaskHandle); // ТО ВКЛЮЧАЕМ ЗАДАЧУ WebServerTask
 					xTaskNotifyGive(SSIDTaskHandle); // И ВКЛЮЧАЕМ ЗАДАЧУ SSIDTask
@@ -1617,11 +1413,61 @@ void StartOneWireTask(void const * argument)
 {
   /* USER CODE BEGIN StartOneWireTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
+		uint8_t Ds18b20TryToFind = 5;
+		do {
+			OneWire_Init(&OneWire, _DS18B20_GPIO, _DS18B20_PIN);
+			TempSensorCount = 0;
+			while (HAL_GetTick() < 3000)
+				Ds18b20Delay(100);
+			OneWireDevices = OneWire_First(&OneWire);
+			while (OneWireDevices) {
+				Ds18b20Delay(100);
+				TempSensorCount++;
+				OneWire_GetFullROM(&OneWire, ds18b20[TempSensorCount - 1].Address);
+				OneWireDevices = OneWire_Next(&OneWire);
+			}
+			printf("TempSensorCount = %d\r\n", TempSensorCount);
 
+			if (TempSensorCount > 0)
+				break;
+			Ds18b20TryToFind--;
+		} while (Ds18b20TryToFind > 0);
+	//	if(Ds18b20TryToFind==0)
+	//		vTaskDelete(Ds18b20Handle);
+		for (uint8_t i = 0; i < TempSensorCount; i++) {
+			Ds18b20Delay(50);
+			DS18B20_SetResolution(&OneWire, ds18b20[i].Address,
+					DS18B20_Resolution_12bits);
+			Ds18b20Delay(50);
+			DS18B20_DisableAlarmTemperature(&OneWire, ds18b20[i].Address);
+		}
 	/* Infinite loop */
 	for (;;) {
-	    get_Temperature();
-		osDelay(1000);
+		while (_DS18B20_UPDATE_INTERVAL_MS == 0) {
+			if (Ds18b20StartConvert == 1)
+				break;
+			Ds18b20Delay(10);
+		}
+		Ds18b20Timeout = _DS18B20_CONVERT_TIMEOUT_MS / 10;
+		DS18B20_StartAll(&OneWire);
+		osDelay(100);
+		while (!DS18B20_AllDone(&OneWire)) {
+			osDelay(10);
+			Ds18b20Timeout -= 1;
+			if (Ds18b20Timeout == 0)
+				break;
+		}
+		if (Ds18b20Timeout > 0) {
+			for (uint8_t i = 0; i < TempSensorCount; i++) {
+				osDelay(300);
+				ds18b20[i].DataIsValid = DS18B20_Read(&OneWire, ds18b20[i].Address, &ds18b20[i].Temperature);
+			}
+		} else {
+			for (uint8_t i = 0; i < TempSensorCount; i++)
+				ds18b20[i].DataIsValid = false;
+		}
+		Ds18b20StartConvert = 0;
+		osDelay(500);//_DS18B20_UPDATE_INTERVAL_MS
 	}
   /* USER CODE END StartOneWireTask */
 }

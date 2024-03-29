@@ -9,7 +9,7 @@
 #include "stdio.h"
 #include "stm32f7xx_hal.h"
 
-struct dbdevice strdev[MAXDEVICES];
+//struct dbdevice strdev[MAXDEVICES];
 
 struct dbPinsConf PinsConf[NUMPIN];
 

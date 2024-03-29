@@ -7,11 +7,11 @@
 
 #ifndef INC_DB_H_
 #define INC_DB_H_
-#define MAXDEVICES    125 // Максимальное количество датчиков на всех пинах.
+
 #define NUMPIN 89 // количество пинов
 #define NUMPINLINKS 100 // количество pin to pin
 #define NUMTASK 30 // кол-во CRON task
-
+#define MAXDEVICES    5 // Максимальное количество датчиков на всех пинах.
 #include "stdio.h"
 #include "stm32f7xx_hal.h"
 
@@ -135,7 +135,6 @@ struct dbSettings { 	// Cтруктура для setting
 	uint8_t macaddr4;	// MAC address
 	uint8_t macaddr5;	// MAC address
 };
-
 
 struct dbdevice {
 int         idpin;        // ID пина
