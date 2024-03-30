@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Edit temperature.</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="<!--#lang-->"></script>
+  <script src="js/jquerymin.js"></script>
+
+</head>
+
+<body>
+
+      <center>
+        <h1>NUCLEO-F767ZI</h1>        
+
+        <!--#menu-->
+
+        <h2  id="title1">Edit the settings of the temperature sensor.</h2>
+
+        <form action="devices.shtml?ssid=<!--#ssid-->" method="post">
+            <table class="zebra_2" border="1" align="center" id="tab1">
+        
+            </table>
+            <br>
+            <center>
+              <button> Save pin </button>
+            </center>
+        </form>  
+
+      </center>
+      <script>
+        var response = '<!--#devjson-->';
+    
+        $(document).ready(function () {
+    
+          var val = JSON.parse(response);
+          var employee_data = '';
+    
+          var employee_data_pin = '';
+          employee_data_pin += ' ' + val.pins + ' ';
+
+          employee_data += '<tr><td>ID</td><td>' + val.id + '<input type=\"hidden\" name=\"id" value=\"' + val.id + '\"></td></tr>'
+  
+          employee_data += '<tr><td>Upper T&nbsp;&#8451 limit</td><td><input type=\"number\" min=\"-55\" max=\"125\" name=\"uppert" value=\"' + val.uppert + '\" size=\"25\" style=\"width:45px;\"></td></tr>';
+          employee_data += '<tr><td>Lower T&nbsp;&#8451 limit</td><td><input type=\"number\" min=\"-55\" max=\"125\" name=\"lowert" value=\"' + val.lowert + '\" size=\"25\" style=\"width:45px;\"></td></tr>';
+
+          employee_data += '<tr><td>INFO</td><td><input type=\"text\" name=\"info" value=\"' + val.info + '\"></td></tr>';
+    
+          $('#tab1').append(employee_data);
+          $('#title1').append(employee_data_pin);
+        
+        });
+    
+      </script>
+
+</body>
+</html>

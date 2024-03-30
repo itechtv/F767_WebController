@@ -102,7 +102,7 @@ osThreadId EncoderTaskHandle;
 uint32_t EncoderTaskBuffer[ 512 ];
 osStaticThreadDef_t EncoderTaskControlBlock;
 osThreadId OneWireTaskHandle;
-uint32_t OneWireTaskBuffer[ 256 ];
+uint32_t OneWireTaskBuffer[ 512 ];//256
 osStaticThreadDef_t OneWireTaskControlBlock;
 osThreadId I2CTaskHandle;
 uint32_t I2CTaskBuffer[ 256 ];
@@ -925,6 +925,7 @@ void StartWebServerTask(void const * argument)
 			for (uint8_t i = 0; i < _DS18B20_MAX_SENSORS; i++) {//
 				sprintf(bufmqtt, "Device %d: %.5f C", i, ds18b20[i].Temperature);// Формируем строку с температурой
 				example_publish(client, bufmqtt);	// Публикация сообщения
+				osDelay(1000);
 			}
 		}
 		osDelay(1000);
@@ -1459,7 +1460,7 @@ void StartOneWireTask(void const * argument)
 		}
 		if (Ds18b20Timeout > 0) {
 			for (uint8_t i = 0; i < TempSensorCount; i++) {
-				osDelay(300);
+				osDelay(1000);//300
 				ds18b20[i].DataIsValid = DS18B20_Read(&OneWire, ds18b20[i].Address, &ds18b20[i].Temperature);
 			}
 		} else {

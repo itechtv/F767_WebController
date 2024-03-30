@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Home</title>
+    <title>Settings of the temperature sensors.</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="styles.css">
@@ -27,9 +27,29 @@
                 </th>
                 <th>T&nbsp;&#8451;
                     <a class="support" href="#">(?)
-                        <span class="tooltiptext" id="lang2"></span>
+                        <span class="tooltiptext" id="lang3"></span>
                     </a>
                 </th>
+                <th>Upper T&nbsp;&#8451 limit;
+                    <a class="support" href="#">(?)
+                        <span class="tooltiptext" id="lang4"></span>
+                    </a>
+                </th>
+                <th>Lower T&nbsp;&#8451 limit;
+                    <a class="support" href="#">(?)
+                        <span class="tooltiptext" id="lang5"></span>
+                    </a>
+                </th>
+                <th>INFO;
+                    <a class="support" href="#">(?)
+                      <span class="tooltiptext" id="lang6"></span>
+                    </a>
+                </th>
+                <th>Action
+                      <a class="support" href="#">(?)
+                        <span class="tooltiptext" id="lang7"></span>
+                      </a>
+                  </th>
             </tr>
         </table>
     </center>
@@ -45,6 +65,10 @@
                 temp_data += '<td align=\"center\">' + val.id + '</td>';
                 temp_data += '<td align=\"center\">' + val.sn + '</td>';
                 temp_data += '<td align=\"center\">' + val.temp + '</td>';
+                temp_data += '<td align=\"center\">' + val.uppert + '</td>';
+                temp_data += '<td align=\"center\">' + val.lowert + '</td>';
+                temp_data += '<td align=\"center\">' + val.info + '</td>';
+                temp_data += '<td align=\"center\">  <a href=\"formdevice.shtml?ssid=<!--#ssid-->&id=' + val.id + '&tab=2\">Edit</a></td>';
                 temp_data += '</tr>';
             }
             $('#tab1').append(temp_data);

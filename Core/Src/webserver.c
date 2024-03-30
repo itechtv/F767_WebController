@@ -18,6 +18,7 @@
 #include "cJSON.h"
 #include "db.h"
 #include "cmsis_os.h"
+#include "ds18b20.h"
 
 //#include "data_pin_t"
 #define MAX_BUFFER_SIZE 1000 // zerg Замените на необходимый размер буфера
@@ -129,7 +130,7 @@ int MultiPartTabCount(int num, int pinnum, int count)
 }
 //////////////////////////////  SSI HANDLER  //////////////////////////////////
 
-char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson"};
+char const *TAGCHAR[] = { "tabjson", "ssid", "check", "menu", "lang", "formjson", "cronjson", "devjson"};
 char const **TAGS = TAGCHAR;
 
 
@@ -144,6 +145,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 	cJSON *fld = NULL;
 	int idplus = 0;
 	int i = 0;
+	char romstr[18] = {0,};
 
 	switch (iIndex) {
 	// ssi tag <!--#tabjson-->
@@ -534,24 +536,34 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 				return strlen(pcInsert);
 				break;
-			case 7:// ssi tag <!--#devjson-->
+			case 7: // ssi tag <!--#devjson-->
 				root = cJSON_CreateArray();
 				i = 0;
 				fld = cJSON_CreateObject();
-				while (i <= 2) {
-//					if(strdev[i].idpin == 37){
+				while (i < 5) {
+		//					if(strdev[i].idpin == 37){
+					if (1) { //PA5
 						cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
-//						cJSON_AddNumberToObject(fld, "id", i);
-//						cJSON_AddStringToObject(fld, "sn", strdev[i].romaddr);
-//						cJSON_AddNumberToObject(fld, "temp", strdev[i].temperature);
-//						cJSON_AddNumberToObject(fld, "activ", strdev[i].activ);
-//						cJSON_AddStringToObject(fld, "info", strdev[i].info);
-
+						cJSON_AddNumberToObject(fld, "id", i);
+						sprintf(romstr, "%02X%02X%02X%02X%02X%02X%02X%02X",
+								ds18b20[i].Address[0], ds18b20[i].Address[1],
+								ds18b20[i].Address[2], ds18b20[i].Address[3],
+								ds18b20[i].Address[4], ds18b20[i].Address[5],
+								ds18b20[i].Address[6], ds18b20[i].Address[7]);
+//						printf("+++++ %s\r\n",romstr);
+						cJSON_AddStringToObject(fld, "sn", romstr);
+						cJSON_AddNumberToObject(fld, "temp", ds18b20[i].Temperature);
+//						cJSON_AddNumberToObject(fld, "activ", ds18b20[i].activ);
+						cJSON_AddNumberToObject(fld, "uppert", ds18b20[i].uppert);
+//						cJSON_AddStringToObject(fld, "textupt", ds18b20[i].textupt);
+						cJSON_AddNumberToObject(fld, "lowert", ds18b20[i].lowert);
+//						cJSON_AddStringToObject(fld, "textlowt", ds18b20[i].textlowt);
+						cJSON_AddStringToObject(fld, "info", ds18b20[i].info);
 						i++;
-//					}
+					}
 				}
 				str = cJSON_PrintUnformatted(root);
-//				str = cJSON_Print(root);
+		//				str = cJSON_Print(root);
 
 				cJSON_Delete(root);
 				sprintf(pcInsert, "%s", str);
@@ -559,11 +571,11 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 
 				return strlen(pcInsert);
 				break;
-		default:
-			break;
-	}
-	return 0;
-}
+			default:
+				break;
+			}
+			return 0;
+		}
 
 //////////////////////////////  CGI HANDLER  //////////////////////////////////
 
