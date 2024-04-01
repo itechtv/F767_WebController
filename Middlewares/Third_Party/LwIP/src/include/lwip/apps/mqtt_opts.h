@@ -61,7 +61,7 @@ extern "C" {
  * If one wants to avoid fragmented incoming publish, set length to max incoming topic length + max payload length + 8
  */
 #ifndef MQTT_VAR_HEADER_BUFFER_LEN
-#define MQTT_VAR_HEADER_BUFFER_LEN 128
+#define MQTT_VAR_HEADER_BUFFER_LEN 256
 #endif
 
 /**

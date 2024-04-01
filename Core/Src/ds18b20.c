@@ -5,7 +5,21 @@
 #include "FreeRTOS.h"
 #include "task.h"
 //###################################################################################
-Ds18b20Sensor_t	ds18b20[_DS18B20_MAX_SENSORS] = {0};
+//Ds18b20Sensor_t	ds18b20[_DS18B20_MAX_SENSORS] = {0};
+Ds18b20Sensor_t ds18b20[_DS18B20_MAX_SENSORS] = {
+    {
+        .Address = {0},
+        .Temperature = 0.0,
+        .DataIsValid = false,
+        .idpin = 0,
+        .family = 0,
+        .uppert = 0,
+        .lowert = 0,
+        .activ = false,
+        .info = {0}
+    }
+};
+
 
 OneWire_t OneWire;
 uint8_t	  OneWireDevices;

@@ -358,6 +358,9 @@ extern char bufmqtt[70];
       //return GPIO_PIN_RESET; // Значение по умолчанию, если кнопка не найдена
   }
 
+  static void mqtt_publish_cb_t(void *arg, err_t err){
+      //printf("[main.c] Message sended with error code: %d\r\n",err);
+  }
 /* USER CODE END 0 */
 
 /**
@@ -393,7 +396,6 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  /**********************************OneWire ********************************************/
 
   /* USER CODE END 2 */
 
@@ -901,6 +903,7 @@ void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
   ulTaskNotifyTake(0, portMAX_DELAY);  //
+  char* bufmqtt[70];
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
@@ -921,15 +924,45 @@ void StartWebServerTask(void const * argument)
 
 	/* Infinite loop */
 	for (;;) {
-		if (SetSettings.check_mqtt == 1) {
-			for (uint8_t i = 0; i < _DS18B20_MAX_SENSORS; i++) {//
-				sprintf(bufmqtt, "Device %d: %.5f C", i, ds18b20[i].Temperature);// Формируем строку с температурой
-				example_publish(client, bufmqtt);	// Публикация сообщения
-				osDelay(1000);
-			}
-		}
-		osDelay(1000);
-	}
+//		if (SetSettings.check_mqtt == 1) {
+//			for (uint8_t i = 0; i < _DS18B20_MAX_SENSORS; i++) {//
+//				sprintf((char *)bufmqtt, "Device[%d] %.5f C", i, ds18b20[i].Temperature);
+////				example_publish(client, bufmqtt);	// Публикация сообщения
+//				mqtt_publish(client, SetSettings.mqtt_tpc, bufmqtt, 12, 0, 0, mqtt_publish_cb_t, NULL);//"Device_TEST"
+//				memset(bufmqtt, 0, sizeof(bufmqtt));
+//				osDelay(1000);
+//			}
+//		}
+//		osDelay(1000);
+//	}
+        if (SetSettings.check_mqtt == 1) {
+            cJSON *root = cJSON_CreateObject(); // Создаем корневой JSON объект
+
+            cJSON *temperatures = cJSON_AddArrayToObject(root, "ds18b20"); // Добавляем массив "temperatures"
+
+            for (uint8_t i = 0; i < _DS18B20_MAX_SENSORS; i++) {
+                cJSON *temp = cJSON_CreateObject(); // Создаем JSON объект для температуры
+                cJSON_AddNumberToObject(temp, "sIdx", i); // Добавляем id датчика
+                cJSON_AddNumberToObject(temp, "value", ds18b20[i].Temperature); // Добавляем значение температуры
+                cJSON_AddItemToArray(temperatures, temp); // Добавляем объект температуры в массив
+            }
+
+            char *jsonString = cJSON_Print(root); // Преобразуем JSON объект в строку
+
+            // Публикуем JSON строку через MQTT
+            mqtt_publish(client, SetSettings.mqtt_tpc, jsonString, strlen(jsonString), 0, 0, mqtt_publish_cb_t, NULL);
+
+            cJSON_free((void *)jsonString); // Освобождаем память, выделенную для JSON строки
+            cJSON_Delete(root); // Удаляем корневой JSON объект
+
+            osDelay(1000);
+        }
+
+        osDelay(1000);
+    }
+
+
+
   /* USER CODE END 5 */
 }
 

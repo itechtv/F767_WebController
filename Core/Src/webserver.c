@@ -51,6 +51,7 @@ extern osMessageQId myQueueHandle;
 extern data_pin_t data_pin;
 extern TIM_HandleTypeDef htim[NUMPIN];
 
+//extern myDs18b20Sensor_t myds18b20[_DS18B20_MAX_SENSORS];// ????zerg
 // Generation SSID
 char *randomSSIDGeneration(char *rSSID, int num)
 {
@@ -541,7 +542,7 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen,
 				i = 0;
 				fld = cJSON_CreateObject();
 				while (i < 5) {
-		//					if(strdev[i].idpin == 37){
+//					if(strdev[i].idpin == 37){
 					if (1) { //PA5
 						cJSON_AddItemToArray(root, fld = cJSON_CreateObject());
 						cJSON_AddNumberToObject(fld, "id", i);

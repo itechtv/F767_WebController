@@ -395,7 +395,9 @@ void OneWire_GetFullROM(OneWire_t* OneWireStruct, uint8_t *firstIndex) {
 	uint8_t i;
 	for (i = 0; i < 8; i++) {
 		*(firstIndex + i) = OneWireStruct->ROM_NO[i];
-	    printf("%02X ", OneWireStruct->ROM_NO[i]);
+
+
+		printf("%02X ", OneWireStruct->ROM_NO[i]);
 	    if ((i + 1) % 8 == 0) {
 	      printf("\n");
 	    }

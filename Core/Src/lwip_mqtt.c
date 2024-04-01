@@ -11,7 +11,7 @@ static void mqtt_pub_request_cb(void *arg, err_t result);
 
 extern struct dbSettings SetSettings;// Для получения IP и т.п из web.морды.
 extern UART_HandleTypeDef huart3;
-char bufmqtt[70];
+//char bufmqtt[70];
 
 /* The idea is to demultiplex topic and create some reference to be used in data callbacks
  Example here uses a global variable, better would be to use a member in arg
@@ -131,23 +131,41 @@ void example_do_connect(mqtt_client_t *client, const char *topic) {
 }
 
 /* Called when publish is complete either with sucess or failure */
-static void mqtt_pub_request_cb(void *arg, err_t result) {
-	if (result != ERR_OK) {
-//		sprintf(bufmqtt, "Publish result: %d\n", result);
-//		HAL_UART_Transmit(&huart3, (uint8_t*) bufmqtt, strlen(bufmqtt), 1000);
-	}
-}
-void example_publish(mqtt_client_t *client, void *arg) {
-	//const char *pub_payload= "Hola mundo de mierda!";
-	const char *pub_payload = arg;
-	err_t err;
-	u8_t qos = 0; /* 0 1 or 2, see MQTT specification */
-	u8_t retain = 0; /* No don't retain such crappy payload... */
-	err = mqtt_publish(client, SetSettings.mqtt_tpc, pub_payload, strlen(pub_payload), qos, retain, mqtt_pub_request_cb, arg);
-	if (err != ERR_OK) {
-//		sprintf(bufmqtt, "Publish err: %d\n\r", err);
-//		HAL_UART_Transmit(&huart3, (uint8_t*) bufmqtt, strlen(bufmqtt), 1000);
-	}
+//static void mqtt_pub_request_cb(void *arg, err_t result) {
+//	if (result != ERR_OK) {
+////		sprintf(bufmqtt, "Publish result: %d\n", result);
+////		HAL_UART_Transmit(&huart3, (uint8_t*) bufmqtt, strlen(bufmqtt), 1000);
+//	}
+//}
+//void example_publish(mqtt_client_t *client, void *arg) {
+//	//const char *pub_payload= "Hola mundo de mierda!";
+//	const char *pub_payload = arg;
+//	err_t err;
+//	u8_t qos = 0; /* 0 1 or 2, see MQTT specification */
+//	u8_t retain = 0; /* No don't retain such crappy payload... */
+//	err = mqtt_publish(client, SetSettings.mqtt_tpc, pub_payload, strlen(pub_payload), qos, retain, mqtt_pub_request_cb, arg);
+//	if (err != ERR_OK) {
+////		sprintf(bufmqtt, "Publish err: %d\n\r", err);
+////		HAL_UART_Transmit(&huart3, (uint8_t*) bufmqtt, strlen(bufmqtt), 1000);
+//	}
+//}
+void example_publish(mqtt_client_t *client, void *arg)
+{
+  const char *pub_payload= "PubSubHubLubJub";
+  err_t err;
+  u8_t qos = 2; /* 0 1 or 2, see MQTT specification */
+  u8_t retain = 0; /* No don't retain such crappy payload... */
+  err = mqtt_publish(client, SetSettings.mqtt_tpc, pub_payload, strlen(pub_payload), qos, retain, mqtt_pub_request_cb, arg);
+  if(err != ERR_OK) {
+    printf("Publish err: %d\n", err);
+  }
 }
 
+/* Called when publish is complete either with sucess or failure */
+static void mqtt_pub_request_cb(void *arg, err_t result)
+{
+  if(result != ERR_OK) {
+    printf("Publish result: %d\n", result);
+  }
+}
 

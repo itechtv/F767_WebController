@@ -24,14 +24,6 @@ extern struct dbPinsInfo PinsInfo[NUMPIN];
 extern struct dbPinsConf PinsConf[NUMPIN];
 extern struct dbPinToPin PinsLinks[NUMPINLINKS];
 extern struct Button button[NUMPIN];
-
-extern UART_HandleTypeDef huart4;
-extern UART_HandleTypeDef huart5;
-extern UART_HandleTypeDef huart7;
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
-extern UART_HandleTypeDef huart3;
-extern UART_HandleTypeDef huart6;
 extern TIM_HandleTypeDef htim[NUMPIN];
 /**************************************************************************/
 // Функция включает тактирование на указанном порту.

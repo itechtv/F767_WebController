@@ -21,7 +21,7 @@ typedef struct
 	uint8_t 	Address[8];
 	float 		Temperature;
 	bool		DataIsValid;
-	
+
 	int         idpin;        // ID пина
 	uint8_t     family;       // тип датчика
 	int         uppert;       // Верхний предел температуры (ds18b20 -55°C to +125°C)
