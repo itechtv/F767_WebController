@@ -25,6 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "SEGGER_SYSVIEW_Conf.h"
+#include "SEGGER_SYSVIEW.h"
+
 ///////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
@@ -370,7 +373,7 @@ extern char bufmqtt[70];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	SEGGER_SYSVIEW_Conf();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
