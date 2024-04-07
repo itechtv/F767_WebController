@@ -78,8 +78,7 @@ Additional information:
 * TODO: Add your defines here.                                       *
 **********************************************************************
 */
-
-
+SEGGER_SYSVIEW_RTT_BUFFER_SIZE
 #endif  // SEGGER_SYSVIEW_CONF_H
 
 /*************************** End of file ****************************/

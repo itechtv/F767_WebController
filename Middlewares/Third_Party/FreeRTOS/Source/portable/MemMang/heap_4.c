@@ -179,8 +179,6 @@ void *pvReturn = NULL;
 					BlockLink_t structure at its start. */
 					pvReturn = ( void * ) ( ( ( uint8_t * ) pxPreviousBlock->pxNextFreeBlock ) + xHeapStructSize );
 
-					SEGGER_SYSVIEW_HeapAlloc(ucHeap, pvReturn, xWantedSize);// zerg
-
 					/* This block is being returned for use so must be taken out
 					of the list of free blocks. */
 					pxPreviousBlock->pxNextFreeBlock = pxBlock->pxNextFreeBlock;
@@ -239,10 +237,12 @@ void *pvReturn = NULL;
 		{
 			mtCOVERAGE_TEST_MARKER();
 		}
-
-		traceMALLOC( pvReturn, xWantedSize );
+		SEGGER_SYSVIEW_HeapAlloc(ucHeap, pvReturn, xWantedSize);// zerg
+//		traceMALLOC( pvReturn, xWantedSize );
 	}
 	( void ) xTaskResumeAll();
+
+
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{
@@ -294,7 +294,8 @@ BlockLink_t *pxLink;
 				{
 					/* Add this block to the list of free blocks. */
 					xFreeBytesRemaining += pxLink->xBlockSize;
-					traceFREE( pv, pxLink->xBlockSize );
+					SEGGER_SYSVIEW_HeapFree(ucHeap, pv);// zerg
+//					traceFREE( pv, pxLink->xBlockSize );
 					prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
 				}
 				( void ) xTaskResumeAll();
@@ -309,7 +310,6 @@ BlockLink_t *pxLink;
 			mtCOVERAGE_TEST_MARKER();
 		}
 	}
-	SEGGER_SYSVIEW_HeapFree(ucHeap, pv);// zerg
 }
 /*-----------------------------------------------------------*/
 
