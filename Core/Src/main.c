@@ -27,7 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "SEGGER_SYSVIEW_Conf.h"
 #include "SEGGER_SYSVIEW.h"
-
+#include "SEGGER_SYSVIEW_FreeRTOS.h"
 ///////////////////////////////////////////
 #include "webserver.h"
 #include "lwip/apps/httpd.h"
@@ -374,6 +374,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	SEGGER_SYSVIEW_Conf();
+	SEGGER_SYSVIEW_Start();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -963,12 +964,8 @@ void StartWebServerTask(void const * argument)
 
         osDelay(1000);
     }
-
-
-
   /* USER CODE END 5 */
 }
-
 /* USER CODE BEGIN Header_StartSSIDTask */
 /**
  * @brief Function implementing the SSIDTask thread.
@@ -980,7 +977,6 @@ void StartSSIDTask(void const * argument)
 {
   /* USER CODE BEGIN StartSSIDTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-	//
 	/* Infinite loop */
 	for (;;) {
 		if (strlen(randomSSID) != 0) {
@@ -1030,7 +1026,6 @@ void StartCronTask(void const * argument)
 {
   /* USER CODE BEGIN StartCronTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-
 	static lwdtc_cron_ctx_t cron_ctxs[MAXSIZE];
 
 	/* Define context for CRON, used to parse data to */
@@ -1237,7 +1232,6 @@ void StartInputTask(void const * argument)
 {
   /* USER CODE BEGIN StartInputTask */
 	ulTaskNotifyTake(0, portMAX_DELAY);
-
 	uint8_t pinStates[NUMPIN] = { 0 };
 	uint32_t pinTimes[NUMPIN] = { 0 };
 	uint32_t millis;

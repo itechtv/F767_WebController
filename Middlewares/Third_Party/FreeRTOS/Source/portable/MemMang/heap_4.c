@@ -42,7 +42,8 @@ task.h is included from an application file. */
 
 #include "FreeRTOS.h"
 #include "task.h"
-
+#include "SEGGER_SYSVIEW.h"
+#include "SEGGER_SYSVIEW_Conf.h"
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #if( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
@@ -178,6 +179,8 @@ void *pvReturn = NULL;
 					BlockLink_t structure at its start. */
 					pvReturn = ( void * ) ( ( ( uint8_t * ) pxPreviousBlock->pxNextFreeBlock ) + xHeapStructSize );
 
+					SEGGER_SYSVIEW_HeapAlloc(ucHeap, pvReturn, xWantedSize);// zerg
+
 					/* This block is being returned for use so must be taken out
 					of the list of free blocks. */
 					pxPreviousBlock->pxNextFreeBlock = pxBlock->pxNextFreeBlock;
@@ -257,6 +260,7 @@ void *pvReturn = NULL;
 
 	configASSERT( ( ( ( size_t ) pvReturn ) & ( size_t ) portBYTE_ALIGNMENT_MASK ) == 0 );
 	return pvReturn;
+
 }
 /*-----------------------------------------------------------*/
 
@@ -305,6 +309,7 @@ BlockLink_t *pxLink;
 			mtCOVERAGE_TEST_MARKER();
 		}
 	}
+	SEGGER_SYSVIEW_HeapFree(ucHeap, pv);// zerg
 }
 /*-----------------------------------------------------------*/
 
@@ -371,6 +376,9 @@ size_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
 
 	/* Work out the position of the top bit in a size_t variable. */
 	xBlockAllocatedBit = ( ( size_t ) 1 ) << ( ( sizeof( size_t ) * heapBITS_PER_BYTE ) - 1 );
+
+    SEGGER_SYSVIEW_HeapDefine(ucHeap, ucHeap, sizeof(ucHeap), sizeof(BlockLink_t));// zerg
+    SEGGER_SYSVIEW_NameResource((uint32_t)ucHeap, "heap4");
 }
 /*-----------------------------------------------------------*/
 
