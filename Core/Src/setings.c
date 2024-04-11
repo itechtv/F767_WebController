@@ -250,7 +250,7 @@ void GetSetingsConfig() {
 
 	if (fresult == FR_OK) {
 		if (f_open(&USBHFile, (const TCHAR*) "setings.ini", FA_READ) == FR_OK) {
-			char fsbuffer[1024];
+//			char fsbuffer[1024];
 			UINT Byteswritten = 0;
 			fresult = f_read(&USBHFile, fsbuffer, sizeof(fsbuffer), &Byteswritten);
 

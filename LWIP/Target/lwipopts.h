@@ -58,7 +58,7 @@
 /*----- Value in opt.h for LWIP_DNS_SECURE: (LWIP_DNS_SECURE_RAND_XID | LWIP_DNS_SECURE_NO_MULTIPLE_OUTSTANDING | LWIP_DNS_SECURE_RAND_SRC_PORT) -*/
 #define LWIP_DNS_SECURE 7
 /*----- Value in opt.h for TCP_SND_QUEUELEN: (4*TCP_SND_BUF + (TCP_MSS - 1))/TCP_MSS -----*/
-#define TCP_SND_QUEUELEN 9
+#define TCP_SND_QUEUELEN 10
 /*----- Value in opt.h for TCP_SNDLOWAT: LWIP_MIN(LWIP_MAX(((TCP_SND_BUF)/2), (2 * TCP_MSS) + 1), (TCP_SND_BUF) - 1) -*/
 #define TCP_SNDLOWAT 1071
 /*----- Value in opt.h for TCP_SNDQUEUELOWAT: LWIP_MAX(TCP_SND_QUEUELEN)/2, 5) -*/
@@ -137,6 +137,7 @@
 #define CHECKSUM_CHECK_ICMP6 0
 /*-----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
+
 #define SNTP_DEBUG LWIP_DBG_ON
  //Define the processing function of Lwip SNTP
 #include <lwip_sntp.h>
@@ -146,6 +147,14 @@
 
 #define SNTP_SET_SYSTEM_TIME		sntp_set_time
 /* USER CODE END 1 */
+#define LWIP_DEBUG   1
+#define MQTT_DEBUG          LWIP_DBG_ON
+#define PBUF_POOL_BUFSIZE   1600
+#define TCP_MSS             536//536
+#define TCP_SND_BUF         1920// 5840
+//#define MEMP_NUM_TCP_SEG    50 // 16
+ // определена сверху  TCP_SNDLOWAT 1074
+// определена сверху TCP_SND_QUEUELEN 25 //9
 
 #ifdef __cplusplus
 }

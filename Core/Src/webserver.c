@@ -1578,6 +1578,7 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 	if (current_connection == connection && p != NULL) {
 	  if(strcmp("upgrade.shtml", v_PostBufer.uri) == 0){
 		  // @todo  Firmware update in flash
+		  pbuf_free(p);
 		  return ERR_OK;
 	  } else {
 		  strncpy(tempbufer, p->payload, p->len);
@@ -1588,15 +1589,15 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 		  return ERR_OK;
 	  }
 
-	    if (p != NULL) {
+//	    if (p != NULL) {
 	        pbuf_free(p);
-	    }
+//	    }
 		return ERR_OK;
 	}
 
-	if (p != NULL) {
+//	if (p != NULL) {
 		pbuf_free(p);
-	}
+//	}
 	return ERR_VAL;
 }
 

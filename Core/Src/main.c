@@ -903,7 +903,7 @@ void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
   ulTaskNotifyTake(0, portMAX_DELAY);  //
-  char* bufmqtt[70];
+//  char* bufmqtt[70];
   MX_LWIP_Init();
 
   /* init code for USB_HOST */
@@ -954,8 +954,6 @@ void StartWebServerTask(void const * argument)
 
             cJSON_free((void *)jsonString); // Освобождаем память, выделенную для JSON строки
             cJSON_Delete(root); // Удаляем корневой JSON объект
-
-            osDelay(1000);
         }
 
         osDelay(1000);
