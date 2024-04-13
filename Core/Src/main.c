@@ -30,12 +30,13 @@
 #include "lwip/apps/httpd.h"
 #include <stdio.h>
 #include <string.h>
-#include <lwip_mqtt.h>
+//#include <lwip_mqtt.h>
 #include "db.h"
 #include "lwdtc.h"
 #include "cJSON.h"
 #include "setings.h"
 #include "multi_button.h"
+#include "lwip/apps/mqtt.h"
 
 
 /* USER CODE END Includes */
@@ -115,6 +116,9 @@ extern ApplicationTypeDef Appli_state;
 
 RTC_TimeTypeDef sTime = { 0 };
 RTC_DateTypeDef sDate = { 0 };
+
+static mqtt_client_t* mqtt_client;
+static ip_addr_t MQTT_SERVER;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -152,7 +156,7 @@ unsigned long Te;
 
 #define DEBOUNCE_DELAY 45
 //////////////////////////////////////????????
-mqtt_client_t *client;
+
 char pacote[50];
 
 
@@ -666,6 +670,108 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+static void mqtt_publish_cb_t(void *arg, err_t err){
+	printf("[main.c] Message sended with error code: %d\r\n",err);
+}
+
+#if LWIP_TCP
+
+/** Define this to a compile-time IP address initialization
+ * to connect anything else than IPv4 loopback
+ */
+#ifndef LWIP_MQTT_EXAMPLE_IPADDR_INIT
+#if LWIP_IPV4
+#define LWIP_MQTT_EXAMPLE_IPADDR_INIT = IPADDR4_INIT(PP_HTONL(IPADDR_LOOPBACK))
+#else
+#define LWIP_MQTT_EXAMPLE_IPADDR_INIT
+#endif
+#endif
+
+static ip_addr_t mqtt_ip LWIP_MQTT_EXAMPLE_IPADDR_INIT;
+static mqtt_client_t* mqtt_client;
+
+static const struct mqtt_connect_client_info_t mqtt_client_info =
+{
+  "test",
+  NULL, /* user */
+  NULL, /* pass */
+  100,  /* keep alive */
+  NULL, /* will_topic */
+  NULL, /* will_msg */
+  0,    /* will_msg_len */
+  0,    /* will_qos */
+  0     /* will_retain */
+#if LWIP_ALTCP && LWIP_ALTCP_TLS
+  , NULL
+#endif
+};
+
+static void
+mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
+{
+  const struct mqtt_connect_client_info_t* client_info = (const struct mqtt_connect_client_info_t*)arg;
+  LWIP_UNUSED_ARG(data);
+
+  LWIP_PLATFORM_DIAG(("MQTT client \"%s\" data cb: len %d, flags %d\n", client_info->client_id,
+          (int)len, (int)flags));
+}
+
+static void
+mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len)
+{
+  const struct mqtt_connect_client_info_t* client_info = (const struct mqtt_connect_client_info_t*)arg;
+
+  LWIP_PLATFORM_DIAG(("MQTT client \"%s\" publish cb: topic %s, len %d\n", client_info->client_id,
+          topic, (int)tot_len));
+}
+
+static void
+mqtt_request_cb(void *arg, err_t err)
+{
+  const struct mqtt_connect_client_info_t* client_info = (const struct mqtt_connect_client_info_t*)arg;
+
+  LWIP_PLATFORM_DIAG(("MQTT client \"%s\" request cb: err %d\n", client_info->client_id, (int)err));
+}
+
+static void
+mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status)
+{
+  const struct mqtt_connect_client_info_t* client_info = (const struct mqtt_connect_client_info_t*)arg;
+  LWIP_UNUSED_ARG(client);
+
+  LWIP_PLATFORM_DIAG(("MQTT client \"%s\" connection cb: status %d\n", client_info->client_id, (int)status));
+
+  if (status == MQTT_CONNECT_ACCEPTED) {
+    mqtt_sub_unsub(client,
+            "topic_qos1", 1,
+            mqtt_request_cb, LWIP_CONST_CAST(void*, client_info),
+            1);
+    mqtt_sub_unsub(client,
+            "topic_qos0", 0,
+            mqtt_request_cb, LWIP_CONST_CAST(void*, client_info),
+            1);
+  }
+}
+#endif /* LWIP_TCP */
+
+void
+mqtt_example_init(void)
+{
+#if LWIP_TCP
+  mqtt_client = mqtt_client_new();
+
+  mqtt_set_inpub_callback(mqtt_client,
+          mqtt_incoming_publish_cb,
+          mqtt_incoming_data_cb,
+          LWIP_CONST_CAST(void*, &mqtt_client_info));
+
+  mqtt_client_connect(mqtt_client,
+          &mqtt_ip, MQTT_PORT,
+          mqtt_connection_cb, LWIP_CONST_CAST(void*, &mqtt_client_info),
+          &mqtt_client_info);
+#endif /* LWIP_TCP */
+}
 /*************************** Processing functions of SNTP **********************************/
 /*!
  * @brief Get the current timestamp
@@ -818,6 +924,11 @@ void parse_string(char *str, time_t cronetime_olds, int i, int pause) {
 void StartWebServerTask(void const * argument)
 {
   /* init code for LWIP */
+	  int8_t ret=100;
+	  char *msg = "Hello from STM32";
+	  char bufjson[1000] = { 0, };//
+	  char snsrData[250] = { 0, };
+
   ulTaskNotifyTake(0, portMAX_DELAY);
   MX_LWIP_Init();
 
@@ -827,17 +938,47 @@ void StartWebServerTask(void const * argument)
 	http_server_init();
 	osDelay(1000);
 
-	client = mqtt_client_new();
-	example_do_connect(client, "test"); // Подписались на топик"Zagotovka"
-	//sprintf(pacote, "Cool, MQTT-client is working!"); // Cобщение на 'MQTT' сервер.
-	//example_publish(client, pacote); // Публикуем сообщение.
+	 printf("[main.c] LWIP Init\r\n");
+	  printf("[main.c] Setting MQTT connection\r\n");
+	  uint16_t mqttPort = 1883;
+	  uint8_t flag = ipaddr_aton("192.168.11.11",&MQTT_SERVER);
+	  if(flag){
+		  printf("[main.c] IP server converted correctly\r\n");
+	  }else{
+		  printf("[main.c] Something go wrong converting the IP\r\n");
+	  }
+	  mqtt_client = mqtt_client_new();
+	  mqtt_set_inpub_callback(mqtt_client,
+	          mqtt_incoming_publish_cb,
+	          mqtt_incoming_data_cb,
+	          LWIP_CONST_CAST(void*, &mqtt_client_info));
+	  mqtt_client_connect(mqtt_client,
+			  &MQTT_SERVER, mqttPort,
+	          mqtt_connection_cb, LWIP_CONST_CAST(void*, &mqtt_client_info),
+	          &mqtt_client_info);
 
 	osDelay(1000);
 	bsp_sntp_init();
 
 	/* Infinite loop */
 	for (;;) {
-		osDelay(1);
+
+		strcat(bufjson, "[");
+		for (int i = 0; i < 3; i++) {
+			sprintf(snsrData, "{\"sIdx\":%d,\"ptype\":%d,\"topin\":%d,\"info\":%s}", i, PinsConf[i].ptype, PinsConf[i].topin, PinsConf[i].info);
+			strcat(bufjson, snsrData);
+			memset(snsrData, '\0', sizeof(snsrData));
+			if (i < (3 - 1)) {
+				strcat(bufjson, ",");
+			}
+		}
+		strcat(bufjson, "]");
+
+		  ret = mqtt_publish(mqtt_client,"test",bufjson,strlen(bufjson),0,0,mqtt_publish_cb_t,NULL);
+		  //ret = mqtt_publish(mqtt_client,"test",msg,16,0,0,mqtt_publish_cb_t,NULL);
+		  printf("[main.c] Publication flag is %d len %d\r\n",ret, strlen(bufjson));
+		  memset(bufjson, '\0', sizeof(bufjson));
+		osDelay(1000);
 	}
   /* USER CODE END 5 */
 }
