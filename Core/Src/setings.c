@@ -786,22 +786,22 @@ void InitMultibutton(void) {
 
 			if(PinsConf[i].sclick == 2){
 				// PWM кнопка
-				button_attach(&button[i], PRESS_DOWN, pwm_event_handler);
-				button_attach(&button[i], PRESS_UP, pwm_event_handler);
-				button_attach(&button[i], LONG_PRESS_START, pwm_event_handler);
-				button_attach(&button[i], LONG_PRESS_HOLD, pwm_event_handler);
-				button_attach(&button[i], SINGLE_CLICK, pwm_event_handler);
-				button_attach(&button[i], DOUBLE_CLICK, pwm_event_handler);
-				button_attach(&button[i], PRESS_REPEAT, pwm_event_handler);
+				button_attach(&button[i], PRESS_DOWN, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], PRESS_UP, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, (BtnCallback) pwm_event_handler);
 			} else {
 				// просто кнопка
-				button_attach(&button[i], PRESS_DOWN, button_event_handler);
-				button_attach(&button[i], PRESS_UP, button_event_handler);
-				button_attach(&button[i], LONG_PRESS_START, button_event_handler);
-				button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
-				button_attach(&button[i], SINGLE_CLICK, button_event_handler);
-				button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
-				button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+				button_attach(&button[i], PRESS_DOWN, (BtnCallback) button_event_handler);
+				button_attach(&button[i], PRESS_UP, (BtnCallback) button_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, (BtnCallback) button_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, (BtnCallback) button_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, (BtnCallback) button_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, (BtnCallback) button_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, (BtnCallback) button_event_handler);
 			}
 
 			button_start(&button[i]);
@@ -816,22 +816,22 @@ void InitMultibutton(void) {
 			button_init(&button[i], read_button_level, 0, i);
 			// PWM кнопка
 			if(PinsConf[i].sclick == 2){
-				button_attach(&button[i], PRESS_DOWN, pwm_event_handler);
-				button_attach(&button[i], PRESS_UP, pwm_event_handler);
-				button_attach(&button[i], LONG_PRESS_START, pwm_event_handler);
-				button_attach(&button[i], LONG_PRESS_HOLD, pwm_event_handler);
-				button_attach(&button[i], SINGLE_CLICK, pwm_event_handler);
-				button_attach(&button[i], DOUBLE_CLICK, pwm_event_handler);
-				button_attach(&button[i], PRESS_REPEAT, pwm_event_handler);
+				button_attach(&button[i], PRESS_DOWN, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], PRESS_UP, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, (BtnCallback) pwm_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, (BtnCallback) pwm_event_handler);
 			} else {
 				// просто кнопка
-				button_attach(&button[i], PRESS_DOWN, button_event_handler);
-				button_attach(&button[i], PRESS_UP, button_event_handler);
-				button_attach(&button[i], LONG_PRESS_START, button_event_handler);
-				button_attach(&button[i], LONG_PRESS_HOLD, button_event_handler);
-				button_attach(&button[i], SINGLE_CLICK, button_event_handler);
-				button_attach(&button[i], DOUBLE_CLICK, button_event_handler);
-				button_attach(&button[i], PRESS_REPEAT, button_event_handler);
+				button_attach(&button[i], PRESS_DOWN, (BtnCallback) button_event_handler);
+				button_attach(&button[i], PRESS_UP, (BtnCallback) button_event_handler);
+				button_attach(&button[i], LONG_PRESS_START, (BtnCallback) button_event_handler);
+				button_attach(&button[i], LONG_PRESS_HOLD, (BtnCallback) button_event_handler);
+				button_attach(&button[i], SINGLE_CLICK, (BtnCallback) button_event_handler);
+				button_attach(&button[i], DOUBLE_CLICK, (BtnCallback) button_event_handler);
+				button_attach(&button[i], PRESS_REPEAT, (BtnCallback) button_event_handler);
 			}
 
 			button_start(&button[i]);
